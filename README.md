@@ -39,12 +39,13 @@
 
 ![Scan results](docs/assets/screenshot_results.svg)
 
-> **Asciinema recording:** A full animated terminal demo is available in [`docs/assets/demo.cast`](docs/assets/demo.cast).
-> Upload it to [asciinema.org](https://asciinema.org) or play it locally:
+> **Asciinema recording:** Watch the full interactive demo on asciinema.org, or play it locally:
 > ```bash
 > pip install asciinema
 > asciinema play docs/assets/demo.cast
 > ```
+
+[![asciicast](https://asciinema.org/a/QHiA1uk3kf9pKxY6.svg)](https://asciinema.org/a/QHiA1uk3kf9pKxY6)
 
 ---
 
