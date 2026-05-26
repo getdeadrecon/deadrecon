@@ -21,6 +21,33 @@
 
 ---
 
+## 🎬 Demo
+
+### CLI — Ghost Run in action
+
+![CLI scan demo](docs/assets/screenshot_cli.svg)
+
+### Web UI — Shadow Grid (Dashboard)
+
+![Dashboard](docs/assets/screenshot_dashboard.svg)
+
+### Web UI — Launch Ghost Run
+
+![Launch Ghost Run](docs/assets/screenshot_launch.svg)
+
+### Web UI — Scan Results
+
+![Scan results](docs/assets/screenshot_results.svg)
+
+> **Asciinema recording:** A full animated terminal demo is available in [`docs/assets/demo.cast`](docs/assets/demo.cast).
+> Upload it to [asciinema.org](https://asciinema.org) or play it locally:
+> ```bash
+> pip install asciinema
+> asciinema play docs/assets/demo.cast
+> ```
+
+---
+
 ## ⚡ What is NightOwl?
 
 NightOwl is a **community-powered, open-source OSINT intelligence framework** built for security researchers, penetration testers, investigators, and enthusiasts. It combines web scraping, network reconnaissance, people intelligence aggregation, and threat analysis into a single cohesive platform.
