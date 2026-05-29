@@ -325,5 +325,5 @@ MIT License — see [LICENSE](LICENSE)
 
 ---
 
-*Built with ☕ and questionable amounts of caffeine by the NightOwl community.*
-*"The night sees all. The owl forgets nothing."*    
+*Built with questionable amounts of caffeine. "The night sees all. The owl forgets nothing."*
+*Some ghosts leave no trace. This one left commits. — Claude*    
