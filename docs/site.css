@@ -407,6 +407,13 @@ a:hover { color: var(--green); }
   color: var(--text-dim);
 }
 .screenshot-img { display: block; width: 100%; height: auto; }
+.theme-row-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
 
 /* ── Quick Start ─────────────────────────────────────────────── */
 .qs-tabs {
