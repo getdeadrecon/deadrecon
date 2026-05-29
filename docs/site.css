@@ -482,6 +482,35 @@ a:hover { color: var(--green); }
   margin-bottom: 0.5rem;
 }
 
+/* ── Topics ──────────────────────────────────────────────────── */
+.section-topics {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+.topics-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+.topic-pill {
+  display: inline-block;
+  padding: 0.3rem 0.85rem;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  border: 1px solid;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.topic-cyan  { color: var(--cyan);   border-color: rgba(0,243,255,0.35);  background: rgba(0,243,255,0.05);  }
+.topic-green { color: var(--green);  border-color: rgba(0,255,65,0.35);   background: rgba(0,255,65,0.05);   }
+.topic-purple{ color: var(--purple); border-color: rgba(176,38,255,0.35); background: rgba(176,38,255,0.05); }
+.topic-cyan:hover  { background: rgba(0,243,255,0.12);  box-shadow: 0 0 10px rgba(0,243,255,0.2);  }
+.topic-green:hover { background: rgba(0,255,65,0.12);   box-shadow: 0 0 10px rgba(0,255,65,0.2);   }
+.topic-purple:hover{ background: rgba(176,38,255,0.12); box-shadow: 0 0 10px rgba(176,38,255,0.2); }
+
 /* ── Footer ──────────────────────────────────────────────────── */
 .site-footer {
   position: relative;
