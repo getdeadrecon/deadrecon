@@ -69,10 +69,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - README demo section: animated CLI demo (GIF + asciinema cast), SVG web UI screenshots
 
 ### Fixed
-- Repository URLs corrected to `the-clipper/nightowl` across all files and badge links
+- Repository URLs corrected to `nightowl-osint/nightowl` across all files and badge links
 
 ---
 
-[Unreleased]: https://github.com/the-clipper/nightowl/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/the-clipper/nightowl/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/the-clipper/nightowl/releases/tag/v1.0.0
+[Unreleased]: https://github.com/nightowl-osint/nightowl/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/nightowl-osint/nightowl/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/nightowl-osint/nightowl/releases/tag/v1.0.0

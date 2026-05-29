@@ -14,9 +14,9 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-00ff41?style=flat-square&logo=python)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-00f3ff?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Docker-b026ff?style=flat-square)]()
-[![GitHub Stars](https://img.shields.io/github/stars/the-clipper/nightowl?style=flat-square&color=00ff41)](https://github.com/the-clipper/nightowl/stargazers)
-[![Open Issues](https://img.shields.io/github/issues/the-clipper/nightowl?style=flat-square&color=b026ff)](https://github.com/the-clipper/nightowl/issues)
-[![CI](https://img.shields.io/github/actions/workflow/status/the-clipper/nightowl/ci.yml?branch=main&style=flat-square&label=CI&color=00ff41)](https://github.com/the-clipper/nightowl/actions/workflows/ci.yml)
+[![GitHub Stars](https://img.shields.io/github/stars/nightowl-osint/nightowl?style=flat-square&color=00ff41)](https://github.com/nightowl-osint/nightowl/stargazers)
+[![Open Issues](https://img.shields.io/github/issues/nightowl-osint/nightowl?style=flat-square&color=b026ff)](https://github.com/nightowl-osint/nightowl/issues)
+[![CI](https://img.shields.io/github/actions/workflow/status/nightowl-osint/nightowl/ci.yml?branch=main&style=flat-square&label=CI&color=00ff41)](https://github.com/nightowl-osint/nightowl/actions/workflows/ci.yml)
 [![Project Site](https://img.shields.io/badge/site-nightowl-00f3ff?style=flat-square&logo=github)](https://owlrecon.io)
 [![Changelog](https://img.shields.io/badge/changelog-view-00ff41?style=flat-square)](CHANGELOG.md)
 
@@ -142,7 +142,7 @@ All formats support **ZIP compression** and **AES-256-GCM encryption**.
 
 ### Option 1: Docker (Recommended)
 ```bash
-git clone https://github.com/the-clipper/nightowl
+git clone https://github.com/nightowl-osint/nightowl
 cd nightowl
 docker-compose up -d
 # Open http://localhost:5000
@@ -151,7 +151,7 @@ docker-compose up -d
 ### Option 2: Manual Installation
 ```bash
 # Python 3.10+ required
-git clone https://github.com/the-clipper/nightowl
+git clone https://github.com/nightowl-osint/nightowl
 cd nightowl
 pip install -e .
 nightowl init
@@ -268,7 +268,7 @@ NightOwl thrives on community contributions. Ways to help:
 
 1. **Add API integrations** — Follow the plugin pattern above
 2. **Improve detection signatures** — Expand `tech_detector.py`
-3. **Bug reports** — [GitHub Issues](https://github.com/the-clipper/nightowl/issues)
+3. **Bug reports** — [GitHub Issues](https://github.com/nightowl-osint/nightowl/issues)
 4. **Documentation** — Improve the wiki
 5. **Translations** — Internationalize the UI
 
