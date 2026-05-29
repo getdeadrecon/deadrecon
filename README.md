@@ -18,6 +18,7 @@
 [![Open Issues](https://img.shields.io/github/issues/the-clipper/nightowl?style=flat-square&color=b026ff)](https://github.com/the-clipper/nightowl/issues)
 [![CI](https://img.shields.io/github/actions/workflow/status/the-clipper/nightowl/ci.yml?branch=main&style=flat-square&label=CI&color=00ff41)](https://github.com/the-clipper/nightowl/actions/workflows/ci.yml)
 [![Project Site](https://img.shields.io/badge/site-nightowl-00f3ff?style=flat-square&logo=github)](https://the-clipper.github.io/nightowl/)
+[![Changelog](https://img.shields.io/badge/changelog-view-00ff41?style=flat-square)](CHANGELOG.md)
 
 
 ---
