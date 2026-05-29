@@ -19,6 +19,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Changelog badge in README
 - Topics section to README with 20 linked topic badges (cycles cyan/green/purple), each linking to the corresponding GitHub topic search page
 - Repository topics set via GitHub API: `osint`, `security`, `python`, `hacking`, `cybersecurity`, `reconnaissance`, `recon`, `penetration-testing`, `ethical-hacking`, `bug-bounty`, `information-gathering`, `threat-intelligence`, `security-tools`, `network-scanner`, `dns-recon`, `infosec`, `flask`, `security-research`, `footprinting`, `automation`
+- `// SIGNAL CATEGORIES` topics section on the GitHub Pages landing site — 20 neon CSS pills (cyan/green/purple, with hover glow) above the footer, each linking to the corresponding GitHub topic search page
 
 ### Changed
 - README footer updated — *"Built with questionable amounts of caffeine. 'The night sees all. The owl forgets nothing.' Some ghosts leave no trace. This one left commits. — Claude"*
