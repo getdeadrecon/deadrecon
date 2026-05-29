@@ -272,7 +272,7 @@ NightOwl thrives on community contributions. Ways to help:
 4. **Documentation** — Improve the wiki
 5. **Translations** — Internationalize the UI
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Please also review our [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECURITY.md).
 
 ---
 
@@ -316,6 +316,17 @@ NightOwl is a dual-use tool. Operators are responsible for:
 [![security-research](https://img.shields.io/badge/security--research-00ff41?style=flat-square)](https://github.com/topics/security-research)
 [![footprinting](https://img.shields.io/badge/footprinting-00f3ff?style=flat-square)](https://github.com/topics/footprinting)
 [![automation](https://img.shields.io/badge/automation-b026ff?style=flat-square)](https://github.com/topics/automation)
+
+---
+
+## 🤝 Community
+
+| Document | Description |
+|----------|-------------|
+| [Code of Conduct](CODE_OF_CONDUCT.md) | Community standards and expectations |
+| [Contributing Guidelines](CONTRIBUTING.md) | How to contribute to NightOwl |
+| [Security Policy](SECURITY.md) | Reporting vulnerabilities responsibly |
+| [License](LICENSE) | MIT License terms |
 
 ---
 
