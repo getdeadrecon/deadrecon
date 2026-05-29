@@ -294,6 +294,31 @@ NightOwl is a dual-use tool. Operators are responsible for:
 
 ---
 
+## 🏷 Topics
+
+[![osint](https://img.shields.io/badge/osint-00ff41?style=flat-square)](https://github.com/topics/osint)
+[![security](https://img.shields.io/badge/security-00f3ff?style=flat-square)](https://github.com/topics/security)
+[![python](https://img.shields.io/badge/python-00f3ff?style=flat-square)](https://github.com/topics/python)
+[![hacking](https://img.shields.io/badge/hacking-00ff41?style=flat-square)](https://github.com/topics/hacking)
+[![cybersecurity](https://img.shields.io/badge/cybersecurity-b026ff?style=flat-square)](https://github.com/topics/cybersecurity)
+[![reconnaissance](https://img.shields.io/badge/reconnaissance-00ff41?style=flat-square)](https://github.com/topics/reconnaissance)
+[![recon](https://img.shields.io/badge/recon-00f3ff?style=flat-square)](https://github.com/topics/recon)
+[![penetration-testing](https://img.shields.io/badge/penetration--testing-b026ff?style=flat-square)](https://github.com/topics/penetration-testing)
+[![ethical-hacking](https://img.shields.io/badge/ethical--hacking-00ff41?style=flat-square)](https://github.com/topics/ethical-hacking)
+[![bug-bounty](https://img.shields.io/badge/bug--bounty-00f3ff?style=flat-square)](https://github.com/topics/bug-bounty)
+[![information-gathering](https://img.shields.io/badge/information--gathering-b026ff?style=flat-square)](https://github.com/topics/information-gathering)
+[![threat-intelligence](https://img.shields.io/badge/threat--intelligence-00ff41?style=flat-square)](https://github.com/topics/threat-intelligence)
+[![security-tools](https://img.shields.io/badge/security--tools-00f3ff?style=flat-square)](https://github.com/topics/security-tools)
+[![network-scanner](https://img.shields.io/badge/network--scanner-b026ff?style=flat-square)](https://github.com/topics/network-scanner)
+[![dns-recon](https://img.shields.io/badge/dns--recon-00ff41?style=flat-square)](https://github.com/topics/dns-recon)
+[![infosec](https://img.shields.io/badge/infosec-00f3ff?style=flat-square)](https://github.com/topics/infosec)
+[![flask](https://img.shields.io/badge/flask-b026ff?style=flat-square)](https://github.com/topics/flask)
+[![security-research](https://img.shields.io/badge/security--research-00ff41?style=flat-square)](https://github.com/topics/security-research)
+[![footprinting](https://img.shields.io/badge/footprinting-00f3ff?style=flat-square)](https://github.com/topics/footprinting)
+[![automation](https://img.shields.io/badge/automation-b026ff?style=flat-square)](https://github.com/topics/automation)
+
+---
+
 ## 📜 License
 
 MIT License — see [LICENSE](LICENSE)
