@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.4] — 2026-05-30
+
+### Changed
+- Added `Homepage` and `Documentation` URLs pointing to owlscan.sh in PyPI project metadata
+
+---
+
 ## [1.2.3] — 2026-05-30
 
 ### Fixed

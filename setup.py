@@ -12,7 +12,7 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="owlscan",
-    version="1.2.3",
+    version="1.2.4",
     description="OwlScan :: Open-Source OSINT Intelligence Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -45,6 +45,8 @@ setup(
     ],
     keywords="osint intelligence reconnaissance security pentest",
     project_urls={
+        "Homepage": "https://owlscan.sh",
+        "Documentation": "https://owlscan.sh",
         "Bug Reports": "https://github.com/owlscan/owlscan/issues",
         "Source": "https://github.com/owlscan/owlscan",
     },
