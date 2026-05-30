@@ -11,8 +11,14 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+import platform
 from pathlib import Path
 from typing import Optional
+
+# On Windows, Python 3.10+ defaults to ProactorEventLoop which is incompatible
+# with aiodns used during scans. Force SelectorEventLoop on Windows.
+if platform.system() == "Windows":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 import click
 from rich.console import Console
@@ -79,7 +85,7 @@ def web(host, port, debug, open_browser):
     from owlscan.web.app import create_app, socketio
 
     app = create_app()
-    socketio.run(app, host=_host, port=_port, debug=_debug, use_reloader=False)
+    socketio.run(app, host=_host, port=_port, debug=_debug, use_reloader=False, allow_unsafe_werkzeug=True)
 
 
 @main.command()

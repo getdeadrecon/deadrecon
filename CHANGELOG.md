@@ -11,6 +11,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.2] — 2026-05-30
+
+### Fixed
+- `owlscan web` crash on all platforms — missing `allow_unsafe_werkzeug=True` in `socketio.run()` call in CLI entrypoint
+- Windows asyncio compatibility — force `WindowsSelectorEventLoopPolicy` on Python 3.10+ to prevent `aiodns` conflict with `ProactorEventLoop`
+
+---
+
 ## [1.2.1] — 2026-05-30
 
 ### Fixed
@@ -94,7 +102,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-[Unreleased]: https://github.com/owlscan/owlscan/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/owlscan/owlscan/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/owlscan/owlscan/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/owlscan/owlscan/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/owlscan/owlscan/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/owlscan/owlscan/compare/v1.0.0...v1.1.0
