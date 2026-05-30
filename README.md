@@ -57,7 +57,7 @@ OwlScan ships with two built-in UI themes, selectable via the **☀/🌙 toggle*
 > asciinema play docs/assets/demo.cast
 > ```
 
-[![asciicast](https://asciinema.org/a/QHiA1uk3kf9pKxY6.svg)](https://asciinema.org/a/QHiA1uk3kf9pKxY6)
+[![asciicast](https://asciinema.org/a/1163488.svg)](https://asciinema.org/a/1163488)
 
 ---
 
