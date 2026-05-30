@@ -28,19 +28,19 @@
 
 ### CLI — Ghost Run in action
 
-![CLI scan demo](docs/assets/demo.gif)
+![CLI scan demo](https://raw.githubusercontent.com/owlscan/owlscan/main/docs/assets/demo.gif)
 
 ### Web UI — Shadow Grid (Dashboard)
 
-![Dashboard](docs/assets/screenshot_dashboard.svg)
+![Dashboard](https://raw.githubusercontent.com/owlscan/owlscan/main/docs/assets/screenshot_dashboard.svg)
 
 ### Web UI — Launch Ghost Run
 
-![Launch Ghost Run](docs/assets/screenshot_launch.svg)
+![Launch Ghost Run](https://raw.githubusercontent.com/owlscan/owlscan/main/docs/assets/screenshot_launch.svg)
 
 ### Web UI — Scan Results
 
-![Scan results](docs/assets/screenshot_results.svg)
+![Scan results](https://raw.githubusercontent.com/owlscan/owlscan/main/docs/assets/screenshot_results.svg)
 
 ### Web UI — Theme Options
 
@@ -54,7 +54,7 @@ OwlScan ships with two built-in UI themes, selectable via the **☀/🌙 toggle*
 > **Asciinema recording:** Watch the full interactive demo on asciinema.org, or play it locally:
 > ```bash
 > pip install asciinema
-> asciinema play docs/assets/demo.cast
+> asciinema play https://raw.githubusercontent.com/owlscan/owlscan/main/docs/assets/demo.cast
 > ```
 
 [![asciicast](https://asciinema.org/a/1163488.svg)](https://asciinema.org/a/1163488)

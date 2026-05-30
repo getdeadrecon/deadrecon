@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.5] — 2026-05-30
+
+### Fixed
+- README demo images not rendering on PyPI — replaced relative `docs/assets/` paths with absolute `raw.githubusercontent.com` URLs
+
+---
+
 ## [1.2.4] — 2026-05-30
 
 ### Changed
