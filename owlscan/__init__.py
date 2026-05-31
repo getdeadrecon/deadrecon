@@ -7,11 +7,11 @@
  ╚═════╝  ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝
 
          >> OPEN-SOURCE OSINT INTELLIGENCE FRAMEWORK <<
-         >> PHANTOM SIGNAL  //  v1.2.5               <<
+         >> PHANTOM SIGNAL  //  v1.3.0               <<
          >> "See everything. Leave no trace."        <<
 """
 
-__version__ = "1.2.5"
+__version__ = "1.3.0"
 __codename__ = "PHANTOM SIGNAL"
 __author__ = "the-clipper"
 __credits__ = [

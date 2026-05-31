@@ -11,6 +11,22 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.0] — 2026-05-31
+
+### Added
+- **Rich CLI scan output** — `owlscan scan <target>` now renders module-specific panels instead of a flat table: DNS intelligence (records, subdomains, SPF/DMARC/DNSSEC, cert transparency, zone transfer), port scan table (PORT · SERVICE · PROTO · VERSION · BANNER · RISK), tech stack (detected technologies, security header grade A–F, TLS info), exposed resources (status codes, sensitive path flags), network intel (GeoIP, ASN, TOR/VPN indicators), and a red anomaly callout panel. All panel right-borders are pinned to terminal width.
+- **nmap integration in port scanner** — attempts `nmap -sV --version-intensity 7 -O --osscan-guess` for full version detection and OS fingerprinting; falls back silently to the pure-Python async TCP prober when nmap is absent or lacks privileges. Scan engine and OS guess shown in panel footer.
+- **Expanded port coverage** — `COMMON_PORTS` grown from 56 → 99 ports covering low privileged and high-numbered services (WinRM, Webmin, InfluxDB, Radmin, and more). `DANGEROUS_PORTS` extended with WinRM, REXEC, RLOGIN, FINGER, RPCBIND, Radmin, and Webmin.
+- **Web results type-aware rendering** — results page renders each result type as structured output matching CLI panels instead of raw JSON blobs. Covers open ports, OS detection, DNS records, email security, security posture grade, TLS, API endpoints, IP geolocation, and more.
+
+### Changed
+- **Quick probe** now runs all 5 CLI-default modules (`dns_recon`, `port_scan`, `tech_detect`, `api_hunt`, `intel`) — previously ran only 3.
+- **Full mission form** — `web_crawl` unchecked by default to match CLI behaviour.
+- **API route** empty-modules fallback uses the same 5-module default as CLI.
+- **`.gitignore`** — `scans/` → `/scans/` to avoid shadowing `owlscan/web/templates/scans/`.
+
+---
+
 ## [1.2.5] — 2026-05-30
 
 ### Fixed
