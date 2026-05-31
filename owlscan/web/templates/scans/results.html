@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+{% block title %}{{ scan.target }} — Results{% endblock %}
+
+{% block content %}
+{# ── Type-aware result body rendering ──────────────────────────────────── #}
+{% macro ri(result) %}
+{% set d = result.data %}
+<div class="ri-wrap">
+{%- if result.result_type == 'open_port' -%}
+  <div class="ri-row">
+    <span class="ri-port">{{ d.port }}</span>
+    <span class="ri-svc">{{ d.service }}</span>
+    {% if d.version %}<span class="ri-dim">{{ d.version[:60] }}</span>{% endif %}
+    {% if d.protocol %}<span class="result-tag">{{ d.protocol }}</span>{% endif %}
+    {% if d.scan_engine %}<span class="result-tag">{{ d.scan_engine }}</span>{% endif %}
+    {% if d.danger_warning %}
+      <span class="ri-danger">⚠ {{ d.danger_warning }}</span>
+    {% endif %}
+  </div>
+  {% if d.banner %}
+    <div class="ri-mono">{{ d.banner[:120] }}</div>
+  {% endif %}
+
+{%- elif result.result_type == 'port_scan_summary' -%}
+  {% set ra = d.risk_assessment or {} %}
+  <div class="ri-row ri-gap">
+    <div><span class="ri-label">OPEN</span> <span class="ri-cyan ri-bold">{{ d.open_count }}</span></div>
+    <div><span class="ri-label">SCANNED</span> <span>{{ d.total_scanned }}</span></div>
+    {% if d.scan_engine %}<div><span class="ri-label">ENGINE</span> <span class="result-tag">{{ d.scan_engine }}</span></div>{% endif %}
+    {% if ra.level %}
+      <div><span class="ri-label">RISK</span>
+        <span class="{% if ra.level in ['CRITICAL','HIGH'] %}ri-red ri-bold{% elif ra.level == 'MEDIUM' %}ri-orange{% else %}ri-green{% endif %}">{{ ra.level }}</span>
+      </div>
+    {% endif %}
+  </div>
+  {% if d.dangerous_ports %}
+    <div class="ri-danger" style="margin-top:0.4rem;">
+      ⚠ Dangerous:
+      {% for p in d.dangerous_ports[:8] %}{{ p.port }} — {{ p.warning[:35] }}{% if not loop.last %} · {% endif %}{% endfor %}
+    </div>
+  {% endif %}
+  {% if d.open_ports %}
+    <div class="ri-mono" style="margin-top:0.3rem;">{{ d.open_ports | join('  ') }}</div>
+  {% endif %}
+
+{%- elif result.result_type == 'os_detection' -%}
+  <div class="ri-row">
+    <span class="ri-cyan ri-bold">{{ d.os_name or '?' }}</span>
+    {% if d.os_family %}<span class="result-tag">{{ d.os_family }}</span>{% endif %}
+    {% if d.os_gen %}<span class="result-tag">{{ d.os_gen }}</span>{% endif %}
+    <span class="ri-dim">{{ d.accuracy }}% accuracy</span>
+  </div>
+  {% if d.cpe %}<div class="ri-mono">{{ d.cpe }}</div>{% endif %}
+
+{%- elif result.result_type == 'dns_records' -%}
+  {% for rtype, vals in (d.records or {}).items() %}
+    <div class="ri-row ri-dns-row">
+      <span class="ri-cyan ri-bold ri-rtype">{{ rtype }}</span>
+      <span class="ri-mono ri-dim">{{ vals[:4] | join(' · ') }}</span>
+    </div>
+  {% endfor %}
+
+{%- elif result.result_type == 'ip_address' -%}
+  <div class="ri-row">
+    <span class="ri-cyan ri-bold ri-mono" style="font-size:0.95rem;">{{ d.ip }}</span>
+    {% if d.domain %}<span class="ri-dim">← {{ d.domain }}</span>{% endif %}
+  </div>
+
+{%- elif result.result_type == 'subdomain_summary' -%}
+  <div class="ri-cyan ri-bold" style="margin-bottom:0.3rem;">{{ d.discovered_count }} subdomains discovered</div>
+  <div class="ri-mono ri-dim">{{ (d.subdomains or []) | join('  ') }}</div>
+
+{%- elif result.result_type == 'subdomain' -%}
+  <div class="ri-row">
+    <span class="ri-cyan ri-mono">{{ d.subdomain }}</span>
+    {% if d.ip %}<span class="ri-dim">→ {{ d.ip }}</span>{% endif %}
+    {% if d.cname %}<span class="ri-dim">CNAME {{ d.cname }}</span>{% endif %}
+  </div>
+
+{%- elif result.result_type == 'email_security' -%}
+  <div class="ri-row ri-gap" style="margin-bottom:0.4rem;">
+    <span class="{% if d.spf_configured %}ri-green{% else %}ri-red{% endif %} ri-bold">
+      {% if d.spf_configured %}✓{% else %}✗{% endif %} SPF
+    </span>
+    <span class="{% if d.dmarc_configured %}ri-green{% else %}ri-red{% endif %} ri-bold">
+      {% if d.dmarc_configured %}✓{% else %}✗{% endif %} DMARC
+    </span>
+    {% if d.spoofable %}
+      <span class="ri-red ri-bold">⚠ DOMAIN SPOOFABLE</span>
+    {% else %}
+      <span class="ri-green">✓ Not spoofable</span>
+    {% endif %}
+  </div>
+  {% if d.spf_record %}<div class="ri-mono ri-dim">{{ d.spf_record }}</div>{% endif %}
+  {% if d.dmarc_record %}<div class="ri-mono ri-dim">{{ d.dmarc_record }}</div>{% endif %}
+
+{%- elif result.result_type == 'dnssec' -%}
+  <div class="ri-row">
+    <span class="{% if d.dnssec_enabled %}ri-green{% else %}ri-orange{% endif %} ri-bold">
+      {% if d.dnssec_enabled %}✓ DNSSEC ENABLED{% else %}⚠ DNSSEC NOT CONFIGURED{% endif %}
+    </span>
+  </div>
+
+{%- elif result.result_type == 'zone_transfer' -%}
+  {% if d.vulnerable %}
+    <div class="ri-danger ri-bold" style="margin-bottom:0.35rem;">⚠ CRITICAL — Zone Transfer Allowed</div>
+    <div class="ri-dim">Nameserver: {{ d.nameserver }} — {{ d.record_count }} records leaked</div>
+  {% else %}
+    <div class="ri-green">✓ Zone transfer blocked</div>
+  {% endif %}
+
+{%- elif result.result_type == 'cert_transparency' -%}
+  <div class="ri-row ri-gap">
+    {% if d.common_name %}<span class="ri-cyan ri-mono">{{ d.common_name }}</span>{% endif %}
+    {% if d.issuer %}<span class="ri-dim">{{ d.issuer }}</span>{% endif %}
+    {% if d.not_after %}<span class="ri-dim">expires {{ d.not_after }}</span>{% endif %}
+  </div>
+
+{%- elif result.result_type == 'reverse_dns' -%}
+  <div class="ri-row ri-mono">
+    <span class="ri-cyan">{{ d.ip }}</span>
+    <span class="ri-dim"> → </span>
+    <span>{{ d.hostname }}</span>
+  </div>
+
+{%- elif result.result_type == 'technology' -%}
+  <div class="ri-row ri-gap">
+    {% if d.category %}<span class="result-tag">{{ d.category }}</span>{% endif %}
+    <span class="ri-cyan ri-bold">{{ d.name }}</span>
+    {% if d.version %}<span class="ri-dim">{{ d.version }}</span>{% endif %}
+    <span class="ri-dim">{{ "%.0f"|format((d.confidence or 0)*100) }}% confidence</span>
+  </div>
+  {% if d.evidence %}
+    <div class="ri-dim" style="margin-top:0.3rem;font-size:0.72rem;">Evidence: {{ d.evidence[:3] | join(' · ') }}</div>
+  {% endif %}
+
+{%- elif result.result_type == 'security_posture' -%}
+  <div class="ri-row ri-gap" style="margin-bottom:0.4rem;">
+    <span class="ri-bold" style="font-size:1.25rem; color:{% if d.rating=='A' %}var(--neon-green){% elif d.rating in ['B','C'] %}var(--neon-orange){% else %}var(--neon-red){% endif %};">
+      Grade {{ d.rating }}
+    </span>
+    <span class="ri-dim">{{ d.score }}/100</span>
+  </div>
+  {% if d.missing %}
+    <div class="ri-red" style="font-size:0.75rem;margin-bottom:0.25rem;">Missing: {{ d.missing | join(', ') }}</div>
+  {% endif %}
+  {% if d.present %}
+    <div class="ri-green" style="font-size:0.72rem;">Present: {{ d.present.keys() | list | join(', ') }}</div>
+  {% endif %}
+  {% if d.recommendation %}
+    <div class="ri-dim" style="font-size:0.72rem;margin-top:0.25rem;">{{ d.recommendation }}</div>
+  {% endif %}
+
+{%- elif result.result_type == 'tls_certificate' -%}
+  <div class="ri-row ri-gap">
+    <span class="ri-cyan ri-bold">{{ d.version }}</span>
+    {% if d.issuer and d.issuer.organizationName %}
+      <span class="ri-dim">issuer: {{ d.issuer.organizationName }}</span>
+    {% endif %}
+    {% if d.not_after %}<span class="ri-dim" style="font-size:0.72rem;">expires: {{ d.not_after }}</span>{% endif %}
+  </div>
+  {% if d.subject and d.subject.commonName %}
+    <div class="ri-mono ri-dim">CN={{ d.subject.commonName }}</div>
+  {% endif %}
+  {% if d.cipher %}
+    <div class="ri-dim" style="font-size:0.72rem;">cipher: {{ d.cipher[0] if d.cipher is iterable else d.cipher }}</div>
+  {% endif %}
+
+{%- elif result.result_type == 'http_headers' -%}
+  {% if d.server_fingerprint %}
+    <div class="ri-row" style="margin-bottom:0.25rem;">
+      <span class="ri-label">Server</span><span class="ri-cyan ri-mono">{{ d.server_fingerprint }}</span>
+    </div>
+  {% endif %}
+  {% if d.powered_by %}
+    <div class="ri-row" style="margin-bottom:0.25rem;">
+      <span class="ri-label">X-Powered-By</span><span class="ri-cyan ri-mono">{{ d.powered_by }}</span>
+    </div>
+  {% endif %}
+  {% if d.interesting_headers %}
+    <div class="ri-row ri-gap" style="margin-top:0.3rem;">
+      {% for h in d.interesting_headers.keys() %}<span class="result-tag">{{ h }}</span>{% endfor %}
+    </div>
+  {% endif %}
+
+{%- elif result.result_type in ('api_endpoint', 'web_resource') -%}
+  <div class="ri-row ri-gap">
+    <span class="ri-mono ri-bold" style="color:{% if d.status_code==200 %}var(--neon-green){% elif d.status_code in [301,302,307,308] %}var(--neon-orange){% else %}var(--neon-red){% endif %};">
+      {{ d.status_code }}
+    </span>
+    <span class="ri-mono">{{ (d.path or d.url or '?')[:60] }}</span>
+    {% if d.endpoint_type %}<span class="result-tag">{{ d.endpoint_type }}</span>{% endif %}
+    {% if d.is_sensitive %}<span class="ri-red ri-bold" style="font-size:0.72rem;">⚠ SENSITIVE</span>{% endif %}
+    {% if d.requires_auth %}<span class="ri-orange" style="font-size:0.72rem;">AUTH REQUIRED</span>{% endif %}
+  </div>
+  {% if d.data_preview %}
+    <div class="ri-mono ri-dim" style="margin-top:0.3rem;font-size:0.7rem;max-height:80px;overflow:auto;">{{ d.data_preview | tojson(indent=2) | truncate(300) }}</div>
+  {% endif %}
+
+{%- elif result.result_type == 'graphql_schema' -%}
+  <div class="ri-cyan ri-bold" style="margin-bottom:0.3rem;">GraphQL schema — {{ (d.types or []) | length }} types</div>
+  <div class="ri-mono ri-dim">{{ (d.types or [])[:20] | join('  ') }}</div>
+
+{%- elif result.result_type == 'ip_geolocation' -%}
+  <div class="ri-row ri-gap" style="margin-bottom:0.35rem;">
+    <span class="ri-cyan ri-bold">
+      {% if d.city %}{{ d.city }}{% if d.region or d.country %}, {% endif %}{% endif %}
+      {% if d.region %}{{ d.region }}{% if d.country %}, {% endif %}{% endif %}
+      {% if d.country %}{{ d.country }}{% endif %}
+    </span>
+    {% if d.org %}<span class="ri-dim">{{ d.org }}</span>{% endif %}
+  </div>
+  <div class="ri-row ri-gap">
+    {% if d.asn %}<span class="result-tag">{{ d.asn }}</span>{% endif %}
+    {% if d.timezone %}<span class="ri-dim" style="font-size:0.72rem;">{{ d.timezone }}</span>{% endif %}
+    {% if d.is_tor %}<span class="ri-red ri-bold">⚠ TOR EXIT NODE</span>{% endif %}
+    {% if d.is_vpn %}<span class="ri-orange">VPN</span>{% endif %}
+    {% if d.is_proxy %}<span class="ri-orange">PROXY</span>{% endif %}
+  </div>
+
+{%- else -%}
+  <pre class="result-data">{{ result.data | tojson(indent=2) }}</pre>
+{%- endif %}
+</div>
+{% endmacro %}
+<div class="page-header">
+  <div class="page-title-block">
+    <div class="breadcrumb">
+      <a href="{{ url_for('scans.list_scans') }}" class="bc-link">GHOST RUNS</a>
+      <span class="bc-sep">›</span>
+      <span class="bc-current">{{ scan.target[:50] }}</span>
+    </div>
+    <h1 class="page-title">
+      <span class="target-sigil">◈</span>
+      <span class="target-display">{{ scan.target }}</span>
+      <span class="status-badge status-{{ scan.status }} {% if scan.status == 'running' %}pulse-anim{% endif %}">
+        {{ scan.status.upper() }}
+      </span>
+    </h1>
+  </div>
+  <div class="header-actions">
+    {% if scan.status == 'running' %}
+      <form action="{{ url_for('scans.abort_scan', scan_id=scan.id) }}" method="POST" style="display:inline">
+        <button class="btn btn-danger">⬛ ABORT</button>
+      </form>
+    {% else %}
+      <a href="{{ url_for('export.export_options', scan_id=scan.id) }}" class="btn btn-secondary">
+        ↓ EXPORT INTEL
+      </a>
+    {% endif %}
+    <form action="{{ url_for('scans.delete_scan', scan_id=scan.id) }}" method="POST" style="display:inline"
+          onsubmit="return confirm('Purge this ghost run from the grid?')">
+      <button class="btn btn-ghost">✕ PURGE</button>
+    </form>
+  </div>
+</div>
+
+<!-- Scan meta strip -->
+<div class="scan-meta-strip">
+  <div class="meta-item">
+    <span class="meta-label">TYPE</span>
+    <span class="meta-val">{{ scan.scan_type or '—' }}</span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">PROFILE</span>
+    <span class="meta-val">{{ scan.profile or '—' }}</span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">RESULTS</span>
+    <span class="meta-val neon-cyan">{{ scan.result_count }}</span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">DURATION</span>
+    <span class="meta-val">{% if scan.duration_seconds %}{{ "%.1f"|format(scan.duration_seconds) }}s{% else %}—{% endif %}</span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">SHADOW SCORE</span>
+    <div class="shadow-score-wrap">
+      <div class="shadow-score-bar">
+        <div class="shadow-score-fill" style="width: {{ scan.shadow_score or 0 }}%"></div>
+      </div>
+      <span class="shadow-score-num {% if (scan.shadow_score or 0) > 70 %}neon-red{% elif (scan.shadow_score or 0) > 40 %}neon-orange{% else %}neon-green{% endif %}">
+        {{ "%.0f"|format(scan.shadow_score or 0) }}/100
+      </span>
+    </div>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">THREAT LEVEL</span>
+    <span class="threat-badge threat-{{ scan.threat_level or 'unknown' }}">
+      {{ (scan.threat_level or 'unknown').upper() }}
+    </span>
+  </div>
+</div>
+
+<!-- Live terminal (visible when running) -->
+{% if is_live %}
+<div class="live-section">
+  <div class="live-header">
+    <span class="live-indicator pulse-anim">◉</span>
+    <span>LIVE SIGNAL FEED</span>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width: {{ scan.progress }}%"></div>
+      </div>
+      <span id="progress-pct">{{ scan.progress }}%</span>
+    </div>
+  </div>
+  <div id="live-terminal" class="terminal-output terminal-large">
+    <div class="term-line term-system">
+      <span class="term-prompt">[OWLSCAN]</span>
+      <span class="term-msg">Ghost run active. Receiving signal...</span>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Results tabs -->
+<div class="results-section">
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="all">ALL ({{ results|length }})</button>
+    {% for module, items in grouped_results.items() %}
+    <button class="tab-btn" data-tab="{{ module }}">
+      {{ module.upper().replace('_', ' ') }} ({{ items|length }})
+    </button>
+    {% endfor %}
+    <button class="tab-btn" data-tab="anomalies">
+      ⚠ ANOMALIES ({{ results|selectattr('is_anomaly')|list|length }})
+    </button>
+  </div>
+
+  <!-- All results -->
+  <div class="tab-pane active" id="tab-all">
+    <div class="results-list" id="results-all">
+      {% for result in results %}
+      <div class="result-card {% if result.is_anomaly %}result-anomaly{% endif %}"
+           data-module="{{ result.module }}"
+           data-type="{{ result.result_type }}">
+        <div class="result-header" onclick="toggleResult(this)">
+          <div class="result-meta">
+            <span class="result-module">[{{ result.module }}]</span>
+            <span class="result-type">{{ result.result_type }}</span>
+            <span class="result-source">⚡ {{ result.source or '—' }}</span>
+            {% if result.tags %}
+              {% for tag in result.tags[:4] %}
+                <span class="result-tag">{{ tag }}</span>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="result-stats">
+            <span class="conf-badge">CONF {{ "%.0f"|format((result.confidence or 0) * 100) }}%</span>
+            {% if result.is_anomaly %}
+              <span class="anomaly-badge-sm">⚠ ANOMALY</span>
+            {% endif %}
+            <span class="result-time">{{ result.timestamp[:16] if result.timestamp else '' }}</span>
+            <span class="expand-icon">▼</span>
+          </div>
+        </div>
+        <div class="result-body" style="display:none">
+          {{ ri(result) }}
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-owl">🦉</div>
+        <p class="text-dim">{% if is_live %}Mission in progress — signals incoming...{% else %}No results captured.{% endif %}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Module-specific tabs -->
+  {% for module, items in grouped_results.items() %}
+  <div class="tab-pane" id="tab-{{ module }}">
+    <div class="results-list">
+      {% for result in items %}
+      <div class="result-card {% if result.is_anomaly %}result-anomaly{% endif %}">
+        <div class="result-header" onclick="toggleResult(this)">
+          <div class="result-meta">
+            <span class="result-type">{{ result.result_type }}</span>
+            <span class="result-source">⚡ {{ result.source or '—' }}</span>
+            {% for tag in (result.tags or [])[:4] %}
+              <span class="result-tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+          <div class="result-stats">
+            <span class="conf-badge">CONF {{ "%.0f"|format((result.confidence or 0) * 100) }}%</span>
+            {% if result.is_anomaly %}<span class="anomaly-badge-sm">⚠</span>{% endif %}
+            <span class="expand-icon">▼</span>
+          </div>
+        </div>
+        <div class="result-body" style="display:none">
+          {{ ri(result) }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- Anomalies tab -->
+  <div class="tab-pane" id="tab-anomalies">
+    <div class="results-list">
+      {% for result in results if result.is_anomaly %}
+      <div class="result-card result-anomaly">
+        <div class="result-header" onclick="toggleResult(this)">
+          <div class="result-meta">
+            <span class="result-module">[{{ result.module }}]</span>
+            <span class="result-type">{{ result.result_type }}</span>
+            <span class="anomaly-badge-sm">⚠ ANOMALY</span>
+          </div>
+          <div class="result-stats">
+            <span class="conf-badge">CONF {{ "%.0f"|format((result.confidence or 0) * 100) }}%</span>
+            <span class="expand-icon">▼</span>
+          </div>
+        </div>
+        <div class="result-body" style="display:none">
+          {{ ri(result) }}
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <span class="neon-green">✓</span>
+        <p>No anomalies detected in this ghost run.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/terminal.js') }}"></script>
+<script>
+const SCAN_ID = "{{ scan.id }}";
+const IS_LIVE = {{ 'true' if is_live else 'false' }};
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+    const tab = this.dataset.tab;
+    document.getElementById(`tab-${tab}`).classList.add('active');
+  });
+});
+
+// Expand/collapse result cards
+function toggleResult(header) {
+  const body = header.nextElementSibling;
+  const icon = header.querySelector('.expand-icon');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  icon.textContent = isOpen ? '▼' : '▲';
+  header.closest('.result-card').classList.toggle('expanded', !isOpen);
+}
+
+// Live scan WebSocket connection
+if (IS_LIVE) {
+  initLiveFeed(SCAN_ID);
+}
+</script>
+{% endblock %}

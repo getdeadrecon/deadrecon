@@ -966,6 +966,24 @@ a:hover { color: var(--neon-green); }
   line-height: 1.5;
 }
 
+/* ── Result body — type-aware rendering utilities ───────────── */
+.ri-wrap    { padding: 0.65rem 1rem; font-size: 0.8rem; line-height: 1.6; }
+.ri-row     { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.ri-gap     { gap: 1rem; }
+.ri-dns-row { margin-bottom: 0.25rem; }
+.ri-rtype   { width: 3rem; flex-shrink: 0; }
+.ri-mono    { font-family: monospace; font-size: 0.75rem; }
+.ri-dim     { color: var(--text-dim); }
+.ri-label   { color: var(--text-dim); margin-right: 0.4rem; font-size: 0.72rem; }
+.ri-bold    { font-weight: 600; }
+.ri-port    { color: var(--neon-cyan); font-size: 1.05rem; font-weight: 700; font-family: monospace; }
+.ri-svc     { color: var(--text-bright); font-weight: 600; }
+.ri-cyan    { color: var(--neon-cyan); }
+.ri-green   { color: var(--neon-green); }
+.ri-red     { color: var(--neon-red); }
+.ri-orange  { color: var(--neon-orange); }
+.ri-danger  { color: var(--neon-red); font-size: 0.75rem; }
+
 /* ── Live Section ───────────────────────────────────────────── */
 .live-section {
   background: var(--card-bg);

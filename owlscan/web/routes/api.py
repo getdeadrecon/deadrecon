@@ -47,7 +47,7 @@ def create_scan():
             target=target,
             scan_type=scan_type,
             profile=data.get("profile", "standard"),
-            modules_enabled=data.get("modules", []),
+            modules_enabled=data.get("modules") or ["dns_recon", "port_scan", "tech_detect", "api_hunt", "intel"],
             options=data.get("options", {}),
             tags=data.get("tags", []),
         )

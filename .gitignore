@@ -83,6 +83,6 @@ tmp/
 temp/
 
 # NightOwl scan data / exports
-scans/
-reports/
-screenshots/
+/scans/
+/reports/
+/screenshots/
