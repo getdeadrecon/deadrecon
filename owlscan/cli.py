@@ -33,6 +33,314 @@ from owlscan import __version__, BANNER, DISCLAIMER
 console = Console(highlight=True)
 
 
+# ── Scan result display helpers ──────────────────────────────────────────────
+
+def _pw(con) -> int:
+    """Panel width — full terminal width, minimum 80."""
+    return max(con.width or 80, 80)
+
+
+def _dns_panel(con, results):
+    lines = []
+
+    ips = [r["data"]["ip"] for r in results if r["result_type"] == "ip_address"]
+    if ips:
+        lines.append(f"[bold cyan]IPs:[/bold cyan] {' · '.join(ips[:10])}")
+
+    for r in results:
+        if r["result_type"] == "dns_records":
+            recs = r["data"].get("records", {})
+            labels = {"MX": "Mail (MX)", "NS": "Nameservers", "TXT": "TXT Records"}
+            for rtype, label in labels.items():
+                vals = recs.get(rtype, [])
+                if vals:
+                    lines.append(f"[bold cyan]{label}:[/bold cyan] {' · '.join(v[:60] for v in vals[:4])}")
+            break
+
+    for r in results:
+        if r["result_type"] == "subdomain_summary":
+            count = r["data"].get("discovered_count", 0)
+            subs = r["data"].get("subdomains", [])
+            suffix = " …" if len(subs) > 8 else ""
+            lines.append(f"[bold cyan]Subdomains:[/bold cyan] {count} discovered — {', '.join(subs[:8])}{suffix}")
+            break
+
+    ct_hits = [r for r in results if r["result_type"] == "cert_transparency"]
+    if ct_hits:
+        lines.append(f"[bold cyan]Cert Transparency:[/bold cyan] {len(ct_hits)} certificate record(s) found")
+
+    for r in results:
+        if r["result_type"] == "email_security":
+            d = r["data"]
+            spf   = "[green]✓ SPF[/green]"   if d.get("spf_configured")   else "[red]✗ SPF[/red]"
+            dmarc = "[green]✓ DMARC[/green]" if d.get("dmarc_configured") else "[red]✗ DMARC[/red]"
+            spoof = "  [bold red]⚠ DOMAIN SPOOFABLE[/bold red]" if d.get("spoofable") else ""
+            lines.append(f"[bold cyan]Email Security:[/bold cyan] {spf}  {dmarc}{spoof}")
+            break
+
+    for r in results:
+        if r["result_type"] == "dnssec":
+            enabled = r["data"].get("dnssec_enabled", False)
+            lines.append(f"[bold cyan]DNSSEC:[/bold cyan] {'[green]enabled[/green]' if enabled else '[yellow]not enabled[/yellow]'}")
+            break
+
+    zt = [r for r in results if r["result_type"] == "zone_transfer" and r["data"].get("vulnerable")]
+    if zt:
+        ns = zt[0]["data"].get("nameserver", "?")
+        lines.append(f"[bold red]⚠ ZONE TRANSFER VULNERABLE:[/bold red] {ns} leaks full zone")
+
+    if lines:
+        con.print(Panel("\n".join(lines), title="[bold green]◈ DNS INTELLIGENCE[/bold green]",
+                        border_style="green", padding=(0, 2), width=_pw(con)))
+
+
+def _port_panel(con, results):
+    open_ports = [r for r in results if r["result_type"] == "open_port"]
+    summary_r  = next((r for r in results if r["result_type"] == "port_scan_summary"), None)
+    os_r       = next((r for r in results if r["result_type"] == "os_detection"),      None)
+
+    if not open_ports:
+        return
+
+    t = Table(show_header=True, header_style="bold green", box=None,
+              pad_edge=False, padding=(0, 1), expand=True)
+    t.add_column("PORT",    style="cyan",       width=7,  no_wrap=True)
+    t.add_column("SERVICE", style="white",      width=14, no_wrap=True)
+    t.add_column("PROTO",   style="dim",        width=5,  no_wrap=True)
+    t.add_column("VERSION", style="dim white",  width=34, no_wrap=True)
+    t.add_column("BANNER",  style="dim",        ratio=1,  no_wrap=True)
+    t.add_column("RISK",                        width=8,  no_wrap=True)
+
+    for r in sorted(open_ports, key=lambda x: x["data"].get("port", 0)):
+        d      = r["data"]
+        danger = d.get("danger_warning")
+        risk   = "[bold red]HIGH[/bold red]" if danger else "[green]LOW[/green]"
+        banner = (d.get("banner") or "")[:60].replace("\n", " ").replace("\r", "")
+        ver    = (d.get("version") or "")[:34]
+        proto  = d.get("protocol", "tcp")
+        t.add_row(
+            str(d.get("port", "")),
+            d.get("service", ""),
+            proto,
+            ver or "—",
+            banner or "—",
+            risk,
+        )
+
+    footer = f"[bold]{len(open_ports)}[/bold] open port(s)"
+    engine = "python async"
+    if summary_r:
+        dp     = summary_r["data"].get("dangerous_ports", [])
+        ra     = summary_r["data"].get("risk_assessment", {})
+        engine = summary_r["data"].get("scan_engine", "python")
+        if dp:
+            ports_str = ", ".join(str(p["port"]) for p in dp[:5])
+            footer += f" · [red]{len(dp)} dangerous: {ports_str}[/red]"
+        lvl = ra.get("level", "")
+        if lvl:
+            lvl_color = "red" if lvl in ("CRITICAL", "HIGH") else "yellow"
+            footer += f" · Risk: [bold {lvl_color}]{lvl}[/bold {lvl_color}]"
+
+    engine_tag = "[dim]nmap -sV -O[/dim]" if engine == "nmap" else "[dim]async TCP[/dim]"
+    if os_r:
+        d       = os_r["data"]
+        os_name = d.get("os_name", "Unknown")
+        acc     = d.get("accuracy", 0)
+        fam     = d.get("os_family", "")
+        footer += f" · OS: [cyan]{os_name}[/cyan]" + (f" ({fam})" if fam else "") + f" [{acc}%]"
+
+    con.print(Panel(t, title=f"[bold green]◈ PORT SCAN[/bold green]  {engine_tag}",
+                    border_style="green", padding=(0, 2), width=_pw(con)))
+    con.print(f"  {footer}\n")
+
+
+def _tech_panel(con, results):
+    techs     = [r for r in results if r["result_type"] == "technology"]
+    posture_r = next((r for r in results if r["result_type"] == "security_posture"), None)
+    tls_r     = next((r for r in results if r["result_type"] == "tls_certificate"),  None)
+    headers_r = next((r for r in results if r["result_type"] == "http_headers"),     None)
+
+    lines = []
+
+    if techs:
+        parts = []
+        for tech in sorted(techs, key=lambda x: x["data"].get("confidence", 0), reverse=True)[:12]:
+            d   = tech["data"]
+            cat = d.get("category", "")
+            ver = d.get("version")
+            entry = f"[cyan]{d['name']}[/cyan]" + (f" {ver}" if ver else "")
+            if cat:
+                entry = f"[dim][{cat}][/dim] {entry}"
+            parts.append(entry)
+        lines.append("[bold cyan]Stack:[/bold cyan] " + " · ".join(parts))
+
+    if headers_r:
+        d     = headers_r["data"]
+        parts = []
+        if d.get("server_fingerprint"):
+            parts.append(f"Server: [cyan]{d['server_fingerprint']}[/cyan]")
+        if d.get("powered_by"):
+            parts.append(f"X-Powered-By: [cyan]{d['powered_by']}[/cyan]")
+        if parts:
+            lines.append("[bold cyan]Fingerprint:[/bold cyan] " + " · ".join(parts))
+
+    if posture_r:
+        d      = posture_r["data"]
+        rating = d.get("rating", "?")
+        score  = d.get("score", 0)
+        color  = "green" if rating == "A" else "yellow" if rating in ("B", "C") else "red"
+        missing = ", ".join(d.get("missing", [])[:4])
+        grade_line = (f"[bold cyan]Security Headers:[/bold cyan] "
+                      f"[{color}]Grade {rating} ({score}/100)[/{color}]")
+        if missing:
+            grade_line += f" — missing: [dim]{missing}[/dim]"
+        lines.append(grade_line)
+
+    if tls_r:
+        d      = tls_r["data"]
+        issuer = d.get("issuer", {}).get("organizationName", "?")
+        lines.append(f"[bold cyan]TLS:[/bold cyan] {d.get('version','?')} · "
+                     f"issuer: [cyan]{issuer}[/cyan] · "
+                     f"expires: [dim]{d.get('not_after','?')}[/dim]")
+
+    if lines:
+        con.print(Panel("\n".join(lines), title="[bold green]◈ TECH STACK[/bold green]",
+                        border_style="green", padding=(0, 2), width=_pw(con)))
+
+
+def _api_panel(con, results):
+    endpoints = [r for r in results if r["result_type"] in ("api_endpoint", "web_resource")]
+    if not endpoints:
+        return
+
+    sensitive_exposed = [
+        r for r in endpoints
+        if r["data"].get("is_sensitive") and r["data"].get("is_accessible")
+    ]
+
+    t = Table(show_header=True, header_style="bold green", box=None,
+              pad_edge=False, padding=(0, 1))
+    t.add_column("STATUS", width=7,  no_wrap=True)
+    t.add_column("TYPE",   width=18, no_wrap=True)
+    t.add_column("PATH",   style="cyan", max_width=50)
+    t.add_column("AUTH",   width=7,  no_wrap=True)
+    t.add_column("!",      width=3,  no_wrap=True)
+
+    to_show = sorted(
+        endpoints,
+        key=lambda r: (not r["data"].get("is_sensitive"), r["data"].get("status_code", 0)),
+    )[:25]
+
+    for r in to_show:
+        d      = r["data"]
+        status = d.get("status_code", "?")
+        if status == 200:
+            sc = f"[green]{status}[/green]"
+        elif status in (301, 302, 307, 308):
+            sc = f"[yellow]{status}[/yellow]"
+        else:
+            sc = f"[dim]{status}[/dim]"
+        path  = (d.get("path") or d.get("url") or "?")[:50]
+        etype = (d.get("endpoint_type") or "")[:18]
+        auth  = "[yellow]auth[/yellow]" if d.get("requires_auth") else ""
+        flag  = "[bold red]![/bold red]" if d.get("is_sensitive") else ""
+        t.add_row(sc, etype, path, auth, flag)
+
+    footer = f"[bold]{len(endpoints)}[/bold] resources probed"
+    if sensitive_exposed:
+        footer += f" · [bold red]{len(sensitive_exposed)} sensitive & accessible[/bold red]"
+
+    con.print(Panel(t, title="[bold green]◈ EXPOSED RESOURCES[/bold green]",
+                    border_style="green", padding=(0, 2), width=_pw(con)))
+    con.print(f"  {footer}\n")
+
+
+def _intel_panel(con, results):
+    lines = []
+
+    for r in results:
+        if r["result_type"] == "ip_geolocation":
+            d         = r["data"]
+            loc_parts = [p for p in [d.get("city"), d.get("region"), d.get("country")] if p]
+            loc       = ", ".join(loc_parts)
+            org       = d.get("org", "")
+            flags     = []
+            if d.get("is_tor"):   flags.append("[bold red]TOR EXIT NODE[/bold red]")
+            if d.get("is_vpn"):   flags.append("[yellow]VPN[/yellow]")
+            if d.get("is_proxy"): flags.append("[yellow]PROXY[/yellow]")
+            flag_str  = ("  " + " ".join(flags)) if flags else ""
+            lines.append(f"[bold cyan]GeoIP:[/bold cyan] {loc} · [cyan]{org}[/cyan]{flag_str}")
+            if d.get("asn"):
+                lines.append(f"[bold cyan]ASN:[/bold cyan] {d['asn']}")
+            if d.get("timezone"):
+                lines.append(f"[bold cyan]Timezone:[/bold cyan] {d['timezone']}")
+
+    if lines:
+        con.print(Panel("\n".join(lines), title="[bold green]◈ NETWORK INTEL[/bold green]",
+                        border_style="green", padding=(0, 2), width=_pw(con)))
+
+
+def _anomaly_panel(con, anomalies):
+    lines = []
+    for r in anomalies[:12]:
+        module = r.get("module", "?")
+        rtype  = r.get("result_type", "?")
+        d      = r.get("data", {})
+        detail = (
+            d.get("danger_warning")
+            or d.get("nameserver")
+            or d.get("path")
+            or d.get("recommendation")
+            or d.get("summary")
+            or ""
+        )
+        line = f"[red]▸[/red] [dim][{module}][/dim] [bold white]{rtype}[/bold white]"
+        if detail:
+            line += f" — [yellow]{str(detail)[:80]}[/yellow]"
+        lines.append(line)
+
+    con.print(Panel("\n".join(lines), title="[bold red]⚠  ANOMALIES DETECTED[/bold red]",
+                    border_style="red", padding=(0, 2), width=_pw(con)))
+
+
+def _summary_footer(con, scan_dict, results_list):
+    score  = scan_dict.get("shadow_score", 0)
+    threat = (scan_dict.get("threat_level") or "unknown").upper()
+    s_color = "red"    if score  >= 70                          else "yellow" if score  >= 35 else "green"
+    t_color = "red"    if threat in ("CRITICAL", "MALICIOUS")   else "yellow" if threat == "SUSPICIOUS" else "green"
+
+    con.print()
+    con.rule("[bold green]◈ SHADOW ANALYSIS[/bold green]", style="green")
+    con.print(f"\n  Shadow Score   [bold][{s_color}]{score:.0f} / 100[/{s_color}][/bold]")
+    con.print(f"  Threat Level   [bold][{t_color}]{threat}[/{t_color}][/bold]")
+    con.print(f"  Data Points    {len(results_list)} results harvested")
+    con.print()
+    con.print("[dim]  ◦ Extend coverage with API keys: owlscan config --list-apis[/dim]")
+    con.print("[dim]    shodan · virustotal · abuseipdb · greynoise · censys · securitytrails[/dim]\n")
+
+
+def _render_scan_results(con, results_list, scan_dict, target):
+    from collections import defaultdict
+    by_module = defaultdict(list)
+    for r in results_list:
+        by_module[r["module"]].append(r)
+
+    anomalies = [r for r in results_list if r.get("is_anomaly")]
+
+    con.print()
+    con.rule(f"[bold green]◈ GHOST RUN COMPLETE — {target}[/bold green]", style="green")
+    con.print()
+
+    if "dns_recon"  in by_module: _dns_panel(con,   by_module["dns_recon"])
+    if "port_scan"  in by_module: _port_panel(con,  by_module["port_scan"])
+    if "tech_detect" in by_module: _tech_panel(con, by_module["tech_detect"])
+    if "api_hunt"   in by_module: _api_panel(con,   by_module["api_hunt"])
+    if "intel"      in by_module: _intel_panel(con, by_module["intel"])
+    if anomalies:                  _anomaly_panel(con, anomalies)
+
+    _summary_footer(con, scan_dict, results_list)
+
+
 def print_banner():
     console.print(BANNER, style="bold green")
 
@@ -166,25 +474,7 @@ def scan(target, scan_type, modules, profile, output, fmt, compress, encrypt, pa
         scan_dict = scan_obj.to_dict()
         results_list = [r.to_dict() for r in results]
 
-    # Display summary
-    table = Table(title="[bold green]GHOST RUN RESULTS[/bold green]", show_header=True, header_style="bold green")
-    table.add_column("MODULE", style="green")
-    table.add_column("TYPE", style="cyan")
-    table.add_column("SOURCE")
-    table.add_column("CONF", justify="right")
-
-    for r in results_list[:40]:
-        table.add_row(
-            r.get("module", "—"),
-            r.get("result_type", "—"),
-            r.get("source", "—"),
-            f"{(r.get('confidence', 0) * 100):.0f}%",
-        )
-    console.print(table)
-
-    console.print(f"\n[bold]Shadow Score:[/bold] [{'red' if scan_dict.get('shadow_score', 0) > 70 else 'green'}]{scan_dict.get('shadow_score', 0):.0f}/100[/]")
-    console.print(f"[bold]Threat Level:[/bold] {scan_dict.get('threat_level', 'unknown').upper()}")
-    console.print(f"[bold]Results:[/bold] {len(results_list)}")
+    _render_scan_results(console, results_list, scan_dict, target)
 
     if output:
         from owlscan.exporters.manager import ExportManager
