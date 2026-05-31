@@ -24,6 +24,22 @@
 
 ---
 
+## ⚡ What's New in v1.3.0
+
+### Rich CLI output panels
+`owlscan scan <target>` now renders module-specific intelligence panels instead of a raw table — DNS records, subdomains, SPF/DMARC/DNSSEC status, an aligned port table with version/banner/risk, tech stack with security header grade A–F, exposed API resources, GeoIP/ASN intel, and a red anomaly callout. All panel right-borders are pinned to terminal width.
+
+### nmap integration
+The port scanner now chains **nmap** (`-sV --version-intensity 7 -O --osscan-guess`) for full service-version detection and OS fingerprinting, with a transparent pure-Python async TCP fallback when nmap is absent or running without raw-socket privileges (macOS / Windows). The scan engine used and OS guess are shown inline in the port panel footer.
+
+### Expanded port coverage
+`COMMON_PORTS` expanded from 56 → 99 ports covering low privileged services and high-numbered application ports — WinRM (5985/5986), Webmin (10000), InfluxDB (8086), Radmin (4899), and more. `DANGEROUS_PORTS` extended accordingly.
+
+### Web UI parity with CLI
+The scan results page now renders each result type as structured output — port cards, DNS record tables, SPF/DMARC status, security header grade, TLS issuer/expiry, API endpoint status codes, IP geolocation with TOR/VPN flags — matching the CLI display. Quick Probe now runs all 5 default modules (`dns_recon`, `port_scan`, `tech_detect`, `api_hunt`, `intel`).
+
+---
+
 ## 🎬 Demo
 
 ### CLI — Ghost Run in action
@@ -79,7 +95,8 @@ OwlScan is a **community-powered, open-source OSINT intelligence framework** bui
 - **Email, phone, link, and comment harvesting**
 
 ### 🌐 Network Intelligence
-- **Async port scanner** — 65,535 ports, banner grabbing, service detection
+- **nmap-powered port scanner** — full service-version detection and OS fingerprinting via nmap (`-sV -O`); pure-Python async TCP fallback when nmap unavailable — no config required
+- **Expanded port coverage** — 99 common ports by default, 1,000+ port profile, or full 65,535; covers WinRM, Webmin, InfluxDB, Docker API, Kubernetes, and more
 - **DNS recon** — A/AAAA/MX/NS/TXT/SOA/CAA, zone transfer attempts, subdomain brute-force
 - **Certificate transparency** via crt.sh — uncover subdomains via SSL history
 - **SPF/DMARC analysis** — identify email spoofing vulnerabilities

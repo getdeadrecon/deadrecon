@@ -99,7 +99,7 @@ The **LIVE FEED** terminal on the dashboard streams real-time events from any ac
 
 ### Quick Probe (dashboard)
 
-The fastest way to start — enter a target in the **QUICK PROBE** box on the dashboard. This runs DNS recon, top-port scan, and tech detection with default settings. Results appear in Ghost Runs within seconds.
+The fastest way to start — enter a target in the **QUICK PROBE** box on the dashboard. This runs all five default modules (`dns_recon`, `port_scan`, `tech_detect`, `api_hunt`, `intel`) with the quick profile. Results appear in Ghost Runs within seconds.
 
 ### Full Ghost Run (New Mission page)
 
@@ -161,15 +161,16 @@ You are redirected to the live results page where findings stream in as they're 
 - Port Profile: **Extended (1000 ports)** or **Full (65535)** for thorough coverage
 
 **What OwlScan will find:**
-- All open TCP ports with service banners (nginx version, SSH version, etc.)
+- All open TCP ports with service/version from nmap (`-sV`) and banner grabbing — falls back to pure-Python async prober when nmap unavailable
+- **OS fingerprint** — detected automatically via nmap `-O` and shown in the port panel footer (e.g. "Linux 5.15 [95%]")
 - Reverse DNS and PTR records
-- ASN, ISP, geolocation data
+- ASN, ISP, geolocation data (IPInfo — no key required)
 - CVE matches via Shodan (if API key set)
 - AbuseIPDB confidence score and report history
 - VirusTotal passive DNS, malware history
 - GreyNoise classification (scanner, benign, unknown)
 
-**Tip:** Enable **Deep Dive** for targets with non-standard port ranges, or when you suspect services on high ports.
+**Tip:** nmap is used automatically when present. On Kali/Parrot it's pre-installed. On macOS install via `brew install nmap`; on Windows via the nmap.org installer. Without nmap the async TCP scanner still runs — you just won't get version strings or OS detection.
 
 ---
 
@@ -312,8 +313,8 @@ Or add them to a `.env` file in the project root (Docker Compose picks this up a
 After a scan completes, the results page shows:
 
 - **Meta strip** — target, profile, duration, result count, Shadow Score, threat level
-- **Captured Signals table** — all findings, sortable by module, type, and severity
-- **Module breakdown** — collapsible sections per recon module
+- **Tabs** — ALL · per-module tabs · ANOMALIES (auto-filtered)
+- **Type-aware result cards** — each result type renders its key data as structured output rather than raw JSON: open ports show port/service/version/banner/risk in one row; DNS records display as a labelled table; email security shows SPF/DMARC/spoofable status; security posture shows grade A–F; IP geolocation shows city/ASN/TOR/VPN flags; and so on. Click any card to expand it.
 - **Export panel** — download in any supported format
 
 ### Severity levels
@@ -364,13 +365,16 @@ All formats support **AES-256-GCM encryption**. Check the **Encrypt** checkbox b
 # Activate virtual environment first
 source .venv/bin/activate
 
-# Quick scan
+# Quick scan — renders DNS, port, tech, API, intel panels in terminal
 owlscan scan example.com --profile quick
 
-# Standard recon with HTML report
+# IP recon — nmap version+OS detection, 99-port default, GeoIP
+owlscan scan 192.168.1.1 --type ip_recon
+
+# Full spectrum with HTML report
 owlscan scan example.com --profile standard --format html --output ./reports
 
-# Full spectrum scan
+# Deep dive — all ports, all modules
 owlscan scan 192.168.1.1 --type ip_recon --profile deep --format json
 
 # People intelligence
@@ -382,6 +386,8 @@ owlscan apis
 # Check version
 owlscan --version
 ```
+
+**CLI output (v1.3.0+):** After the scan completes, results are rendered as named Rich panels — one per active module — rather than a flat table. Each panel extracts the key fields from result data: the port panel shows PORT/SERVICE/PROTO/VERSION/BANNER/RISK with dangerous ports highlighted; the DNS panel shows resolved IPs, MX/NS/TXT records, subdomains, and SPF/DMARC status; the tech panel shows detected stack, security header grade, and TLS info; anomalies appear in a separate red-bordered callout. The footer shows Shadow Score, Threat Level, and a hint to configure API keys for deeper coverage.
 
 ### Common flags
 
