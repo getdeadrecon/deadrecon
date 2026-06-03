@@ -1,4 +1,4 @@
-/* OwlScan — GitHub Pages Landing Site
+/* PhantomSignal — GitHub Pages Landing Site
    Cyberpunk dark theme, self-contained */
 
 :root {
@@ -85,7 +85,7 @@ a:hover { color: var(--green); }
   color: #fff;
 }
 .nav-brand:hover { color: #fff; }
-.nav-owl { height: 32px; width: auto; filter: drop-shadow(0 0 6px rgba(0,255,65,0.5)); }
+
 .nav-links { display: flex; gap: 0.25rem; align-items: center; }
 .nav-link {
   display: flex; align-items: center; gap: 0.35rem;
@@ -124,14 +124,18 @@ a:hover { color: var(--green); }
   max-width: 1100px;
   width: 100%;
 }
-.hero-owl-wrap { flex-shrink: 0; }
-.hero-owl {
-  width: 220px; height: auto;
-  filter: drop-shadow(0 0 16px rgba(0,255,65,0.5))
-          drop-shadow(0 0 40px rgba(0,255,65,0.2));
-  animation: owl-float 6s ease-in-out infinite;
+.hero-ascii-wrap { flex-shrink: 0; }
+.hero-ascii {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  line-height: 1.35;
+  color: var(--green);
+  text-shadow: var(--glow-g);
+  white-space: pre;
+  margin: 0;
+  opacity: 0.9;
 }
-@keyframes owl-float {
+@keyframes _unused_float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-10px); }
 }
@@ -476,10 +480,15 @@ a:hover { color: var(--green); }
 /* ── CTA ─────────────────────────────────────────────────────── */
 .section-cta { background: var(--bg3) !important; border-bottom: 1px solid var(--border); }
 .cta-inner { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
-.cta-owl {
-  width: 120px; height: auto;
-  filter: drop-shadow(0 0 12px rgba(0,255,65,0.4));
-  margin-bottom: 0.5rem;
+.cta-ascii {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  line-height: 1.35;
+  color: var(--green);
+  text-shadow: var(--glow-g);
+  white-space: pre;
+  margin: 0 0 0.5rem;
+  opacity: 0.7;
 }
 
 /* ── Topics ──────────────────────────────────────────────────── */
@@ -573,7 +582,7 @@ a:hover { color: var(--green); }
   .site-nav { padding: 0 1rem; }
   .nav-links .nav-link span:not(.gh-icon) { display: none; }
   .section { padding: 3rem 1rem; }
-  .hero-owl { width: 160px; }
+
   .hero-title { font-size: 2.5rem; }
   .score-grid { grid-template-columns: 1fr 1fr; }
   .footer-inner { flex-direction: column; text-align: center; }
