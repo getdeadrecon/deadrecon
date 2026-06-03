@@ -20,9 +20,9 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-00ff41?style=flat-square&logo=python)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-00f3ff?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Docker-b026ff?style=flat-square)]()
-[![GitHub Stars](https://img.shields.io/github/stars/owlscan/phantomsignal?style=flat-square&color=00ff41)](https://github.com/owlscan/phantomsignal/stargazers)
-[![Open Issues](https://img.shields.io/github/issues/owlscan/phantomsignal?style=flat-square&color=b026ff)](https://github.com/owlscan/phantomsignal/issues)
-[![CI](https://img.shields.io/github/actions/workflow/status/owlscan/phantomsignal/ci.yml?branch=main&style=flat-square&label=CI&color=00ff41)](https://github.com/owlscan/phantomsignal/actions/workflows/ci.yml)
+[![GitHub Stars](https://img.shields.io/github/stars/getphantomsignal/phantomsignal?style=flat-square&color=00ff41)](https://github.com/getphantomsignal/phantomsignal/stargazers)
+[![Open Issues](https://img.shields.io/github/issues/getphantomsignal/phantomsignal?style=flat-square&color=b026ff)](https://github.com/getphantomsignal/phantomsignal/issues)
+[![CI](https://img.shields.io/github/actions/workflow/status/getphantomsignal/phantomsignal/ci.yml?branch=main&style=flat-square&label=CI&color=00ff41)](https://github.com/getphantomsignal/phantomsignal/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/phantomsignal?style=flat-square&color=b026ff&logo=pypi&logoColor=white)](https://pypi.org/project/phantomsignal/)
 [![Project Site](https://img.shields.io/badge/site-phantomsignal.sh-00f3ff?style=flat-square&logo=github)](https://phantomsignal.sh)
 [![Changelog](https://img.shields.io/badge/changelog-view-00ff41?style=flat-square)](CHANGELOG.md)
@@ -50,19 +50,19 @@ The scan results page now renders each result type as structured output — port
 
 ### CLI — Ghost Run in action
 
-![CLI scan demo](https://raw.githubusercontent.com/phantomsignal/phantomsignal/main/docs/assets/demo.gif)
+![CLI scan demo](https://raw.githubusercontent.com/getphantomsignal/phantomsignal/main/docs/assets/demo.gif)
 
 ### Web UI — Shadow Grid (Dashboard)
 
-![Dashboard](https://raw.githubusercontent.com/phantomsignal/phantomsignal/main/docs/assets/screenshot_dashboard.svg)
+![Dashboard](https://raw.githubusercontent.com/getphantomsignal/phantomsignal/main/docs/assets/screenshot_dashboard.svg)
 
 ### Web UI — Launch Ghost Run
 
-![Launch Ghost Run](https://raw.githubusercontent.com/phantomsignal/phantomsignal/main/docs/assets/screenshot_launch.svg)
+![Launch Ghost Run](https://raw.githubusercontent.com/getphantomsignal/phantomsignal/main/docs/assets/screenshot_launch.svg)
 
 ### Web UI — Scan Results
 
-![Scan results](https://raw.githubusercontent.com/phantomsignal/phantomsignal/main/docs/assets/screenshot_results.svg)
+![Scan results](https://raw.githubusercontent.com/getphantomsignal/phantomsignal/main/docs/assets/screenshot_results.svg)
 
 ### Web UI — Theme Options
 
@@ -76,7 +76,7 @@ PhantomSignal ships with two built-in UI themes, selectable via the **☀/🌙 t
 > **Asciinema recording:** Watch the full interactive demo on asciinema.org, or play it locally:
 > ```bash
 > pip install asciinema
-> asciinema play https://raw.githubusercontent.com/phantomsignal/phantomsignal/main/docs/assets/demo.cast
+> asciinema play https://raw.githubusercontent.com/getphantomsignal/phantomsignal/main/docs/assets/demo.cast
 > ```
 
 [![asciicast](https://asciinema.org/a/1163488.svg)](https://asciinema.org/a/1163488)
@@ -166,7 +166,7 @@ All formats support **ZIP compression** and **AES-256-GCM encryption**.
 
 ### Option 1: Docker (Recommended)
 ```bash
-git clone https://github.com/owlscan/phantomsignal
+git clone https://github.com/getphantomsignal/phantomsignal
 cd phantomsignal
 docker-compose up -d
 # Open http://localhost:5000
@@ -175,7 +175,7 @@ docker-compose up -d
 ### Option 2: Manual Installation
 ```bash
 # Python 3.10+ required
-git clone https://github.com/owlscan/phantomsignal
+git clone https://github.com/getphantomsignal/phantomsignal
 cd phantomsignal
 pip install -e .
 phantomsignal init
@@ -292,7 +292,7 @@ PhantomSignal thrives on community contributions. Ways to help:
 
 1. **Add API integrations** — Follow the plugin pattern above
 2. **Improve detection signatures** — Expand `tech_detector.py`
-3. **Bug reports** — [GitHub Issues](https://github.com/owlscan/phantomsignal/issues)
+3. **Bug reports** — [GitHub Issues](https://github.com/getphantomsignal/phantomsignal/issues)
 4. **Documentation** — Improve the wiki
 5. **Translations** — Internationalize the UI
 

@@ -17,7 +17,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="the-clipper",
-    url="https://github.com/owlscan/phantomsignal",
+    url="https://github.com/getphantomsignal/phantomsignal",
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.10",
@@ -47,7 +47,7 @@ setup(
     project_urls={
         "Homepage": "https://phantomsignal.sh",
         "Documentation": "https://phantomsignal.sh",
-        "Bug Reports": "https://github.com/owlscan/phantomsignal/issues",
-        "Source": "https://github.com/owlscan/phantomsignal",
+        "Bug Reports": "https://github.com/getphantomsignal/phantomsignal/issues",
+        "Source": "https://github.com/getphantomsignal/phantomsignal",
     },
 )

@@ -34,7 +34,7 @@
 
 ```bash
 # Requires Python 3.10+
-git clone https://github.com/owlscan/phantomsignal
+git clone https://github.com/getphantomsignal/phantomsignal
 cd phantomsignal
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
@@ -47,7 +47,7 @@ Open **http://127.0.0.1:5000** in your browser.
 ### Installation (Docker)
 
 ```bash
-git clone https://github.com/owlscan/phantomsignal
+git clone https://github.com/getphantomsignal/phantomsignal
 cd phantomsignal
 docker-compose up -d
 ```
@@ -602,6 +602,6 @@ docker-compose up -d
 
 ## Getting Help
 
-- **GitHub Issues:** https://github.com/owlscan/phantomsignal/issues
+- **GitHub Issues:** https://github.com/getphantomsignal/phantomsignal/issues
 - **About page:** Click **ABOUT** in the footer for version info and capability overview
 - **Logs:** Check `/tmp/phantomsignal.log` (manual) or `docker-compose logs` (Docker) for detailed error output

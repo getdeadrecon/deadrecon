@@ -23,7 +23,7 @@ __credits__ = [
     "Claude (Anthropic) — AI architecture, implementation, full-stack development",
 ]
 __license__ = "MIT"
-__url__ = "https://github.com/owlscan/phantomsignal"
+__url__ = "https://github.com/getphantomsignal/phantomsignal"
 
 BANNER = r"""
     ____  __  _____    _   ____________  __  ___

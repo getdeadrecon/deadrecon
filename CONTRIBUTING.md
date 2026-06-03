@@ -9,7 +9,7 @@ Before you start: read the [Code of Conduct](CODE_OF_CONDUCT.md). It is short, d
 ## Dev Setup
 
 ```bash
-git clone https://github.com/owlscan/phantomsignal
+git clone https://github.com/getphantomsignal/phantomsignal
 cd phantomsignal
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e .
@@ -70,7 +70,7 @@ Then add one import line to `phantomsignal/intel/orchestrator.py`.
 
 ## Reporting Bugs
 
-Use the [bug report template](https://github.com/owlscan/phantomsignal/issues/new?template=bug_report.md).
+Use the [bug report template](https://github.com/getphantomsignal/phantomsignal/issues/new?template=bug_report.md).
 
 For security vulnerabilities, **do not open a public issue.** Follow the process in [`SECURITY.md`](SECURITY.md) — private email first, coordinated disclosure before anything goes public.
 

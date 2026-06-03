@@ -343,7 +343,7 @@ class WebCrawler:
         results = []
         url = target if target.startswith("http") else f"https://{target}"
 
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; PhantomSignal/1.0; +https://github.com/owlscan/phantomsignal)"}
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; PhantomSignal/1.0; +https://github.com/getphantomsignal/phantomsignal)"}
 
         try:
             async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:

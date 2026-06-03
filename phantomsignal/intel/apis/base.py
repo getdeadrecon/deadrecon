@@ -123,7 +123,7 @@ class BaseIntelAPI(abc.ABC):
 
     def _default_headers(self) -> Dict[str, str]:
         return {
-            "User-Agent": "PhantomSignal-OSINT/1.0 (+https://github.com/owlscan/phantomsignal)",
+            "User-Agent": "PhantomSignal-OSINT/1.0 (+https://github.com/getphantomsignal/phantomsignal)",
             "Accept": "application/json",
         }
 
