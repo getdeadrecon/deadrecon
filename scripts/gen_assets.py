@@ -45,6 +45,31 @@ PHANTOMSIGNAL_THEME = TerminalTheme(
     ],
 )
 
+PHANTOMSIGNAL_LIGHT_THEME = TerminalTheme(
+    background=(245, 246, 250),
+    foreground=(30, 40, 60),
+    normal=[
+        (245, 246, 250),
+        (180, 30, 60),
+        (0, 130, 50),
+        (160, 100, 0),
+        (40, 80, 200),
+        (120, 30, 180),
+        (0, 100, 180),
+        (80, 90, 110),
+    ],
+    bright=[
+        (210, 215, 225),
+        (220, 50, 80),
+        (0, 160, 60),
+        (200, 140, 0),
+        (60, 110, 230),
+        (150, 50, 210),
+        (0, 140, 210),
+        (20, 25, 35),
+    ],
+)
+
 DOCS = Path(__file__).parent.parent / "docs" / "assets"
 DOCS.mkdir(parents=True, exist_ok=True)
 
@@ -313,12 +338,18 @@ def gen_cli():
         ("", "dim",                 ""),
         ("$ phantomsignal scan example.com --profile standard --format html", "bold bright_white", ""),
         ("", "", ""),
-        ("  ██████╗ ██╗    ██╗██╗     ███████╗ ██████╗ █████╗ ███╗   ██╗", "bright_cyan", ""),
-        (" ██╔═══██╗██║    ██║██║     ██╔════╝██╔════╝██╔══██╗████╗  ██║", "bright_cyan", ""),
-        (" ██║   ██║██║ █╗ ██║██║     ███████╗██║     ███████║██╔██╗ ██║", "bright_cyan", ""),
-        (" ██║   ██║██║███╗██║██║     ╚════██║██║     ██╔══██║██║╚██╗██║", "cyan", ""),
-        (" ╚██████╔╝╚███╔███╔╝███████╗███████║╚██████╗██║  ██║██║ ╚████║", "cyan", ""),
-        ("  ╚═════╝  ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝", "dim cyan", ""),
+        ("    ____  __  _____    _   ____________  __  ___", "bright_cyan", ""),
+        ("   / __ \\/ / / /   |  / | / /_  __/ __ \\/  |/  /", "bright_cyan", ""),
+        ("  / /_/ / /_/ / /| | /  |/ / / / / / / / /|_/ /", "bright_cyan", ""),
+        (" / ____/ __  / ___ |/ /|  / / / / /_/ / /  / /", "cyan", ""),
+        ("/_/   /_/ /_/_/  |_/_/ |_/ /_/  \\____/_/  /_/", "cyan", ""),
+        ("", "", ""),
+        ("   _____ ___________   _____    __", "bright_cyan", ""),
+        ("  / ___//  _/ ____/ | / /   |  / /", "bright_cyan", ""),
+        ("  \\__ \\ / // / __/  |/ / /| | / /", "cyan", ""),
+        (" ___/ // // /_/ / /|  / ___ |/ /___", "cyan", ""),
+        ("/____/___/\\____/_/ |_/_/  |_/_____/", "dim cyan", ""),
+        ("", "", ""),
         ("         >> OPEN-SOURCE OSINT INTELLIGENCE FRAMEWORK <<", "bright_green", ""),
         ('                 "See everything. Leave no trace."', "dim green", ""),
         ("", "", ""),
@@ -398,12 +429,18 @@ def gen_cast():
     def magenta(s): return f"{ESC}[1;95m{s}{R}"
 
     BANNER = (
-        f"{neon('  ██████╗ ██╗    ██╗██╗     ███████╗ ██████╗ █████╗ ███╗   ██╗')}\r\n"
-        f"{neon(' ██╔═══██╗██║    ██║██║     ██╔════╝██╔════╝██╔══██╗████╗  ██║')}\r\n"
-        f"{neon(' ██║   ██║██║ █╗ ██║██║     ███████╗██║     ███████║██╔██╗ ██║')}\r\n"
-        f"{cyan(' ██║   ██║██║███╗██║██║     ╚════██║██║     ██╔══██║██║╚██╗██║')}\r\n"
-        f"{cyan(' ╚██████╔╝╚███╔███╔╝███████╗███████║╚██████╗██║  ██║██║ ╚████║')}\r\n"
-        f"{dim('  ╚═════╝  ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝')}\r\n"
+        f"{neon('    ____  __  _____    _   ____________  __  ___')}\r\n"
+        f"{neon('   / __ \\/ / / /   |  / | / /_  __/ __ \\/  |/  /')}\r\n"
+        f"{neon('  / /_/ / /_/ / /| | /  |/ / / / / / / / /|_/ /')}\r\n"
+        f"{cyan(' / ____/ __  / ___ |/ /|  / / / / /_/ / /  / /')}\r\n"
+        f"{cyan('/_/   /_/ /_/_/  |_/_/ |_/ /_/  \\____/_/  /_/')}\r\n"
+        f"\r\n"
+        f"{neon('   _____ ___________   _____    __')}\r\n"
+        f"{neon('  / ___//  _/ ____/ | / /   |  / /')}\r\n"
+        f"{cyan('  \\__ \\ / // / __/  |/ / /| | / /')}\r\n"
+        f"{cyan(' ___/ // // /_/ / /|  / ___ |/ /___')}\r\n"
+        f"{dim('/____/___/\\____/_/ |_/_/  |_/_____/')}\r\n"
+        f"\r\n"
         f"{green('         >> OPEN-SOURCE OSINT INTELLIGENCE FRAMEWORK <<')}\r\n"
         f'{dim(chr(34) + "See everything. Leave no trace." + chr(34))}\r\n'
     )
@@ -487,6 +524,161 @@ def gen_cast():
     print(f"✓  demo.cast  ({len(events)} events, {t:.1f}s runtime)")
 
 
+def gen_dashboard_light():
+    c = Console(record=True, width=110, force_terminal=True)
+    c.print()
+    c.print("  [bold blue]>> PHANTOMSIGNAL[/] [dim]//[/] [bold dark_green]SHADOW GRID[/]"
+            "                         [dim]Operative command center — all systems nominal[/]")
+    c.print("[dim blue]" + "─" * 108 + "[/]")
+    c.print()
+    stats = [
+        ("◫", "42", "TOTAL\nMISSIONS", "dark_green"),
+        ("◉", " 3", "ACTIVE\nGHOSTS",   "blue"),
+        ("⬡", "1,337", "SIGNALS\nCAPTURED", "dark_magenta"),
+        ("⚠", " 2", "CRITICAL\nTHREATS", "red"),
+        ("⚙", " 8", "APIS\nONLINE",   "dark_orange"),
+    ]
+    cards = []
+    for icon, val, label, col in stats:
+        t = Text()
+        t.append(f"  {icon} ", style=f"bold {col}")
+        t.append(f"{val}\n", style=f"bold {col}")
+        t.append(f"  {label}", style="dim")
+        cards.append(Panel(t, border_style=col, width=20))
+    c.print(Columns(cards, equal=True, expand=False, padding=(0, 1)))
+    c.print()
+    tbl = Table(title="◫  RECENT GHOST RUNS", title_style="bold dark_green",
+                border_style="blue", header_style="bold blue", width=72)
+    tbl.add_column("TARGET", style="black", min_width=22)
+    tbl.add_column("TYPE",   style="blue",  min_width=14)
+    tbl.add_column("STATUS", min_width=12)
+    tbl.add_column("SCORE",  min_width=8)
+    tbl.add_column("THREAT", min_width=10)
+    rows = [
+        ("example.com",   "web_recon",    "[bold dark_green]COMPLETE[/]",  "72", "[bold dark_orange]MEDIUM[/]"),
+        ("198.51.100.42", "ip_recon",     "[bold blue]▶ RUNNING[/]",       "—",  "[dim]SCANNING[/]"),
+        ("corp-api.io",   "domain_recon", "[bold dark_green]COMPLETE[/]",  "89", "[bold red]HIGH[/]"),
+        ("john.doe@ex.co","people_intel", "[bold dark_green]COMPLETE[/]",  "45", "[bold dark_green]LOW[/]"),
+        ("darknet-hub.to","full_spectrum","[bold red]FAILED[/]",           "—",  "[dim]UNKNOWN[/]"),
+    ]
+    for r in rows:
+        tbl.add_row(*r)
+    live = Text()
+    live.append("[PHANTOMSIGNAL] ", style="bold blue")
+    live.append("Signal established. Grid online.\n", style="black")
+    live.append("[SYSTEM]   ", style="bold dark_green")
+    live.append("3 active ghost runs in progress.\n", style="dim")
+    live.append("[DNS]      ", style="bold dark_orange")
+    live.append("Resolving corp-api.io... ", style="dim")
+    live.append("OK\n", style="bold dark_green")
+    live.append("[PORT]     ", style="bold dark_orange")
+    live.append("198.51.100.42:443 ", style="dim")
+    live.append("OPEN", style="bold dark_green")
+    live.append(" TLS1.3\n", style="dim blue")
+    live.append("[SHODAN]   ", style="bold dark_magenta")
+    live.append("2 vulnerabilities found\n", style="bold red")
+    live.append("[SYSTEM]   ", style="bold dark_green")
+    live.append("Awaiting next command...", style="dim")
+    live_panel = Panel(live, title="◉  LIVE FEED", title_align="left", border_style="blue", width=35)
+    c.print(Columns([tbl, live_panel], padding=(0, 1)))
+    c.print()
+    c.save_svg(DOCS / "screenshot_dashboard_light.svg", title="PhantomSignal — Light", theme=PHANTOMSIGNAL_LIGHT_THEME)
+    print("✓  screenshot_dashboard_light.svg")
+
+
+def gen_launch_light():
+    c = Console(record=True, width=110, force_terminal=True)
+    c.print()
+    c.print("  [bold blue]>> PHANTOMSIGNAL[/] [dim]//[/] [bold dark_green]LAUNCH GHOST RUN[/]"
+            "                    [dim]Configure your recon parameters, Operative[/]")
+    c.print("[dim blue]" + "─" * 108 + "[/]")
+    c.print()
+    c.print(Panel(
+        "[dim blue]◈  TARGET IDENTIFIER[/]\n"
+        "[bold black on grey82]  ENTER TARGET // IP · DOMAIN · URL · EMAIL · USERNAME                                           [/] [blue]● DOMAIN[/]",
+        title="[bold dark_green]◈  MARK ACQUISITION[/]", border_style="dark_green"))
+    c.print()
+    profiles = [
+        ("⚡", "QUICK PROBE",    "Fast surface scan.\nDNS, top ports, tech stack.", "~30s",    "dark_orange", False),
+        ("◈", "STANDARD RECON", "Balanced depth.\nAll modules, moderate crawl.",   "~2-5min",  "dark_green",  True),
+        ("⬡", "DEEP DIVE",      "Thorough crawl, full port scan,\nall intel APIs.","~10-30min","dark_magenta", False),
+        ("👻","GHOST MODE",     "Low-and-slow, identity rotation,\nmin footprint.", "Variable", "black",       False),
+    ]
+    cards = []
+    for icon, name, desc, time_, col, sel in profiles:
+        border = col if sel else "dim"
+        inner = Text()
+        inner.append(f"  {icon}\n", style=f"bold {col}")
+        inner.append(f"  {name}\n", style=f"bold {'black' if sel else col}")
+        inner.append(f"  {desc}\n", style="dim")
+        inner.append(f"  {time_}", style=f"dim {col}")
+        cards.append(Panel(inner, border_style=border, width=26,
+                           subtitle="[bold dark_green]✓ SELECTED[/]" if sel else ""))
+    c.print(Columns(cards, equal=True, expand=False, padding=(0, 1)))
+    c.print()
+    modules = [
+        ("🌐", "DNS RECON",    "Records, subdomains, zone transfer, SPF/DMARC", True),
+        ("🔌", "PORT SCANNER", "Async TCP scan with banner grabbing",            True),
+        ("🔬", "TECH DETECTOR","Framework, CMS, CDN, WAF, security headers",    True),
+        ("🎯", "API HUNTER",   "Endpoints, GraphQL, swagger, admin panels",      True),
+        ("🕷", "WEB CRAWLER",  "Links, forms, emails, JS, comments",             True),
+        ("📡", "INTEL APIS",   "Shodan, VirusTotal, AbuseIPDB & more",          True),
+    ]
+    mod_cols = []
+    for icon, name, desc, active in modules:
+        col = "dark_green" if active else "dim"
+        t = Text()
+        t.append(f" {icon} {name}\n", style=f"bold {col}")
+        t.append(f" {desc}", style="dim")
+        mod_cols.append(Panel(t, border_style=col, width=34))
+    c.print("[dim blue]◫  RECON MODULES[/]")
+    c.print(Columns(mod_cols[:3], equal=True, expand=False, padding=(0, 0)))
+    c.print(Columns(mod_cols[3:], equal=True, expand=False, padding=(0, 0)))
+    c.print()
+    c.print("  " + "[bold white on dark_green]  ◈  INITIATE GHOST RUN  [/]", justify="left")
+    c.print()
+    c.save_svg(DOCS / "screenshot_launch_light.svg", title="PhantomSignal — Light", theme=PHANTOMSIGNAL_LIGHT_THEME)
+    print("✓  screenshot_launch_light.svg")
+
+
+def gen_results_light():
+    c = Console(record=True, width=110, force_terminal=True)
+    c.print()
+    c.print("  [dim blue]GHOST RUNS ›[/] [bold black]example.com[/]  [bold dark_green]◉ COMPLETE[/]")
+    c.print()
+    meta = ("[dim]TYPE[/] [blue]web_recon[/]   [dim]PROFILE[/] [blue]standard[/]   "
+            "[dim]RESULTS[/] [bold blue]247[/]   [dim]DURATION[/] [blue]4m 12s[/]   "
+            "[dim]SHADOW SCORE[/] [bold red]72[/][dim]/100[/]   [dim]THREAT[/] [bold dark_orange]MEDIUM[/]")
+    c.print(Panel(meta, border_style="blue"))
+    c.print()
+    tbl = Table(title="⬡  CAPTURED SIGNALS", title_style="bold dark_magenta",
+                border_style="dark_magenta", header_style="bold dark_magenta", width=108)
+    tbl.add_column("MODULE",   style="blue",       min_width=14)
+    tbl.add_column("TYPE",     style="dark_blue",  min_width=18)
+    tbl.add_column("VALUE",    style="black",       min_width=36)
+    tbl.add_column("SEVERITY", min_width=10)
+    tbl.add_column("SOURCE",   style="dim",        min_width=14)
+    findings = [
+        ("PORT_SCAN",   "open_port",       "443/tcp — TLS 1.3 (nginx/1.24.0)",   "[bold dark_green]INFO[/]",     "async_scanner"),
+        ("PORT_SCAN",   "open_port",       "8080/tcp — Tomcat/9.0.70 admin",      "[bold red]HIGH[/]",           "async_scanner"),
+        ("TECH_DETECT", "security_header", "Content-Security-Policy: MISSING",    "[bold dark_orange]MEDIUM[/]",  "header_scan"),
+        ("DNS_RECON",   "subdomain",       "api.example.com → 198.51.100.1",      "[bold dark_green]INFO[/]",     "crt.sh"),
+        ("DNS_RECON",   "spf_issue",       "SPF record missing — spoofable",       "[bold red]HIGH[/]",           "dns_recon"),
+        ("INTEL_API",   "shodan_vuln",     "CVE-2023-44487 (HTTP/2 Rapid Reset)", "[bold red]CRITICAL[/]",       "shodan"),
+        ("INTEL_API",   "threat_intel",    "VirusTotal: 0/94 — CLEAN",            "[bold dark_green]INFO[/]",     "virustotal"),
+        ("API_HUNT",    "endpoint_found",  "/api/v1/users — no auth required",    "[bold red]HIGH[/]",           "api_hunter"),
+        ("API_HUNT",    "endpoint_found",  "/graphql — introspection enabled",    "[bold dark_orange]MEDIUM[/]",  "api_hunter"),
+    ]
+    for row in findings:
+        tbl.add_row(*row)
+    c.print(tbl)
+    c.print()
+    c.print("  [dim]↓ EXPORT INTEL[/]  ·  [bold dark_magenta]JSON[/] [dim]CSV[/] [dim]HTML[/] [dim]PDF[/] [dim]STIX[/]")
+    c.print()
+    c.save_svg(DOCS / "screenshot_results_light.svg", title="PhantomSignal — Light", theme=PHANTOMSIGNAL_LIGHT_THEME)
+    print("✓  screenshot_results_light.svg")
+
+
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     print("Generating PhantomSignal demo assets...")
@@ -495,4 +687,7 @@ if __name__ == "__main__":
     gen_results()
     gen_cli()
     gen_cast()
+    gen_dashboard_light()
+    gen_launch_light()
+    gen_results_light()
     print(f"\nAll assets written to:  {DOCS}")
