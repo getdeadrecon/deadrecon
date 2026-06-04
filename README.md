@@ -26,6 +26,7 @@
 [![PyPI](https://img.shields.io/pypi/v/phantomsignal?style=flat-square&color=b026ff&logo=pypi&logoColor=white)](https://pypi.org/project/phantomsignal/)
 [![Project Site](https://img.shields.io/badge/site-phantomsignal.sh-00f3ff?style=flat-square&logo=github)](https://phantomsignal.sh)
 [![Changelog](https://img.shields.io/badge/changelog-view-00ff41?style=flat-square)](CHANGELOG.md)
+[![Sponsors](https://img.shields.io/github/sponsors/getphantomsignal?style=flat-square&color=b026ff&label=sponsors)](https://github.com/sponsors/getphantomsignal)
 
 
 ---
@@ -303,6 +304,27 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Please also review our [C
 ## 📖 Documentation
 
 - **[Usage Guide](docs/USAGE.md)** — full walkthroughs, usage scenarios, CLI reference, and per-platform troubleshooting (Linux / macOS / Windows / Docker)
+
+---
+
+## 💜 Sponsors
+
+PhantomSignal is free, open-source, and built on personal time. If it's useful to you, consider sponsoring to help cover infrastructure costs, domain renewals, trademark filing, and ongoing development.
+
+**[→ Sponsor PhantomSignal on GitHub](https://github.com/sponsors/getphantomsignal)**
+
+| Tier | $/mo | What it covers |
+|---|---|---|
+| Ghost Operative | $5 | Domain renewals & infrastructure |
+| Shadow Agent | $15 | API integrations & dependency updates |
+| Signal Sponsor | $50 | Trademark filing, new modules — listed in README |
+| Grid Patron | $200 | Development sprints, roadmap input — prominent listing |
+
+> Signal Sponsors ($50+) and Grid Patrons ($200+) are listed below.
+
+<!-- SPONSORS -->
+<!-- This section is updated when sponsors join -->
+<!-- END SPONSORS -->
 
 ---
 
