@@ -10,7 +10,7 @@ function initLiveFeed(scanId) {
   }
 
   socket.emit('join_scan', { scan_id: scanId });
-  appendTerminalLine('live-terminal', 'OWLSCAN', `Tuned into ghost run ${scanId.slice(0,8)}...`, 'system');
+  appendTerminalLine('live-terminal', 'PHANTOMSIGNAL', `Tuned into ghost run ${scanId.slice(0,8)}...`, 'system');
 
   socket.on('terminal_log', (data) => {
     if (data.scan_id !== scanId) return;

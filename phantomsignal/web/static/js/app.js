@@ -25,7 +25,7 @@ function initSocket() {
   });
 
   socket.on('ghost_online', (data) => {
-    appendTerminalLine('live-terminal', 'OWLSCAN', data.message, 'system');
+    appendTerminalLine('live-terminal', 'PHANTOMSIGNAL', data.message, 'system');
   });
 
   // Global scan event handlers (for any open terminal on page)
@@ -85,7 +85,7 @@ function initLiveFeed(scanId) {
 
   socket.on('scan_complete', (data) => {
     if (data.scan_id === scanId) {
-      appendTerminalLine('live-terminal', 'OWLSCAN',
+      appendTerminalLine('live-terminal', 'PHANTOMSIGNAL',
         `GHOST RUN COMPLETE — Shadow Score: ${data.shadow_score?.toFixed(0)}/100 | Threat: ${data.threat_level?.toUpperCase()}`,
         'success');
       // Reload results after brief delay
@@ -95,7 +95,7 @@ function initLiveFeed(scanId) {
 
   socket.on('scan_aborted', (data) => {
     if (data.scan_id === scanId) {
-      appendTerminalLine('live-terminal', 'OWLSCAN', 'GHOST RUN TERMINATED — Signal severed.', 'warning');
+      appendTerminalLine('live-terminal', 'PHANTOMSIGNAL', 'GHOST RUN TERMINATED — Signal severed.', 'warning');
       setTimeout(() => { location.reload(); }, 1500);
     }
   });
