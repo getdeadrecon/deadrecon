@@ -80,7 +80,7 @@ PhantomSignal ships with two built-in UI themes, selectable via the **☀/🌙 t
 > asciinema play https://raw.githubusercontent.com/getphantomsignal/phantomsignal/main/docs/assets/demo.cast
 > ```
 
-[![asciicast](https://asciinema.org/a/1163488.svg)](https://asciinema.org/a/1163488)
+[![asciicast](https://asciinema.org/a/1190779.svg)](https://asciinema.org/a/1190779)
 
 ---
 
