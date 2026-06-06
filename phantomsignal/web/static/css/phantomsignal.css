@@ -1300,26 +1300,26 @@ a:hover { color: var(--neon-green); }
 
 /* ── Phantom ASCII Art Image ────────────────────────────────── */
 .phantom-ascii-nav {
-  height: 36px;
-  width: auto;
+  width: 120px;
+  height: auto;
   display: block;
 }
 .phantom-ascii-heading {
-  height: 72px;
-  width: auto;
+  width: 180px;
+  height: auto;
   display: block;
   opacity: 0.92;
 }
 .phantom-ascii-hero {
   display: block;
-  max-width: 200px;
+  max-width: 260px;
   width: 100%;
   height: auto;
   margin: 0 0 1.5rem;
 }
 .phantom-ascii-empty {
   display: block;
-  max-width: 150px;
+  max-width: 200px;
   width: 100%;
   height: auto;
   margin: 0 auto 0.75rem;
@@ -1584,7 +1584,7 @@ a:hover { color: var(--neon-green); }
   .nav-link span:not(.nav-icon) { display: none; }
   .nav-icon { display: inline; }
   .nav-link { padding: 0.4rem 0.6rem; }
-  .phantom-ascii-nav { height: 28px; }
+  .phantom-ascii-nav { width: 90px; height: auto; }
 
   /* Stats: single column */
   .stats-grid { grid-template-columns: 1fr; }
