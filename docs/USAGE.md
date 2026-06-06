@@ -506,12 +506,12 @@ pip install -e .
 python run.py
 ```
 
-**`Hack-Regular.ttf` not found (owl PNG render)**
+**`Hack-Regular.ttf` not found (phantom PNG render)**
 
-The owl asset render script (`scripts/render_owl.py`) requires the Hack font. On Windows:
+The phantom asset render script (`scripts/render_phantom.py`) requires the Hack font. On Windows:
 1. Download Hack from https://sourcefoundry.org/hack/
 2. Install the font system-wide
-3. Update `FONT_PATH` in `scripts/render_owl.py`:
+3. Update `FONT_PATH` in `scripts/render_phantom.py`:
 ```python
 FONT_PATH = "C:/Windows/Fonts/Hack-Regular.ttf"
 ```

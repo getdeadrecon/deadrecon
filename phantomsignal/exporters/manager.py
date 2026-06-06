@@ -478,7 +478,7 @@ footer {{ margin-top: 3rem; border-top: 1px solid #1a1a2e; padding-top: 1rem; co
 
             with open(enc_path, "wb") as f:
                 # Format: [4 bytes magic][16 bytes salt][12 bytes nonce][ciphertext]
-                f.write(b"NOWL")
+                f.write(b"NPHM")
                 f.write(salt)
                 f.write(nonce)
                 f.write(ciphertext)
@@ -511,7 +511,7 @@ footer {{ margin-top: 3rem; border-top: 1px solid #1a1a2e; padding-top: 1rem; co
 
         with open(enc_path, "rb") as f:
             magic = f.read(4)
-            if magic != b"NOWL":
+            if magic not in (b"NPHM", b"NOWL"):  # NOWL = legacy pre-1.4 files
                 raise ValueError("Not a valid PhantomSignal encrypted file")
             salt = f.read(16)
             nonce = f.read(12)

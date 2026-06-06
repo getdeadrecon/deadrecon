@@ -71,7 +71,7 @@ PhantomSignal ships with two built-in UI themes, selectable via the **☀/🌙 t
 
 | Theme | Description |
 |-------|-------------|
-| **Dark** *(default)* | Cyberpunk aesthetic — deep charcoal background, neon green/cyan/purple accents, matrix rain canvas, glowing owl logo |
+| **Dark** *(default)* | Cyberpunk aesthetic — deep charcoal background, neon green/cyan/purple accents, matrix rain canvas, glowing phantom logo |
 | **Light** | "Phantom Dawn" — soft blue-grey background, muted accent palette, clean black ASCII logo, matrix rain disabled |
 
 > **Asciinema recording:** Watch the full interactive demo on asciinema.org, or play it locally:
