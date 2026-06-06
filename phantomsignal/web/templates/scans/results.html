@@ -457,7 +457,34 @@ function toggleResult(header) {
 
 // Live scan WebSocket connection
 if (IS_LIVE) {
-  initLiveFeed(SCAN_ID);
+  // Wait for socket to be connected before joining the room.
+  // socket is initialised at module level in app.js (before DOMContentLoaded),
+  // so it always exists here — but may not yet be connected.
+  if (socket && socket.connected) {
+    initLiveFeed(SCAN_ID);
+  } else {
+    socket.once('connect', () => initLiveFeed(SCAN_ID));
+  }
+
+  // Polling fallback — keeps the progress bar accurate even if SocketIO events
+  // are missed (slow connect, missed room join, etc.).
+  const _pollInterval = setInterval(() => {
+    fetch(`/api/v1/scans/${SCAN_ID}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status !== 'ok') return;
+        const s = d.data;
+        const fill  = document.getElementById('progress-fill');
+        const label = document.getElementById('progress-pct');
+        if (fill)  fill.style.width  = `${s.progress || 0}%`;
+        if (label) label.textContent = `${s.progress || 0}%`;
+        if (s.status !== 'running') {
+          clearInterval(_pollInterval);
+          setTimeout(() => location.reload(), 1000);
+        }
+      })
+      .catch(() => {});
+  }, 2000);
 }
 </script>
 {% endblock %}

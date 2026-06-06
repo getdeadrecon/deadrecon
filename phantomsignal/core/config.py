@@ -171,6 +171,25 @@ class PhantomSignalConfig:
             "INTELIUS_API_KEY": "intelius",
             "CLEARBIT_API_KEY": "clearbit",
             "TELEGRAM_BOT_TOKEN": "telegram",
+            # Expanded social / people intel
+            "TWITCH_CLIENT_ID": "twitch_client_id",
+            "TWITCH_CLIENT_SECRET": "twitch_client_secret",
+            "SPOTIFY_CLIENT_ID": "spotify_client_id",
+            "SPOTIFY_CLIENT_SECRET": "spotify_client_secret",
+            "STEAM_API_KEY": "steam",
+            "VK_ACCESS_TOKEN": "vk",
+            "TUMBLR_API_KEY": "tumblr",
+            "FLICKR_API_KEY": "flickr",
+            "DISCORD_BOT_TOKEN": "discord",
+            "FACEBOOK_ACCESS_TOKEN": "facebook",
+            "INTELX_API_KEY": "intelx",
+            "ABSTRACTAPI_PHONE_KEY": "abstractapi_phone",
+            "EMAILREP_API_KEY": "emailrep",
+            "LINKEDIN_RAPIDAPI_KEY": "linkedin_rapidapi",
+            "TIKTOK_CLIENT_KEY": "tiktok_client_key",
+            "TIKTOK_CLIENT_SECRET": "tiktok_client_secret",
+            "INSTAGRAM_ACCESS_TOKEN": "instagram",
+            "TWITTER_API_KEY": "twitter",
         }
         for env_var, (section, key) in env_map.items():
             val = os.getenv(env_var)

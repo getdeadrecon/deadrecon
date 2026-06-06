@@ -65,6 +65,10 @@ class PhantomEngine:
         self.emit("scan_started", {"scan_id": scan_id, "target": scan.target}, scan_id)
         self._log(scan_id, "system", f"Ghost run initiated. Target: {scan.target}")
 
+        # Give the browser ~1 s to load results.html, connect the WebSocket,
+        # and emit join_scan — so no early events are lost to a race condition.
+        await asyncio.sleep(1.0)
+
         try:
             modules = scan.modules_enabled or []
             total_modules = len(modules) or 1

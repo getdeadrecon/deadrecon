@@ -11,6 +11,30 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.0] — 2026-06-06
+
+### Added
+- **16 new intelligence API integrations** — Twitch, Mastodon (4 federated instances), Keybase, Gravatar, HackerNews, Tumblr, Flickr, Spotify, Steam, VK, Telegram (public channels), Discord (user + server), Facebook/Meta Graph, EmailRep, Intelligence X (dark web / paste / breach), and Abstract API phone validation
+- **Ghost Key invalid-key indicator** — TEST button in the Ghost Key Vault now detects HTTP 401/403 rejections and surfaces an amber `⚠ INVALID` badge on the key row with a targeted toast message, distinct from generic network failures (`✗ FAIL`)
+- **`APIAuthError` exception** (`intel/apis/base.py`) — raised on 401/403 in `_get`; propagates through the orchestrator and is caught specifically by the test endpoint, keeping scan pipelines unaffected
+- **WebSocket sync on late join** (`web/app.py`, `terminal.js`) — server emits current scan progress to clients that connect after a scan has already started; eliminates the stuck-at-0% progress bar on page load
+- **Polling fallback for live results** (`results.html`) — a background `fetch` loop keeps the progress bar accurate even when SocketIO events are missed (slow connect, missed room join)
+
+### Changed
+- **AlienVault OTX timeout fix** — section requests (`general`, `reputation`, `geo`, `malware`, `passive_dns`) now run concurrently via `asyncio.gather` with an 8-second per-section timeout instead of sequentially; eliminates the consistent 30s timeout caused by the slow `reputation` endpoint
+- **People aggregator** (`intel/people/aggregator.py`) — now runs free no-key sources as a fallback baseline when no paid people-intel APIs are configured; improved field merging for names, employers, social profiles, and phone numbers; native social API result types (`github_profile`, `twitter_profile`, etc.) mapped directly to social profile slots
+- **Config env mappings** (`core/config.py`) — added env var bindings for all 16 new API integrations
+- **Socket init timing** (`app.js`) — `initSocket()` called at module load (before `DOMContentLoaded`) so the results page can attach scan room listeners immediately; guarded against double-init
+- **Scan start delay** (`core/engine.py`) — 1-second delay before first module fires, preventing WebSocket race where events are emitted before the browser has joined the scan room
+- **`.gitignore`** — replaced explicit `.env.local` / `.env.production` entries with `.env.*` wildcard; added `!.env.example` exclusion so a template file can be committed safely; covers `.env.testing` and any future per-environment variants
+
+### Fixed
+- Ghost Key TEST showing `✓ OK` with 0 results for an invalid key (e.g. Shodan 403) — now correctly shows `⚠ INVALID`
+- AlienVault consistently timing out on IP scans due to sequential section fetches exceeding the 30s orchestrator limit
+- Progress bar stuck at 0% when navigating directly to a scan URL mid-run
+
+---
+
 ## [1.3.3] — 2026-06-05
 
 ### Changed

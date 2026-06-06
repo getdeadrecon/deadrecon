@@ -24,6 +24,14 @@ logger = logging.getLogger("phantomsignal.intel.api")
 _REGISTRY: Dict[str, Type["BaseIntelAPI"]] = {}
 
 
+class APIAuthError(Exception):
+    """Raised when an API key is rejected (HTTP 401/403)."""
+    def __init__(self, api_name: str, status_code: int):
+        self.api_name = api_name
+        self.status_code = status_code
+        super().__init__(f"{api_name}: key rejected (HTTP {status_code})")
+
+
 def register_api(cls: Type["BaseIntelAPI"]) -> Type["BaseIntelAPI"]:
     """Decorator to register an Intel API in the plugin registry."""
     _REGISTRY[cls.NAME] = cls
@@ -145,8 +153,11 @@ class BaseIntelAPI(abc.ABC):
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
-            self.logger.warning(f"HTTP {e.response.status_code} from {url}")
-            return {"error": f"HTTP {e.response.status_code}", "url": url}
+            status = e.response.status_code
+            self.logger.warning(f"HTTP {status} from {url}")
+            if status in (401, 403):
+                raise APIAuthError(self.NAME, status)
+            return {"error": f"HTTP {status}", "url": url}
         except Exception as e:
             self.logger.error(f"Request failed: {url}: {e}")
             return {"error": str(e)}

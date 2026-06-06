@@ -387,12 +387,24 @@ class AlienVaultOTXAPI(BaseIntelAPI):
             indicator_type = "domain"
             sections = ["general", "passive_dns", "malware", "whois", "http_scans"]
 
-        all_data = {}
-        for section in sections:
-            data = await self._get(
-                f"{self.BASE_URL}/indicators/{indicator_type}/{query}/{section}",
-                headers=headers,
+        async def _fetch(section: str):
+            import asyncio as _asyncio
+            data = await _asyncio.wait_for(
+                self._get(
+                    f"{self.BASE_URL}/indicators/{indicator_type}/{query}/{section}",
+                    headers=headers,
+                ),
+                timeout=8,
             )
+            return section, data
+
+        import asyncio as _asyncio
+        fetched = await _asyncio.gather(*[_fetch(s) for s in sections], return_exceptions=True)
+        all_data = {}
+        for item in fetched:
+            if isinstance(item, Exception):
+                continue
+            section, data = item
             if "error" not in data:
                 all_data[section] = data
 
@@ -928,7 +940,7 @@ class GitHubAPI(BaseIntelAPI):
     DESCRIPTION = "GitHub user/org OSINT — repos, contributions, email harvest"
     REQUIRES_KEY = False
     TIER = APITier.FREE_LIMITED
-    CATEGORIES = [APICategory.SOCIAL]
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
     BASE_URL = "https://api.github.com"
     DOCS_URL = "https://docs.github.com/en/rest"
     SIGN_UP_URL = "https://github.com/settings/tokens"
@@ -1502,6 +1514,1154 @@ class LinkedInAPI(BaseIntelAPI):
                 "avatar_url": profile_data.get("profilePicture"),
             },
             confidence=0.88, relevance_score=0.85, tags=["linkedin", "social", "professional", "profile"],
+        )]
+
+
+# ═══════════════════════════════════════════════════════════
+# EXPANDED SOCIAL MEDIA INTELLIGENCE
+# ═══════════════════════════════════════════════════════════
+
+@register_api
+class TwitchAPI(BaseIntelAPI):
+    NAME = "twitch"
+    DESCRIPTION = "Twitch streamer OSINT — followers, activity, channel data, stream history"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://api.twitch.tv/helix"
+    DOCS_URL = "https://dev.twitch.tv/docs/api/"
+    SIGN_UP_URL = "https://dev.twitch.tv/console/apps/create"
+    RATE_LIMIT_PER_MINUTE = 60
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(
+            self.config.get_api_key("twitch_client_id") and
+            self.config.get_api_key("twitch_client_secret")
+        )
+
+    async def _get_app_token(self) -> Optional[str]:
+        client_id = self.config.get_api_key("twitch_client_id")
+        client_secret = self.config.get_api_key("twitch_client_secret")
+        data = await self._post(
+            "https://id.twitch.tv/oauth2/token",
+            data={
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "grant_type": "client_credentials",
+            },
+        )
+        return data.get("access_token")
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+        if "@" in query or re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query):
+            return []
+
+        token = await self._get_app_token()
+        if not token:
+            return []
+
+        client_id = self.config.get_api_key("twitch_client_id")
+        headers = {"Authorization": f"Bearer {token}", "Client-Id": client_id}
+
+        user_data = await self._get(
+            f"{self.BASE_URL}/users",
+            params={"login": query.lstrip("@")},
+            headers=headers,
+        )
+        users = user_data.get("data", [])
+        if not users:
+            return []
+
+        user = users[0]
+        user_id = user.get("id")
+
+        channel_data = await self._get(
+            f"{self.BASE_URL}/channels",
+            params={"broadcaster_id": user_id},
+            headers=headers,
+        )
+        channel = (channel_data.get("data") or [{}])[0]
+
+        followers_data = await self._get(
+            f"{self.BASE_URL}/channels/followers",
+            params={"broadcaster_id": user_id, "first": 1},
+            headers=headers,
+        )
+
+        streams_data = await self._get(
+            f"{self.BASE_URL}/streams",
+            params={"user_id": user_id},
+            headers=headers,
+        )
+        live_stream = (streams_data.get("data") or [None])[0]
+
+        return [self._wrap_result(
+            "twitch_profile",
+            {
+                "username": user.get("login"),
+                "display_name": user.get("display_name"),
+                "id": user_id,
+                "bio": user.get("description"),
+                "profile_image_url": user.get("profile_image_url"),
+                "view_count": user.get("view_count"),
+                "broadcaster_type": user.get("broadcaster_type"),
+                "created_at": user.get("created_at"),
+                "game_name": channel.get("game_name"),
+                "title": channel.get("title"),
+                "language": channel.get("broadcaster_language"),
+                "follower_count": followers_data.get("total"),
+                "is_live": live_stream is not None,
+                "viewer_count": live_stream.get("viewer_count") if live_stream else None,
+                "profile_url": f"https://www.twitch.tv/{user.get('login')}",
+            },
+            confidence=0.97, relevance_score=0.82,
+            tags=["twitch", "social", "gaming", "streamer"],
+        )]
+
+
+@register_api
+class MastodonAPI(BaseIntelAPI):
+    NAME = "mastodon"
+    DESCRIPTION = "Mastodon/Fediverse profile lookup — federated social network search across instances"
+    REQUIRES_KEY = False
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://mastodon.social/api/v2"
+    DOCS_URL = "https://docs.joinmastodon.org/api/"
+    SIGN_UP_URL = "https://mastodon.social"
+    RATE_LIMIT_PER_MINUTE = 30
+
+    _INSTANCES = [
+        "https://mastodon.social",
+        "https://infosec.exchange",
+        "https://fosstodon.org",
+        "https://hachyderm.io",
+    ]
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if "@" in query and "." in query.split("@")[-1]:
+            # Full fediverse handle: @user@instance
+            parts = query.lstrip("@").split("@")
+            username, instance = parts[0], parts[1]
+            instances_to_try = [f"https://{instance}"]
+        else:
+            username = query.lstrip("@")
+            instances_to_try = self._INSTANCES
+
+        results = []
+        seen_accts = set()
+
+        for base in instances_to_try:
+            # resolve=true requires auth on most instances; omit for anonymous search
+            data = await self._get(
+                f"{base}/api/v2/search",
+                params={"q": username, "type": "accounts", "limit": 3},
+            )
+            for account in data.get("accounts", []):
+                acct = account.get("acct", "")
+                if acct in seen_accts:
+                    continue
+                if username.lower() not in acct.lower():
+                    continue
+                seen_accts.add(acct)
+                results.append(self._wrap_result(
+                    "mastodon_profile",
+                    {
+                        "username": acct,
+                        "display_name": account.get("display_name"),
+                        "bio": re.sub(r"<[^>]+>", "", account.get("note", "")),
+                        "followers_count": account.get("followers_count"),
+                        "following_count": account.get("following_count"),
+                        "statuses_count": account.get("statuses_count"),
+                        "created_at": account.get("created_at"),
+                        "url": account.get("url"),
+                        "avatar": account.get("avatar_static"),
+                        "bot": account.get("bot"),
+                        "fields": [
+                            {"name": f.get("name"), "value": re.sub(r"<[^>]+>", "", f.get("value", ""))}
+                            for f in account.get("fields", [])
+                        ],
+                    },
+                    confidence=0.9, relevance_score=0.75,
+                    tags=["mastodon", "fediverse", "social"],
+                ))
+        return results
+
+
+@register_api
+class KeybaseAPI(BaseIntelAPI):
+    NAME = "keybase"
+    DESCRIPTION = "Keybase verified identity lookup — cross-platform social proof, PGP keys"
+    REQUIRES_KEY = False
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://keybase.io/_/api/1.0"
+    DOCS_URL = "https://keybase.io/docs/api/1.0"
+    SIGN_UP_URL = "https://keybase.io"
+    RATE_LIMIT_PER_MINUTE = 30
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if "@" in query:
+            return []
+        username = query.lstrip("@")
+        data = await self._get(
+            f"{self.BASE_URL}/user/lookup.json",
+            params={"usernames": username, "fields": "basics,profile,proofs_summary,pgp_keys"},
+        )
+        if data.get("status", {}).get("code") != 0:
+            return []
+
+        them = (data.get("them") or [None])[0]
+        if not them:
+            return []
+
+        basics = them.get("basics", {})
+        profile = them.get("profile", {})
+        proofs = them.get("proofs_summary", {}).get("all", [])
+
+        proof_map = {}
+        for proof in proofs:
+            service = proof.get("proof_type", "")
+            proof_map.setdefault(service, []).append(proof.get("nametag") or proof.get("service_url", ""))
+
+        pgp_keys = [
+            {"fingerprint": k.get("key_fingerprint"), "bits": k.get("bits")}
+            for k in them.get("pgp_keys", [])
+        ]
+
+        return [self._wrap_result(
+            "keybase_identity",
+            {
+                "username": basics.get("username"),
+                "uid": basics.get("uid"),
+                "full_name": profile.get("full_name"),
+                "bio": profile.get("bio"),
+                "location": profile.get("location"),
+                "twitter": proof_map.get("twitter", [None])[0],
+                "github": proof_map.get("github", [None])[0],
+                "reddit": proof_map.get("reddit", [None])[0],
+                "hackernews": proof_map.get("hackernews", [None])[0],
+                "website": proof_map.get("generic_web_site", [None])[0],
+                "all_proofs": proof_map,
+                "pgp_keys": pgp_keys,
+                "pgp_key_count": len(pgp_keys),
+                "profile_url": f"https://keybase.io/{basics.get('username')}",
+            },
+            confidence=0.99, relevance_score=0.9,
+            tags=["keybase", "identity", "pgp", "social_proof"],
+        )]
+
+
+@register_api
+class GravatarAPI(BaseIntelAPI):
+    NAME = "gravatar"
+    DESCRIPTION = "Gravatar email-linked global avatar and profile lookup"
+    REQUIRES_KEY = False
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.PEOPLE, APICategory.EMAIL]
+    BASE_URL = "https://www.gravatar.com"
+    DOCS_URL = "https://gravatar.com/site/implement/profiles/json/"
+    SIGN_UP_URL = "https://gravatar.com"
+    RATE_LIMIT_PER_MINUTE = 30
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if "@" not in query:
+            return []
+        import hashlib
+        email_hash = hashlib.md5(query.strip().lower().encode()).hexdigest()
+        data = await self._get(f"{self.BASE_URL}/{email_hash}.json")
+        if "error" in data or "entry" not in data:
+            return []
+
+        entry = data["entry"][0]
+        accounts = [
+            {"domain": a.get("domain"), "url": a.get("url"), "username": a.get("username", {}).get("value")}
+            for a in entry.get("accounts", [])
+        ]
+        photos = [p.get("value") for p in entry.get("photos", [])]
+
+        return [self._wrap_result(
+            "gravatar_profile",
+            {
+                "email": query,
+                "email_hash": email_hash,
+                "username": entry.get("preferredUsername"),
+                "display_name": entry.get("displayName"),
+                "about": entry.get("aboutMe"),
+                "location": entry.get("currentLocation"),
+                "avatar_url": photos[0] if photos else f"https://www.gravatar.com/avatar/{email_hash}",
+                "profile_url": entry.get("profileUrl") or f"https://www.gravatar.com/{email_hash}",
+                "accounts": accounts,
+                "urls": [u.get("value") for u in entry.get("urls", [])],
+            },
+            confidence=0.97, relevance_score=0.88,
+            tags=["gravatar", "email", "profile", "identity"],
+        )]
+
+
+@register_api
+class HackerNewsAPI(BaseIntelAPI):
+    NAME = "hackernews"
+    DESCRIPTION = "Hacker News user OSINT — karma, submissions, account age, bio"
+    REQUIRES_KEY = False
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://hacker-news.firebaseio.com/v0"
+    DOCS_URL = "https://github.com/HackerNews/API"
+    SIGN_UP_URL = "https://news.ycombinator.com"
+    RATE_LIMIT_PER_MINUTE = 60
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if "@" in query or re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query):
+            return []
+        username = query.lstrip("@")
+        data = await self._get(f"{self.BASE_URL}/user/{username}.json")
+        if not data or "error" in data or not data.get("id"):
+            return []
+
+        import datetime as dt
+        created_ts = data.get("created", 0)
+        created_str = dt.datetime.utcfromtimestamp(created_ts).isoformat() if created_ts else None
+
+        submitted = data.get("submitted", [])
+        return [self._wrap_result(
+            "hackernews_profile",
+            {
+                "username": data.get("id"),
+                "karma": data.get("karma"),
+                "about": re.sub(r"<[^>]+>", "", data.get("about") or ""),
+                "created_at": created_str,
+                "submission_count": len(submitted),
+                "recent_items": submitted[:10],
+                "profile_url": f"https://news.ycombinator.com/user?id={data.get('id')}",
+            },
+            confidence=0.98, relevance_score=0.78,
+            tags=["hackernews", "hn", "social", "developer"],
+        )]
+
+
+@register_api
+class TumblrAPI(BaseIntelAPI):
+    NAME = "tumblr"
+    DESCRIPTION = "Tumblr blog OSINT — posts, activity, theme, description"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://api.tumblr.com/v2"
+    DOCS_URL = "https://www.tumblr.com/docs/en/api/v2"
+    SIGN_UP_URL = "https://www.tumblr.com/oauth/apps"
+    RATE_LIMIT_PER_MINUTE = 60
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+        if "@" in query or re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query):
+            return []
+
+        blogname = query.lstrip("@")
+        identifier = blogname if "." in blogname else f"{blogname}.tumblr.com"
+
+        data = await self._get(
+            f"{self.BASE_URL}/blog/{identifier}/info",
+            params={"api_key": self._api_key},
+        )
+        if "error" in data or data.get("meta", {}).get("status", 0) != 200:
+            return []
+
+        blog = data.get("response", {}).get("blog", {})
+        if not blog.get("name"):
+            return []
+
+        return [self._wrap_result(
+            "tumblr_blog",
+            {
+                "name": blog.get("name"),
+                "title": blog.get("title"),
+                "description": re.sub(r"<[^>]+>", "", blog.get("description") or ""),
+                "url": blog.get("url"),
+                "total_posts": blog.get("total_posts"),
+                "updated": blog.get("updated"),
+                "is_nsfw": blog.get("is_nsfw"),
+                "avatar": f"https://api.tumblr.com/v2/blog/{identifier}/avatar/512",
+                "profile_url": blog.get("url") or f"https://{identifier}",
+            },
+            confidence=0.93, relevance_score=0.76,
+            tags=["tumblr", "social", "blog"],
+        )]
+
+
+@register_api
+class FlickrAPI(BaseIntelAPI):
+    NAME = "flickr"
+    DESCRIPTION = "Flickr photo platform OSINT — profile, photo count, geolocation data, albums"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://www.flickr.com/services/rest"
+    DOCS_URL = "https://www.flickr.com/services/api/"
+    SIGN_UP_URL = "https://www.flickr.com/services/apps/create/"
+    RATE_LIMIT_PER_MINUTE = 60
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+        if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query):
+            return []
+
+        base_params = {"api_key": self._api_key, "format": "json", "nojsoncallback": 1}
+
+        # Find by username or email
+        if "@" in query:
+            find_data = await self._get(self.BASE_URL, params={
+                **base_params, "method": "flickr.people.findByEmail", "find_email": query,
+            })
+        else:
+            find_data = await self._get(self.BASE_URL, params={
+                **base_params, "method": "flickr.people.findByUsername", "username": query,
+            })
+
+        if find_data.get("stat") != "ok":
+            return []
+
+        user_id = find_data.get("user", {}).get("id")
+        if not user_id:
+            return []
+
+        info_data = await self._get(self.BASE_URL, params={
+            **base_params, "method": "flickr.people.getInfo", "user_id": user_id,
+        })
+        if info_data.get("stat") != "ok":
+            return []
+
+        person = info_data.get("person", {})
+        photos = person.get("photos", {})
+
+        return [self._wrap_result(
+            "flickr_profile",
+            {
+                "nsid": user_id,
+                "username": person.get("username", {}).get("_content"),
+                "realname": person.get("realname", {}).get("_content"),
+                "description": person.get("description", {}).get("_content"),
+                "location": person.get("location", {}).get("_content"),
+                "timezone": person.get("timezone", {}).get("label"),
+                "photo_count": photos.get("count", {}).get("_content"),
+                "first_date": photos.get("firstdate", {}).get("_content"),
+                "first_date_taken": photos.get("firstdatetaken", {}).get("_content"),
+                "profile_url": person.get("profileurl", {}).get("_content"),
+                "photos_url": person.get("photosurl", {}).get("_content"),
+                "avatar_url": f"https://farm{person.get('iconfarm')}.staticflickr.com/{person.get('iconserver')}/buddyicons/{user_id}.jpg",
+                "is_pro": bool(person.get("ispro")),
+                "can_buy_pro": bool(person.get("can_buy_pro")),
+            },
+            confidence=0.95, relevance_score=0.78,
+            tags=["flickr", "social", "photos", "creative"],
+        )]
+
+
+@register_api
+class SpotifyAPI(BaseIntelAPI):
+    NAME = "spotify"
+    DESCRIPTION = "Spotify public profile OSINT — playlists, followers, listening activity"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://api.spotify.com/v1"
+    DOCS_URL = "https://developer.spotify.com/documentation/web-api"
+    SIGN_UP_URL = "https://developer.spotify.com/dashboard"
+    RATE_LIMIT_PER_MINUTE = 60
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(
+            self.config.get_api_key("spotify_client_id") and
+            self.config.get_api_key("spotify_client_secret")
+        )
+
+    async def _get_token(self) -> Optional[str]:
+        import base64
+        client_id = self.config.get_api_key("spotify_client_id")
+        client_secret = self.config.get_api_key("spotify_client_secret")
+        credentials = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
+        data = await self._post(
+            "https://accounts.spotify.com/api/token",
+            data={"grant_type": "client_credentials"},
+            headers={"Authorization": f"Basic {credentials}", "Content-Type": "application/x-www-form-urlencoded"},
+        )
+        return data.get("access_token")
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+        if "@" in query or re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query):
+            return []
+
+        token = await self._get_token()
+        if not token:
+            return []
+
+        headers = {"Authorization": f"Bearer {token}"}
+        username = query.lstrip("@")
+
+        # Try direct user profile lookup first
+        user_data = await self._get(f"{self.BASE_URL}/users/{username}", headers=headers)
+        if "error" not in user_data and user_data.get("id"):
+            playlists = await self._get(
+                f"{self.BASE_URL}/users/{username}/playlists",
+                params={"limit": 10},
+                headers=headers,
+            )
+            return [self._wrap_result(
+                "spotify_profile",
+                {
+                    "id": user_data.get("id"),
+                    "display_name": user_data.get("display_name"),
+                    "follower_count": user_data.get("followers", {}).get("total"),
+                    "images": [i.get("url") for i in user_data.get("images", [])],
+                    "external_url": user_data.get("external_urls", {}).get("spotify"),
+                    "playlist_count": playlists.get("total"),
+                    "public_playlists": [
+                        {"name": p.get("name"), "tracks": p.get("tracks", {}).get("total"), "url": p.get("external_urls", {}).get("spotify")}
+                        for p in playlists.get("items", [])[:5]
+                    ],
+                    "profile_url": user_data.get("external_urls", {}).get("spotify"),
+                },
+                confidence=0.94, relevance_score=0.77,
+                tags=["spotify", "social", "music"],
+            )]
+
+        # Fall back to artist search
+        search_data = await self._get(
+            f"{self.BASE_URL}/search",
+            params={"q": username, "type": "user", "limit": 3},
+            headers=headers,
+        )
+        results = []
+        for item in search_data.get("users", {}).get("items", []):
+            if item:
+                results.append(self._wrap_result(
+                    "spotify_profile",
+                    {
+                        "id": item.get("id"),
+                        "display_name": item.get("display_name"),
+                        "follower_count": item.get("followers", {}).get("total"),
+                        "external_url": item.get("external_urls", {}).get("spotify"),
+                        "profile_url": item.get("external_urls", {}).get("spotify"),
+                    },
+                    confidence=0.8, relevance_score=0.7,
+                    tags=["spotify", "social", "music"],
+                ))
+        return results
+
+
+@register_api
+class SteamAPI(BaseIntelAPI):
+    NAME = "steam"
+    DESCRIPTION = "Steam gaming platform OSINT — profile, game library, play hours, groups"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://api.steampowered.com"
+    DOCS_URL = "https://steamcommunity.com/dev/apikey"
+    SIGN_UP_URL = "https://steamcommunity.com/dev/apikey"
+    RATE_LIMIT_PER_MINUTE = 60
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+        if "@" in query or re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query):
+            return []
+
+        username = query.lstrip("@")
+        key = self._api_key
+
+        # Resolve vanity URL → SteamID64
+        vanity = await self._get(
+            f"{self.BASE_URL}/ISteamUser/ResolveVanityURL/v1/",
+            params={"key": key, "vanityurl": username},
+        )
+        if vanity.get("response", {}).get("success") != 1:
+            # Try as raw 64-bit SteamID
+            if not re.match(r"^\d{17}$", username):
+                return []
+            steam_id = username
+        else:
+            steam_id = vanity["response"]["steamid"]
+
+        summary = await self._get(
+            f"{self.BASE_URL}/ISteamUser/GetPlayerSummaries/v2/",
+            params={"key": key, "steamids": steam_id},
+        )
+        players = summary.get("response", {}).get("players", [])
+        if not players:
+            return []
+        player = players[0]
+
+        games_data = await self._get(
+            f"{self.BASE_URL}/IPlayerService/GetOwnedGames/v1/",
+            params={"key": key, "steamid": steam_id, "include_appinfo": 1, "include_played_free_games": 1},
+        )
+        games = games_data.get("response", {})
+        game_count = games.get("game_count", 0)
+        total_hours = sum(g.get("playtime_forever", 0) for g in games.get("games", [])) / 60
+
+        import datetime as dt
+        created = player.get("timecreated")
+        created_str = dt.datetime.utcfromtimestamp(created).isoformat() if created else None
+
+        return [self._wrap_result(
+            "steam_profile",
+            {
+                "steam_id": steam_id,
+                "username": player.get("personaname"),
+                "real_name": player.get("realname"),
+                "profile_url": player.get("profileurl"),
+                "avatar_url": player.get("avatarfull"),
+                "country": player.get("loccountrycode"),
+                "state": player.get("locstatecode"),
+                "community_visibility": player.get("communityvisibilitystate"),
+                "profile_state": player.get("profilestate"),
+                "last_logoff": dt.datetime.utcfromtimestamp(player.get("lastlogoff", 0)).isoformat() if player.get("lastlogoff") else None,
+                "created_at": created_str,
+                "current_game": player.get("gameextrainfo"),
+                "game_count": game_count,
+                "total_play_hours": round(total_hours, 1),
+            },
+            confidence=0.97, relevance_score=0.83,
+            tags=["steam", "gaming", "social", "profile"],
+        )]
+
+
+@register_api
+class VkAPI(BaseIntelAPI):
+    NAME = "vk"
+    DESCRIPTION = "VKontakte (VK) social network OSINT — profile, friends, photos, groups"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://api.vk.com/method"
+    DOCS_URL = "https://vk.com/dev/first_guide"
+    SIGN_UP_URL = "https://vk.com/dev/access_token"
+    RATE_LIMIT_PER_MINUTE = 60
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+
+        base_params = {"access_token": self._api_key, "v": "5.199"}
+        is_ip = re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query)
+        if is_ip:
+            return []
+
+        if "@" in query:
+            # Search by name
+            search_data = await self._get(f"{self.BASE_URL}/users.search", params={
+                **base_params, "q": query, "count": 5, "fields": "screen_name,photo_max,city,country",
+            })
+            users = search_data.get("response", {}).get("items", [])
+        else:
+            # Direct lookup by screen_name or ID
+            user_data = await self._get(f"{self.BASE_URL}/users.get", params={
+                **base_params,
+                "user_ids": query.lstrip("@"),
+                "fields": "screen_name,photo_max,bdate,city,country,followers_count,occupation,education,site,status,verified",
+            })
+            users = user_data.get("response", [])
+
+        results = []
+        for user in users[:3]:
+            if user.get("deactivated"):
+                continue
+            city = user.get("city", {}).get("title") if isinstance(user.get("city"), dict) else None
+            country = user.get("country", {}).get("title") if isinstance(user.get("country"), dict) else None
+            results.append(self._wrap_result(
+                "vk_profile",
+                {
+                    "id": user.get("id"),
+                    "first_name": user.get("first_name"),
+                    "last_name": user.get("last_name"),
+                    "screen_name": user.get("screen_name"),
+                    "status": user.get("status"),
+                    "bdate": user.get("bdate"),
+                    "city": city,
+                    "country": country,
+                    "followers_count": user.get("followers_count"),
+                    "verified": bool(user.get("verified")),
+                    "photo_url": user.get("photo_max"),
+                    "site": user.get("site"),
+                    "occupation": user.get("occupation", {}).get("name") if isinstance(user.get("occupation"), dict) else None,
+                    "profile_url": f"https://vk.com/{user.get('screen_name') or 'id' + str(user.get('id', ''))}",
+                },
+                confidence=0.9, relevance_score=0.8,
+                tags=["vk", "vkontakte", "social", "russia"],
+            ))
+        return results
+
+
+@register_api
+class TelegramChannelAPI(BaseIntelAPI):
+    NAME = "telegram"
+    DESCRIPTION = "Telegram public channel, group, and bot OSINT via Bot API"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://api.telegram.org"
+    DOCS_URL = "https://core.telegram.org/bots/api"
+    SIGN_UP_URL = "https://t.me/BotFather"
+    RATE_LIMIT_PER_MINUTE = 30
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+        if "@" in query and "." in query.split("@")[-1]:
+            return []
+        if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query):
+            return []
+
+        token = self._api_key
+        username = "@" + query.lstrip("@")
+
+        data = await self._post(
+            f"{self.BASE_URL}/bot{token}/getChat",
+            json={"chat_id": username},
+        )
+        if not data.get("ok"):
+            return []
+
+        chat = data.get("result", {})
+        chat_type = chat.get("type", "")
+        member_count = None
+        if chat_type in ("channel", "supergroup", "group"):
+            count_data = await self._post(
+                f"{self.BASE_URL}/bot{token}/getChatMemberCount",
+                json={"chat_id": username},
+            )
+            if count_data.get("ok"):
+                member_count = count_data.get("result")
+
+        photo_url = None
+        photo = chat.get("photo")
+        if photo:
+            file_id = photo.get("big_file_id") or photo.get("small_file_id")
+            if file_id:
+                file_data = await self._post(
+                    f"{self.BASE_URL}/bot{token}/getFile",
+                    json={"file_id": file_id},
+                )
+                if file_data.get("ok"):
+                    file_path = file_data.get("result", {}).get("file_path")
+                    if file_path:
+                        photo_url = f"https://api.telegram.org/file/bot{token}/{file_path}"
+
+        return [self._wrap_result(
+            "telegram_channel",
+            {
+                "id": chat.get("id"),
+                "type": chat_type,
+                "username": chat.get("username"),
+                "title": chat.get("title") or chat.get("first_name"),
+                "description": chat.get("description") or chat.get("bio"),
+                "member_count": member_count,
+                "invite_link": chat.get("invite_link"),
+                "photo_url": photo_url,
+                "linked_chat_id": chat.get("linked_chat_id"),
+                "is_verified": chat.get("is_verified"),
+                "is_scam": chat.get("is_scam"),
+                "is_fake": chat.get("is_fake"),
+                "profile_url": f"https://t.me/{chat.get('username')}" if chat.get("username") else None,
+            },
+            confidence=0.98, relevance_score=0.84,
+            tags=["telegram", "social", "messaging"] + (["scam"] if chat.get("is_scam") else []),
+            is_anomaly=bool(chat.get("is_scam") or chat.get("is_fake")),
+        )]
+
+
+@register_api
+class DiscordAPI(BaseIntelAPI):
+    NAME = "discord"
+    DESCRIPTION = "Discord user lookup by snowflake ID via Bot API — avatar, badges, account age"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://discord.com/api/v10"
+    DOCS_URL = "https://discord.com/developers/docs/intro"
+    SIGN_UP_URL = "https://discord.com/developers/applications"
+    RATE_LIMIT_PER_MINUTE = 30
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+        if "@" in query or re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query):
+            return []
+
+        token = self._api_key
+        headers = {"Authorization": f"Bot {token}"}
+
+        # Accept either a numeric snowflake ID or a guild invite code
+        query = query.strip().lstrip("@")
+
+        if re.match(r"^\d{15,22}$", query):
+            # Snowflake ID — direct user lookup
+            data = await self._get(f"{self.BASE_URL}/users/{query}", headers=headers)
+            if "code" in data:
+                return []
+
+            import datetime as dt
+            # Decode snowflake timestamp (Discord epoch: 2015-01-01)
+            discord_epoch = 1420070400000
+            ts_ms = (int(query) >> 22) + discord_epoch
+            created_at = dt.datetime.utcfromtimestamp(ts_ms / 1000).isoformat()
+
+            avatar_hash = data.get("avatar")
+            avatar_url = (
+                f"https://cdn.discordapp.com/avatars/{query}/{avatar_hash}.{'gif' if avatar_hash and avatar_hash.startswith('a_') else 'png'}"
+                if avatar_hash else None
+            )
+
+            flags = data.get("public_flags", 0)
+            badges = [
+                name for name, bit in [
+                    ("Discord Staff", 1), ("Partnered Server Owner", 2), ("HypeSquad Events", 4),
+                    ("Bug Hunter Level 1", 8), ("HypeSquad Bravery", 64), ("HypeSquad Brilliance", 128),
+                    ("HypeSquad Balance", 256), ("Early Supporter", 512), ("Bug Hunter Level 2", 16384),
+                    ("Verified Bot Developer", 131072), ("Active Developer", 4194304),
+                ]
+                if flags & bit
+            ]
+
+            return [self._wrap_result(
+                "discord_user",
+                {
+                    "id": data.get("id"),
+                    "username": data.get("username"),
+                    "global_name": data.get("global_name"),
+                    "discriminator": data.get("discriminator"),
+                    "avatar_url": avatar_url,
+                    "banner_color": data.get("banner_color"),
+                    "accent_color": data.get("accent_color"),
+                    "bot": data.get("bot", False),
+                    "system": data.get("system", False),
+                    "public_flags": flags,
+                    "badges": badges,
+                    "created_at": created_at,
+                    "profile_url": f"https://discord.com/users/{query}",
+                },
+                confidence=1.0, relevance_score=0.86,
+                tags=["discord", "social", "gaming"] + badges,
+            )]
+
+        # Try as a guild invite code to get server info
+        invite_data = await self._get(
+            f"{self.BASE_URL}/invites/{query}",
+            params={"with_counts": "true", "with_expiration": "true"},
+            headers=headers,
+        )
+        if "code" in invite_data and invite_data.get("type") is None:
+            return []
+
+        guild = invite_data.get("guild", {})
+        if not guild:
+            return []
+
+        return [self._wrap_result(
+            "discord_server",
+            {
+                "invite_code": query,
+                "guild_id": guild.get("id"),
+                "name": guild.get("name"),
+                "description": guild.get("description"),
+                "member_count": invite_data.get("approximate_member_count"),
+                "online_count": invite_data.get("approximate_presence_count"),
+                "verification_level": guild.get("verification_level"),
+                "nsfw": guild.get("nsfw"),
+                "features": guild.get("features", []),
+                "invite_url": f"https://discord.gg/{query}",
+            },
+            confidence=0.95, relevance_score=0.8,
+            tags=["discord", "server", "community"],
+        )]
+
+
+@register_api
+class FacebookAPI(BaseIntelAPI):
+    NAME = "facebook"
+    DESCRIPTION = "Facebook/Meta Graph API — public page lookup, fan count, contact info"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE_LIMITED
+    CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
+    BASE_URL = "https://graph.facebook.com/v19.0"
+    DOCS_URL = "https://developers.facebook.com/docs/graph-api"
+    SIGN_UP_URL = "https://developers.facebook.com/apps"
+    RATE_LIMIT_PER_MINUTE = 30
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+        is_ip = re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query)
+        if is_ip:
+            return []
+
+        token = self._api_key
+        username = query.lstrip("@")
+
+        # Direct page/profile slug lookup
+        page_data = await self._get(
+            f"{self.BASE_URL}/{username}",
+            params={
+                "fields": "id,name,about,fan_count,followers_count,location,website,emails,phone,username,verification_status,category",
+                "access_token": token,
+            },
+        )
+        if "error" not in page_data and page_data.get("id"):
+            return [self._wrap_result(
+                "facebook_page",
+                {
+                    "id": page_data.get("id"),
+                    "name": page_data.get("name"),
+                    "username": page_data.get("username"),
+                    "about": page_data.get("about"),
+                    "category": page_data.get("category"),
+                    "fan_count": page_data.get("fan_count"),
+                    "followers_count": page_data.get("followers_count"),
+                    "location": page_data.get("location"),
+                    "website": page_data.get("website"),
+                    "emails": page_data.get("emails", []),
+                    "phone": page_data.get("phone"),
+                    "verified": page_data.get("verification_status") == "blue_verified",
+                    "profile_url": f"https://www.facebook.com/{username}",
+                },
+                confidence=0.92, relevance_score=0.82,
+                tags=["facebook", "meta", "social", "page"],
+            )]
+
+        # Page search
+        search_data = await self._get(
+            f"{self.BASE_URL}/search",
+            params={
+                "q": username,
+                "type": "page",
+                "fields": "id,name,about,fan_count,category",
+                "access_token": token,
+                "limit": 5,
+            },
+        )
+        results = []
+        for page in search_data.get("data", [])[:3]:
+            results.append(self._wrap_result(
+                "facebook_page",
+                {
+                    "id": page.get("id"),
+                    "name": page.get("name"),
+                    "about": page.get("about"),
+                    "category": page.get("category"),
+                    "fan_count": page.get("fan_count"),
+                    "profile_url": f"https://www.facebook.com/{page.get('id')}",
+                },
+                confidence=0.8, relevance_score=0.72,
+                tags=["facebook", "meta", "social", "page"],
+            ))
+        return results
+
+
+# ═══════════════════════════════════════════════════════════
+# EMAIL & BREACH INTELLIGENCE — EXPANDED
+# ═══════════════════════════════════════════════════════════
+
+@register_api
+class EmailRepAPI(BaseIntelAPI):
+    NAME = "emailrep"
+    DESCRIPTION = "Email reputation — spam score, breach status, profiles, deliverability"
+    REQUIRES_KEY = False
+    TIER = APITier.FREE_LIMITED
+    CATEGORIES = [APICategory.EMAIL, APICategory.PEOPLE, APICategory.BREACH]
+    BASE_URL = "https://emailrep.io"
+    DOCS_URL = "https://docs.emailrep.io"
+    SIGN_UP_URL = "https://emailrep.io/key"
+    RATE_LIMIT_PER_MINUTE = 10
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if "@" not in query:
+            return []
+
+        headers = {"User-Agent": "PhantomSignal-OSINT/1.0"}
+        if self._api_key:
+            headers["Key"] = self._api_key
+
+        data = await self._get(f"{self.BASE_URL}/{query}", headers=headers)
+        if "error" in data or not data.get("email"):
+            return []
+
+        details = data.get("details", {})
+        is_suspicious = data.get("suspicious", False)
+        profiles = details.get("profiles", [])
+
+        return [self._wrap_result(
+            "email_reputation",
+            {
+                "email": query,
+                "reputation": data.get("reputation"),
+                "suspicious": is_suspicious,
+                "references": data.get("references"),
+                "blacklisted": details.get("blacklisted"),
+                "malicious_activity": details.get("malicious_activity"),
+                "malicious_activity_recent": details.get("malicious_activity_recent"),
+                "credentials_leaked": details.get("credentials_leaked"),
+                "credentials_leaked_recent": details.get("credentials_leaked_recent"),
+                "data_breach": details.get("data_breach"),
+                "first_seen": details.get("first_seen"),
+                "last_seen": details.get("last_seen"),
+                "domain_exists": details.get("domain_exists"),
+                "domain_reputation": details.get("domain_reputation"),
+                "new_domain": details.get("new_domain"),
+                "days_since_domain_creation": details.get("days_since_domain_creation"),
+                "suspicious_tld": details.get("suspicious_tld"),
+                "spam": details.get("spam"),
+                "free_provider": details.get("free_provider"),
+                "disposable": details.get("disposable"),
+                "deliverable": details.get("deliverable"),
+                "accept_all": details.get("accept_all"),
+                "valid_mx": details.get("valid_mx"),
+                "profiles": profiles,
+                "sport_found_on": profiles,
+            },
+            confidence=0.92, relevance_score=0.88,
+            tags=["emailrep", "email", "reputation"] + (["suspicious", "breach"] if is_suspicious else []),
+            is_anomaly=is_suspicious,
+        )]
+
+
+@register_api
+class IntelligenceXAPI(BaseIntelAPI):
+    NAME = "intelx"
+    DESCRIPTION = "Intelligence X — dark web, leaks, breach data, and paste search"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE_LIMITED
+    CATEGORIES = [APICategory.BREACH, APICategory.DARK_WEB, APICategory.EMAIL, APICategory.PEOPLE]
+    BASE_URL = "https://2.intelx.io"
+    DOCS_URL = "https://intelx.io/product#api"
+    SIGN_UP_URL = "https://intelx.io/signup"
+    RATE_LIMIT_PER_MINUTE = 10
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+
+        headers = {"x-key": self._api_key, "Content-Type": "application/json"}
+
+        # Initiate search
+        search_resp = await self._post(
+            f"{self.BASE_URL}/intelligent/search",
+            json={
+                "term": query,
+                "buckets": [],
+                "lookuplevel": 0,
+                "maxresults": 20,
+                "timeout": 5,
+                "datefrom": "",
+                "dateto": "",
+                "sort": 4,
+                "media": 0,
+                "terminate": [],
+            },
+            headers=headers,
+        )
+        if "error" in search_resp or not search_resp.get("id"):
+            return []
+
+        search_id = search_resp["id"]
+
+        # Brief pause then fetch results
+        await asyncio.sleep(2)
+
+        results_resp = await self._get(
+            f"{self.BASE_URL}/intelligent/search/result",
+            params={"id": search_id, "limit": 20, "offset": 0},
+            headers={"x-key": self._api_key},
+        )
+
+        records = results_resp.get("records", [])
+        if not records:
+            return []
+
+        hits = [
+            {
+                "name": r.get("name"),
+                "bucket": r.get("bucket"),
+                "type": r.get("type"),
+                "date": r.get("date"),
+                "size": r.get("size"),
+                "media": r.get("media"),
+            }
+            for r in records[:20]
+        ]
+
+        return [self._wrap_result(
+            "intelx_leak",
+            {
+                "query": query,
+                "total_hits": results_resp.get("total", len(hits)),
+                "hits": hits,
+                "buckets": list({h.get("bucket") for h in hits if h.get("bucket")}),
+            },
+            confidence=0.85, relevance_score=0.9,
+            tags=["intelx", "breach", "darkweb", "leak"],
+            is_anomaly=len(hits) > 0,
+        )]
+
+
+# ═══════════════════════════════════════════════════════════
+# PHONE INTELLIGENCE
+# ═══════════════════════════════════════════════════════════
+
+@register_api
+class AbstractPhoneAPI(BaseIntelAPI):
+    NAME = "abstractapi_phone"
+    DESCRIPTION = "Phone number validation — carrier, line type, location, WhatsApp-compatible format"
+    REQUIRES_KEY = True
+    TIER = APITier.FREE_LIMITED
+    CATEGORIES = [APICategory.PEOPLE]
+    BASE_URL = "https://phonevalidation.abstractapi.com/v1"
+    DOCS_URL = "https://app.abstractapi.com/api/phone-validation/documentation"
+    SIGN_UP_URL = "https://app.abstractapi.com/api/phone-validation/pricing/select"
+    RATE_LIMIT_PER_MINUTE = 3
+
+    async def search(self, query: str, **kwargs) -> List[Dict]:
+        if not self.is_configured:
+            return []
+
+        # Only act on phone-like strings
+        clean = re.sub(r"[^\d+]", "", query)
+        if len(clean) < 7 or "@" in query or re.match(r"^\d{1,3}(\.\d{1,3}){3}$", query):
+            return []
+
+        data = await self._get(
+            self.BASE_URL,
+            params={"api_key": self._api_key, "phone": clean},
+        )
+        if "error" in data or not data.get("phone"):
+            return []
+
+        return [self._wrap_result(
+            "phone_validation",
+            {
+                "phone": data.get("phone"),
+                "valid": data.get("valid"),
+                "format": data.get("format", {}),
+                "country": data.get("country", {}),
+                "location": data.get("location"),
+                "type": data.get("type"),
+                "carrier": data.get("carrier"),
+                "international_format": data.get("format", {}).get("international"),
+                "local_format": data.get("format", {}).get("local"),
+                "country_code": data.get("country", {}).get("code"),
+                "country_name": data.get("country", {}).get("name"),
+                "country_prefix": data.get("country", {}).get("prefix"),
+            },
+            confidence=0.96, relevance_score=0.85,
+            tags=["phone", "carrier", "validation"],
         )]
 
 

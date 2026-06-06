@@ -15,8 +15,8 @@ dist/
 venv/
 env/
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
 
 # PhantomSignal runtime
 phantomsignal.db

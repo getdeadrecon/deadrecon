@@ -102,6 +102,21 @@ def _register_socketio_handlers(app: Flask) -> None:
         if scan_id:
             join_room(f"scan_{scan_id}")
             emit("joined_scan", {"scan_id": scan_id, "message": f"Tuned into ghost run {scan_id[:8]}..."})
+            # Send current progress so late-joining browsers can sync immediately.
+            with app.app_context():
+                from phantomsignal.core.database import get_db
+                from phantomsignal.core.models import Scan
+                try:
+                    with get_db() as db:
+                        scan = db.query(Scan).filter(Scan.id == scan_id).first()
+                        if scan and scan.status.value == "running":
+                            emit("scan_status", {
+                                "scan_id": scan_id,
+                                "progress": scan.progress or 0,
+                                "status": scan.status.value,
+                            })
+                except Exception:
+                    pass
 
     @socketio.on("leave_scan")
     def on_leave_scan(data):

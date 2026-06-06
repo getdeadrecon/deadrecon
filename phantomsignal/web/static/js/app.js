@@ -8,6 +8,7 @@ let socket = null;
 let isConnected = false;
 
 function initSocket() {
+  if (socket) return;                          // idempotent
   socket = io({ transports: ['websocket', 'polling'], reconnectionAttempts: 10 });
 
   socket.on('connect', () => {
@@ -78,28 +79,6 @@ function setConnectionStatus(state) {
   text.style.color = state === 'online' ? 'var(--neon-green)' : 'var(--text-dim)';
 }
 
-// ── Live Feed Terminal ───────────────────────────────────────
-function initLiveFeed(scanId) {
-  if (!socket) return;
-  socket.emit('join_scan', { scan_id: scanId });
-
-  socket.on('scan_complete', (data) => {
-    if (data.scan_id === scanId) {
-      appendTerminalLine('live-terminal', 'PHANTOMSIGNAL',
-        `GHOST RUN COMPLETE — Shadow Score: ${data.shadow_score?.toFixed(0)}/100 | Threat: ${data.threat_level?.toUpperCase()}`,
-        'success');
-      // Reload results after brief delay
-      setTimeout(() => { location.reload(); }, 2500);
-    }
-  });
-
-  socket.on('scan_aborted', (data) => {
-    if (data.scan_id === scanId) {
-      appendTerminalLine('live-terminal', 'PHANTOMSIGNAL', 'GHOST RUN TERMINATED — Signal severed.', 'warning');
-      setTimeout(() => { location.reload(); }, 1500);
-    }
-  });
-}
 
 function appendTerminalLine(termId, module, message, level) {
   const term = document.getElementById(termId);
@@ -187,8 +166,12 @@ function applyTheme(theme) {
 }
 
 // ── Boot Sequence ─────────────────────────────────────────────
+// Initialise the socket immediately — scripts on the results page need it
+// before DOMContentLoaded fires (socket.io is already loaded by this point).
+initSocket();
+
 document.addEventListener('DOMContentLoaded', () => {
-  initSocket();
+  // initSocket() already called above; this is a no-op guard
 
   // Apply saved theme and wire toggle
   const savedTheme = localStorage.getItem('phantomsignal-theme') || 'dark';

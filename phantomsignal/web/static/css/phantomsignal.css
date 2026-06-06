@@ -1119,9 +1119,10 @@ a:hover { color: var(--neon-green); }
 .key-row { margin-bottom: 0.6rem; }
 .key-row-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; }
 .key-name { font-size: 0.75rem; font-weight: 600; color: var(--text); flex: 1; }
-.key-status { font-size: 0.65rem; }
-.key-set    { color: var(--neon-green); }
-.key-missing{ color: var(--text-dim); }
+.key-status  { font-size: 0.65rem; }
+.key-set     { color: var(--neon-green); }
+.key-missing { color: var(--text-dim); }
+.key-invalid { color: #ffaa00; }
 .key-input  { font-size: 0.8rem; }
 .btn-test {
   background: none;

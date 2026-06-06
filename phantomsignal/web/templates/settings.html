@@ -139,17 +139,29 @@ function testAPI(apiName, btn) {
   fetch(`/settings/api/test/${apiName}`)
     .then(r => r.json())
     .then(data => {
-      btn.textContent = data.status === 'ok' ? '✓ OK' : '✗ FAIL';
-      btn.style.color = data.status === 'ok' ? '#00ff41' : '#ff2d55';
-      showToast(
-        data.status === 'ok'
-          ? `${apiName} signal confirmed — ${data.result_count} results`
-          : `${apiName} signal lost — ${data.message}`,
-        data.status === 'ok' ? 'success' : 'error'
-      );
+      const keyRow = btn.closest('.key-row');
+      const badge = keyRow ? keyRow.querySelector('.key-status') : null;
+
+      if (data.status === 'ok') {
+        btn.textContent = '✓ OK';
+        btn.style.color = '#00ff41';
+        showToast(`${apiName} — signal confirmed (${data.result_count} results)`, 'success');
+      } else if (data.status === 'invalid_key') {
+        btn.textContent = '⚠ INVALID';
+        btn.style.color = '#ffaa00';
+        if (badge) {
+          badge.textContent = '⚠ INVALID';
+          badge.className = 'key-status key-invalid';
+        }
+        showToast(`${apiName} — key rejected by API. Grab a fresh key.`, 'error');
+      } else {
+        btn.textContent = '✗ FAIL';
+        btn.style.color = '#ff2d55';
+        showToast(`${apiName} — ${data.message}`, 'error');
+      }
     })
-    .catch(() => { btn.textContent = '✗ ERR'; })
-    .finally(() => { setTimeout(() => { btn.textContent = 'TEST'; btn.disabled = false; }, 2000); });
+    .catch(() => { btn.textContent = '✗ ERR'; btn.style.color = '#ff2d55'; })
+    .finally(() => { setTimeout(() => { btn.textContent = 'TEST'; btn.disabled = false; btn.style.color = ''; }, 3000); });
 }
 </script>
 {% endblock %}

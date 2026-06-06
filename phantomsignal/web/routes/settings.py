@@ -40,7 +40,7 @@ def save_scraper_settings():
 @settings_bp.route("/api/test/<api_name>")
 def test_api(api_name):
     """Test an API key by making a live query."""
-    from phantomsignal.intel.apis.base import get_registered_apis
+    from phantomsignal.intel.apis.base import get_registered_apis, APIAuthError
     import asyncio
     registry = get_registered_apis()
     cls = registry.get(api_name)
@@ -51,13 +51,13 @@ def test_api(api_name):
     if not api.is_configured:
         return jsonify({"status": "unconfigured", "message": "No API key set"})
 
+    probe = "8.8.8.8" if "network" in [c.value for c in api.CATEGORIES] else "google.com"
     try:
         loop = asyncio.new_event_loop()
-        results = loop.run_until_complete(asyncio.wait_for(
-            api.search("8.8.8.8" if "network" in [c.value for c in api.CATEGORIES] else "google.com"),
-            timeout=10,
-        ))
+        results = loop.run_until_complete(asyncio.wait_for(api.search(probe), timeout=15))
         loop.close()
         return jsonify({"status": "ok", "result_count": len(results or [])})
+    except APIAuthError as e:
+        return jsonify({"status": "invalid_key", "message": f"Key rejected by API (HTTP {e.status_code})"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
