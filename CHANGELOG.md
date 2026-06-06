@@ -11,6 +11,29 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.3] — 2026-06-05
+
+### Changed
+- **Wordmark logo** — replaced block-character ghost mascot with a `PHANTOM / SIGNAL` slant-font wordmark (neon green glow) across the nav bar, page headings, empty states, and favicon; both words centered on a shared canvas
+- **Ghost emoji** — swapped 🦉 → 👻 in UI templates and pre-rendered README SVG screenshots (`screenshot_dashboard.svg`, `screenshot_launch.svg`)
+- **CSS sizing** — image sizing switched from height-based to width-based (`120px` nav, `180px` heading, `200px` empty state) to match the new wider image proportions
+
+### Added
+- `scripts/render_avatar.py` — source-of-truth script to regenerate the wordmark PNG assets (pyfiglet slant font + Pillow glow layers)
+- `docs/assets/phantomsignal-avatar-transparent.png` — transparent variant of the wordmark for light backgrounds
+
+### Removed
+- `scripts/render_owl.py` and all owl PNG assets (`owl-ascii.png`, `owl-ascii-transparent.png`)
+
+### Fixed
+- Encrypted exporter file magic bytes updated `NOWL` → `NPHM`; legacy `NOWL` files remain readable for backwards compatibility
+
+### Housekeeping
+- `wheels/` added to `.gitignore` (offline pip wheel cache — not for version control)
+- Dockerfile: optional crawler deps (`chromium`, `tesseract-ocr`) split into a fault-tolerant layer; added offline wheel install via `--find-links`
+
+---
+
 ## [1.3.1] — 2026-06-04
 
 ### Changed
