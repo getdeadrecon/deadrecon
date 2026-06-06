@@ -31,19 +31,21 @@
 
 ---
 
-## ⚡ What's New in v1.3.0
+## ⚡ What's New in v1.4.0
 
-### Rich CLI output panels
-`phantomsignal scan <target>` now renders module-specific intelligence panels instead of a raw table — DNS records, subdomains, SPF/DMARC/DNSSEC status, an aligned port table with version/banner/risk, tech stack with security header grade A–F, exposed API resources, GeoIP/ASN intel, and a red anomaly callout. All panel right-borders are pinned to terminal width.
+### 16 new intelligence API integrations
+Twitch, Mastodon (4 federated instances), Keybase, Gravatar, HackerNews, Tumblr, Flickr, Spotify, Steam, VK, Telegram (public channels), Discord (user + server lookup), Facebook/Meta Graph, EmailRep, Intelligence X (dark web / paste / breach search), and Abstract API phone validation. Total: **46+ intel sources**.
 
-### nmap integration
-The port scanner now chains **nmap** (`-sV --version-intensity 7 -O --osscan-guess`) for full service-version detection and OS fingerprinting, with a transparent pure-Python async TCP fallback when nmap is absent or running without raw-socket privileges (macOS / Windows). The scan engine used and OS guess are shown inline in the port panel footer.
+### Ghost Key invalid-key detection
+The Ghost Key Vault TEST button now distinguishes a **rejected key** (HTTP 401/403) from a working key with no results. Invalid keys surface an amber `⚠ INVALID` badge directly on the key row — no more false `✓ OK` on a dead credential.
 
-### Expanded port coverage
-`COMMON_PORTS` expanded from 56 → 99 ports covering low privileged services and high-numbered application ports — WinRM (5985/5986), Webmin (10000), InfluxDB (8086), Radmin (4899), and more. `DANGEROUS_PORTS` extended accordingly.
+### AlienVault OTX timeout fix
+OTX section requests (`general`, `reputation`, `geo`, `malware`, `passive_dns`) now run **concurrently** with an 8-second per-section cap instead of sequentially. Eliminates the consistent 30s timeout caused by OTX's slow `reputation` endpoint on IP scans.
 
-### Web UI parity with CLI
-The scan results page now renders each result type as structured output — port cards, DNS record tables, SPF/DMARC status, security header grade, TLS issuer/expiry, API endpoint status codes, IP geolocation with TOR/VPN flags — matching the CLI display. Quick Probe now runs all 5 default modules (`dns_recon`, `port_scan`, `tech_detect`, `api_hunt`, `intel`).
+### WebSocket live feed improvements
+- Server syncs current scan progress to browsers that connect **after** a run has started — no more stuck-at-0% progress bar on direct URL navigation
+- Polling fallback keeps the progress bar accurate even when SocketIO events are missed
+- 1-second engine start delay eliminates the race condition where events fire before the browser joins the scan room
 
 ---
 
@@ -109,17 +111,18 @@ PhantomSignal is a **community-powered, open-source OSINT intelligence framework
 - **SPF/DMARC analysis** — identify email spoofing vulnerabilities
 - **Reverse DNS** and co-hosted domain discovery
 
-### 🔬 Intelligence APIs (30+ Integrations)
+### 🔬 Intelligence APIs (46+ Integrations)
 
 | Category | APIs |
 |----------|------|
 | **Network Scanning** | Shodan, Censys, ZoomEye, BinaryEdge |
-| **Threat Intelligence** | VirusTotal, AbuseIPDB, GreyNoise, AlienVault OTX |
-| **Email** | Hunter.io, HaveIBeenPwned, HaveIBeenPwned |
+| **Threat Intelligence** | VirusTotal, AbuseIPDB, GreyNoise, AlienVault OTX, Intelligence X |
+| **Email & Breach** | Hunter.io, HaveIBeenPwned, EmailRep |
 | **Domain/Web** | SecurityTrails, URLScan.io, WhoisXML, Local WHOIS |
 | **Geolocation** | IPInfo.io |
+| **Phone** | Abstract API phone validation |
 | **People Search** | Pipl, FullContact, WhitePages, Spokeo, Clearbit |
-| **Social** | GitHub, Twitter/X |
+| **Social** | GitHub, Twitter/X, Reddit, Mastodon, Keybase, Gravatar, HackerNews, Twitch, YouTube, Instagram, TikTok, LinkedIn, Tumblr, Flickr, Spotify, Steam, VK, Telegram, Discord, Facebook |
 | **Custom** | Bring your own API via plugin architecture |
 
 ### 👤 Shadow Profiler (People Intelligence)
@@ -256,7 +259,7 @@ phantomsignal/
 ├── core/               — Engine, config, database, models
 ├── scrapers/           — Scrapy crawler, tech detector, port scanner, API hunter, DNS recon
 ├── intel/
-│   ├── apis/           — 30+ API integrations (plugin architecture)
+│   ├── apis/           — 46+ API integrations (plugin architecture)
 │   └── people/         — People intelligence aggregation
 ├── exporters/          — JSON/CSV/PDF/HTML/XML/XLSX/STIX + crypto wrapper
 └── web/
