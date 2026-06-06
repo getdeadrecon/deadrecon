@@ -122,22 +122,22 @@ class PhantomEngine:
         target = scan.target
         opts = scan.options or {}
 
-        module_map = {
-            "dns_recon": ("dns_recon", DNSRecon(config).run(target)),
-            "port_scan": ("port_scan", PortScanner(config).scan(target, opts.get("ports"))),
-            "tech_detect": ("tech_detect", TechDetector(config).detect(target)),
-            "api_hunt": ("api_hunt", APIHunter(config).hunt(target)),
-            "web_crawl": ("web_crawl", WebCrawler(config).crawl(target, depth=opts.get("depth", 2))),
-            "intel": ("intel", IntelOrchestrator(config).run(target, scan.scan_type.value, opts)),
+        module_factories = {
+            "dns_recon": lambda: ("dns_recon", DNSRecon(config).run(target)),
+            "port_scan": lambda: ("port_scan", PortScanner(config).scan(target, opts.get("ports"))),
+            "tech_detect": lambda: ("tech_detect", TechDetector(config).detect(target)),
+            "api_hunt": lambda: ("api_hunt", APIHunter(config).hunt(target)),
+            "web_crawl": lambda: ("web_crawl", WebCrawler(config).crawl(target, depth=opts.get("depth", 2))),
+            "intel": lambda: ("intel", IntelOrchestrator(config).run(target, scan.scan_type.value, opts)),
         }
 
         # Default full-spectrum if no modules specified
         if not modules:
-            modules = list(module_map.keys())
+            modules = list(module_factories.keys())
 
         for mod in modules:
-            if mod in module_map:
-                pipeline.append(module_map[mod])
+            if mod in module_factories:
+                pipeline.append(module_factories[mod]())
 
         return pipeline
 
