@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.1] — 2026-06-06
+
+### Changed
+- README updated to reflect v1.4.0 features — What's New section, API integrations table (46+ sources), architecture count
+
+---
+
 ## [1.4.0] — 2026-06-06
 
 ### Added
