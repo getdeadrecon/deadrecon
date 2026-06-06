@@ -41,7 +41,7 @@ class ExportManager:
     }
 
     def __init__(self, output_dir: Optional[str] = None):
-        self.output_dir = Path(output_dir or phantomsignal_config.get("export", "output_dir", default="./exports"))
+        self.output_dir = Path(output_dir or phantomsignal_config.get("export", "output_dir", default="/tmp")).resolve()
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def export(

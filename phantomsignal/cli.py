@@ -406,7 +406,7 @@ def web(host, port, debug, open_browser):
 @click.option("--profile", "-p",
               type=click.Choice(["quick", "standard", "deep", "ghost"]),
               default="standard")
-@click.option("--output", "-o", default=None, help="Output file path")
+@click.option("--output", "-o", default=None, help="Output directory (defaults to /tmp)")
 @click.option("--format", "-f", "fmt",
               type=click.Choice(["json", "csv", "html", "xml", "pdf", "markdown", "stix"]),
               default="json", help="Output format")
@@ -478,7 +478,7 @@ def scan(target, scan_type, modules, profile, output, fmt, compress, encrypt, pa
 
     if output:
         from phantomsignal.exporters.manager import ExportManager
-        manager = ExportManager(output_dir=str(Path(output).parent))
+        manager = ExportManager(output_dir=output)
         result = manager.export(
             scan_id=scan_id,
             fmt=fmt,
@@ -593,7 +593,7 @@ def status():
 @click.argument("scan_id")
 @click.option("--format", "-f", "fmt", default="json",
               type=click.Choice(["json", "csv", "html", "xml", "pdf", "markdown", "stix"]))
-@click.option("--output", "-o", default="./exports")
+@click.option("--output", "-o", default=None, help="Output directory (defaults to /tmp)")
 @click.option("--compress", is_flag=True)
 @click.option("--encrypt", is_flag=True)
 @click.option("--password", default=None)

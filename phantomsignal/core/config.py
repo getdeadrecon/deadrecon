@@ -91,7 +91,7 @@ class PhantomSignalConfig:
             },
             "export": {
                 "default_format": "json",
-                "output_dir": "./exports",
+                "output_dir": "/tmp",
                 "compression": False,
                 "encryption": False,
                 "encryption_algorithm": "AES-256-GCM",
@@ -139,6 +139,7 @@ class PhantomSignalConfig:
             "PHANTOMSIGNAL_SECRET_KEY": ("server", "secret_key"),
             "PHANTOMSIGNAL_TOR_ENABLED": ("scraper", "tor_enabled"),
             "PHANTOMSIGNAL_PROXY": ("scraper", "proxy"),
+            "PHANTOMSIGNAL_EXPORT_DIR": ("export", "output_dir"),
         }
         api_key_envs = {
             "SHODAN_API_KEY": "shodan",
