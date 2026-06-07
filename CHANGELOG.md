@@ -11,6 +11,15 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.2] — 2026-06-06
+
+### Fixed
+- Export commands now work immediately after install — `ExportManager`, `config`, and the `export` CLI command all default output to `/tmp` instead of `./exports`, preventing permission errors for users who haven't configured an output directory. Override with `PHANTOMSIGNAL_EXPORT_DIR` env var or `--output`.
+- `RuntimeWarning: coroutine was never awaited` printed on every scan when modules were excluded from the pipeline — `_build_pipeline` now uses lazy factories so coroutines are only created for modules that will actually run.
+- `scan --output` flag now treated as a directory path (not a file path), matching the documented behaviour.
+
+---
+
 ## [1.4.1] — 2026-06-06
 
 ### Changed
@@ -202,7 +211,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-[Unreleased]: https://github.com/getphantomsignal/phantomsignal/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/getphantomsignal/phantomsignal/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/getphantomsignal/phantomsignal/compare/v1.4.1...v1.4.2
+[1.4.1]: https://github.com/getphantomsignal/phantomsignal/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/getphantomsignal/phantomsignal/compare/v1.3.3...v1.4.0
+[1.3.3]: https://github.com/getphantomsignal/phantomsignal/compare/v1.3.1...v1.3.3
+[1.3.1]: https://github.com/getphantomsignal/phantomsignal/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/getphantomsignal/phantomsignal/compare/v1.2.5...v1.3.0
+[1.2.5]: https://github.com/getphantomsignal/phantomsignal/compare/v1.2.4...v1.2.5
+[1.2.4]: https://github.com/getphantomsignal/phantomsignal/compare/v1.2.3...v1.2.4
+[1.2.3]: https://github.com/getphantomsignal/phantomsignal/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/getphantomsignal/phantomsignal/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/getphantomsignal/phantomsignal/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/getphantomsignal/phantomsignal/compare/v1.1.0...v1.2.0
