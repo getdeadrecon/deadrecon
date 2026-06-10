@@ -74,19 +74,18 @@ class IntelOrchestrator:
         for name, api in self._apis.items():
             if not api.is_configured:
                 continue
-            if is_ip and "network" in [c.value for c in api.CATEGORIES]:
+            cats = {c.value for c in api.CATEGORIES}
+            if scan_type == "full_spectrum":
                 applicable[name] = api
-            elif is_email and "email" in [c.value for c in api.CATEGORIES]:
+            elif is_ip and cats & {"network", "threat_intel", "geolocation", "vulnerability", "dark_web"}:
                 applicable[name] = api
-            elif is_domain and "domain" in [c.value for c in api.CATEGORIES]:
+            elif is_email and cats & {"email", "breach", "threat_intel", "people"}:
                 applicable[name] = api
-            elif is_people and "people" in [c.value for c in api.CATEGORIES]:
+            elif is_domain and cats & {"domain", "threat_intel", "email"}:
                 applicable[name] = api
-            elif scan_type == "full_spectrum":
+            elif is_people and "people" in cats:
                 applicable[name] = api
-            elif is_ip and "threat_intel" in [c.value for c in api.CATEGORIES]:
-                applicable[name] = api
-            elif is_domain and "threat_intel" in [c.value for c in api.CATEGORIES]:
+            elif is_username and cats & {"social", "people"}:
                 applicable[name] = api
 
         return applicable
