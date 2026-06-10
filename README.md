@@ -31,7 +31,10 @@
 
 ---
 
-## ⚡ What's New in v1.4.0
+## ⚡ What's New in v1.4.3
+
+### Quick probe full intel coverage
+The intel orchestrator now correctly routes every target type to all relevant APIs. **Username targets** now trigger all social and people-intel sources (GitHub, Reddit, HackerNews, Keybase, Mastodon, Twitter, LinkedIn, Telegram, Discord, Steam, and more). **Email targets** now include threat-intel and breach APIs (AlienVaultOTX, HIBP, IntelX, Gravatar, FullContact). **Domain targets** now include email-discovery sources (Hunter.io). **IP targets** now include dark-web sources (Intelligence X). Previously all of these were silently skipped.
 
 ### 16 new intelligence API integrations
 Twitch, Mastodon (4 federated instances), Keybase, Gravatar, HackerNews, Tumblr, Flickr, Spotify, Steam, VK, Telegram (public channels), Discord (user + server lookup), Facebook/Meta Graph, EmailRep, Intelligence X (dark web / paste / breach search), and Abstract API phone validation. Total: **46+ intel sources**.
