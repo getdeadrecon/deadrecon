@@ -1198,13 +1198,14 @@ class RedditAPI(BaseIntelAPI):
     NAME = "reddit"
     DESCRIPTION = "Reddit user OSINT — karma, posts, active subreddits, account age"
     REQUIRES_KEY = False
+    STEALTH_ROUTED = True
     TIER = APITier.FREE
     CATEGORIES = [APICategory.SOCIAL, APICategory.PEOPLE]
     BASE_URL = "https://www.reddit.com"
     RATE_LIMIT_PER_MINUTE = 30
 
     async def search(self, query: str, **kwargs) -> List[Dict]:
-        username = query.lstrip("u/").lstrip("@")
+        username = query.removeprefix("u/").removeprefix("@")
         headers = {"User-Agent": "PhantomSignal-OSINT/1.0 (security research)"}
 
         user_data = await self._get(

@@ -352,8 +352,9 @@ class GitHubCommitHarvesterAPI(BaseIntelAPI):
         if not is_username(login):
             return []
         headers = {"Accept": "application/vnd.github.v3+json"}
-        if self._api_key:
-            headers["Authorization"] = f"token {self._api_key}"
+        api_key = self.config.get_api_key("github") or self._api_key
+        if api_key:
+            headers["Authorization"] = f"token {api_key}"
 
         user = await self._get(f"{self.BASE_URL}/users/{login}", headers=headers)
         if not isinstance(user, dict) or "login" not in user:
