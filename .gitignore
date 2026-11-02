@@ -25,8 +25,11 @@ phantomsignal.db-wal
 *.db
 *.db-shm
 *.db-wal
+*.db-journal
 *.sqlite
 *.sqlite3
+*.sqlite-*
+*.sqlite3-*
 exports/
 *.enc
 /data/
@@ -37,6 +40,11 @@ config/phantomsignal.yaml
 config/*.yaml
 config/*.json
 config/*.toml
+config/*.yml
+secret_key
+.phantomsignal/
+.pypirc
+.netrc
 
 # Scrapy
 .scrapy/
@@ -77,6 +85,12 @@ test-results/
 *.pem
 *.key
 *.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
 
 # Temp
 *.tmp
@@ -88,7 +102,12 @@ temp/
 /scans/
 /reports/
 /screenshots/
+*.kml
+*.geojson
+
+# Test suite — deliberately private, never force-add
 /tests/
+
 # Offline wheel cache (Docker build artifact — regenerate with pip download)
 wheels/
 

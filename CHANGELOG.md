@@ -9,6 +9,43 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+- **The web console now requires a login.** A single operator account protects
+  every route, created on first run with a setup token printed to the server log.
+  New CLI commands: `phantomsignal set-password` and `phantomsignal api-token`.
+- **CSRF protection** on every browser form and session-authenticated API write.
+- **Socket.IO** now refuses anonymous connections and other origins. Allow a
+  reverse proxy's URL with `PHANTOMSIGNAL_ALLOWED_ORIGINS`.
+- **`~/.phantomsignal/config.yaml` is written owner-only** (`0600`, directory
+  `0700`). It held API keys and was world-readable.
+- **The SQLite database is now owner-only** (`0600`, including `-wal`/`-shm`).
+  Existing files are tightened on next start.
+- **Local builds can no longer package private data:** wheels and sdists exclude
+  `tests/` and `config/`, and `.dockerignore` keeps databases, keys, `.env.*`,
+  `config/`, `tests/` and exports out of images. `.gitignore` also covers more key
+  and database formats, plus Locate exports.
+- **Docker Compose publishes on loopback only**, including the optional Tor ports.
+- The session signing key now persists in `~/.phantomsignal/secret_key`, so logins
+  survive a restart. Password login failures are throttled per client.
+
+- **TLS is now verified for API sources that can carry credentials**, including
+  Shodan calls in `origin_pivot`. They previously accepted any certificate, so a
+  hostile proxy could have captured GitHub, OpenFEC, OpenCorporates or Shodan keys.
+- **HTML and PDF reports escape scan data**, so a scanned site can't inject script
+  into a report.
+- **Exports no longer default to `/tmp`.** They go to `~/.phantomsignal/exports`
+  (`0700`) as owner-only files that refuse to overwrite existing paths or symlinks.
+  Files downloaded through the web console are deleted from disk afterward.
+- **The Identity page and live feed escape external data**, closing a script
+  injection path through plain-HTTP egress lookups.
+
+### Changed
+- **Exports:** the default directory moved; set `PHANTOMSIGNAL_EXPORT_DIR` to override.
+- **Breaking:** REST API calls need `Authorization: Bearer <token>`.
+- **Breaking:** `GET /api/v1/health` returns only `status` unless signed in.
+- **Breaking:** the Compose port binding no longer accepts remote connections.
+  See "Signing in" in `docs/USAGE.md` for reverse-proxy setup.
+
 ---
 
 ## [1.27.0] — 2026-07-19

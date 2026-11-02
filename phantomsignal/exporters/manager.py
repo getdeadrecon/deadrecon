@@ -9,18 +9,33 @@ License: MIT — see LICENSE
 from __future__ import annotations
 
 import hashlib
+import html as html_lib
 import json
 import logging
+import os
 import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from phantomsignal.core.config import config as phantomsignal_config
+from phantomsignal.core.config import config as phantomsignal_config, default_export_dir
 from phantomsignal.core.database import get_db
 from phantomsignal.core.models import Export, Scan, ScanResult
 
 logger = logging.getLogger("phantomsignal.exporters")
+
+
+def _esc(value: Any) -> str:
+    """Escape for HTML/reportlab markup. Reports contain text chosen by scanned
+    targets, so nothing from a scan may be interpreted as markup."""
+    return html_lib.escape(str(value))
+
+
+def _reserve_private_file(path: Path) -> None:
+    """Create an owner-only file for an exporter to fill. Exports can hold personal
+    data. O_EXCL also refuses an existing file or a planted symlink; writers that
+    reopen the path keep this mode."""
+    os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600))
 
 
 class ExportManager:
@@ -38,8 +53,12 @@ class ExportManager:
     }
 
     def __init__(self, output_dir: Optional[str] = None):
-        self.output_dir = Path(output_dir or phantomsignal_config.get("export", "output_dir", default="/tmp")).resolve()
+        default_dir = default_export_dir().resolve()
+        configured = output_dir or phantomsignal_config.get("export", "output_dir") or default_dir
+        self.output_dir = Path(configured).expanduser().resolve()
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        if self.output_dir == default_dir:
+            os.chmod(self.output_dir, 0o700)
 
     def export(
         self,
@@ -67,7 +86,7 @@ class ExportManager:
             raise ValueError(f"Unsupported format: {fmt}. Available: {list(self.SUPPORTED_FORMATS.keys())}")
 
         ext = self.SUPPORTED_FORMATS[fmt]
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
         safe_target = "".join(c if c.isalnum() or c in ".-_" else "_" for c in scan_dict["target"])[:40]
         base_name = f"phantomsignal_{safe_target}_{timestamp}"
         output_path = self.output_dir / f"{base_name}{ext}"
@@ -83,7 +102,12 @@ class ExportManager:
 
         # Generate the export file
         exporter = self._get_exporter(fmt)
-        exporter(payload, output_path)
+        _reserve_private_file(output_path)
+        try:
+            exporter(payload, output_path)
+        except Exception:
+            output_path.unlink(missing_ok=True)
+            raise
 
         file_size = output_path.stat().st_size
         final_path = output_path
@@ -281,7 +305,7 @@ class ExportManager:
 
         story.append(Paragraph("Intelligence Results", styles["Heading2"]))
         for r in payload["results"][:200]:
-            result_text = f"<b>[{r.get('module', '')}]</b> {r.get('result_type', '')} | {r.get('source', '')} | conf: {r.get('confidence', '')}"
+            result_text = f"<b>[{_esc(r.get('module', ''))}]</b> {_esc(r.get('result_type', ''))} | {_esc(r.get('source', ''))} | conf: {_esc(r.get('confidence', ''))}"
             story.append(Paragraph(result_text, styles["Normal"]))
             story.append(Spacer(1, 0.2 * cm))
 
@@ -296,20 +320,20 @@ class ExportManager:
             results_html += f"""
             <div class="result {anomaly_class}">
                 <div class="result-header">
-                    <span class="module">[{r.get('module', '')}]</span>
-                    <span class="type">{r.get('result_type', '')}</span>
-                    <span class="source">⚡ {r.get('source', '')}</span>
+                    <span class="module">[{_esc(r.get('module', ''))}]</span>
+                    <span class="type">{_esc(r.get('result_type', ''))}</span>
+                    <span class="source">⚡ {_esc(r.get('source', ''))}</span>
                     <span class="confidence">CONF: {r.get('confidence', 0):.0%}</span>
                     {('<span class="anomaly-badge">⚠ ANOMALY</span>' if r.get("is_anomaly") else "")}
                 </div>
-                <pre class="data">{data_str}</pre>
+                <pre class="data">{_esc(data_str)}</pre>
             </div>"""
 
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PhantomSignal Report — {scan.get('target')}</title>
+<title>PhantomSignal Report — {_esc(scan.get('target'))}</title>
 <style>
 :root {{ --neon-green: #00ff41; --neon-cyan: #00f3ff; --neon-purple: #b026ff; --dark: #0a0a0f; --card: #0d0d1a; }}
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -337,10 +361,10 @@ footer {{ margin-top: 3rem; border-top: 1px solid #1a1a2e; padding-top: 1rem; co
 <h1>PhantomSignal Intelligence Report</h1>
 <div class="meta">
   <table>
-    <tr><td>Target</td><td>{scan.get('target')}</td></tr>
-    <tr><td>Scan Type</td><td>{scan.get('scan_type')}</td></tr>
+    <tr><td>Target</td><td>{_esc(scan.get('target'))}</td></tr>
+    <tr><td>Scan Type</td><td>{_esc(scan.get('scan_type'))}</td></tr>
     <tr><td>Shadow Score</td><td><span class="shadow-score">{scan.get('shadow_score', 0):.0f}</span>/100</td></tr>
-    <tr><td>Threat Level</td><td>{scan.get('threat_level', 'UNKNOWN').upper()}</td></tr>
+    <tr><td>Threat Level</td><td>{_esc(str(scan.get('threat_level', 'UNKNOWN')).upper())}</td></tr>
     <tr><td>Results</td><td>{payload['result_count']}</td></tr>
     <tr><td>Duration</td><td>{scan.get('duration_seconds', 0):.1f}s</td></tr>
     <tr><td>Generated</td><td>{payload['export_timestamp']}</td></tr>
@@ -467,6 +491,7 @@ footer {{ margin-top: 3rem; border-top: 1px solid #1a1a2e; padding-top: 1rem; co
 
     def _compress(self, path: Path) -> Path:
         zip_path = path.with_suffix(path.suffix + ".zip")
+        _reserve_private_file(zip_path)
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
             zf.write(path, path.name)
         return zip_path
@@ -476,7 +501,6 @@ footer {{ margin-top: 3rem; border-top: 1px solid #1a1a2e; padding-top: 1rem; co
         try:
             from cryptography.hazmat.primitives.ciphers.aead import AESGCM
             from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-            import os
 
             salt = os.urandom(16)
             kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1)
@@ -490,6 +514,7 @@ footer {{ margin-top: 3rem; border-top: 1px solid #1a1a2e; padding-top: 1rem; co
             ciphertext = aesgcm.encrypt(nonce, plaintext, None)
             enc_path = path.with_suffix(path.suffix + ".enc")
 
+            _reserve_private_file(enc_path)
             with open(enc_path, "wb") as f:
                 # Format: [4 bytes magic][16 bytes salt][12 bytes nonce][ciphertext]
                 f.write(b"NPHM")
@@ -537,6 +562,6 @@ footer {{ margin-top: 3rem; border-top: 1px solid #1a1a2e; padding-top: 1rem; co
         plaintext = aesgcm.decrypt(nonce, ciphertext, None)
 
         out = output_path or enc_path.replace(".enc", "")
-        with open(out, "wb") as f:
+        with os.fdopen(os.open(out, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600), "wb") as f:
             f.write(plaintext)
         return out

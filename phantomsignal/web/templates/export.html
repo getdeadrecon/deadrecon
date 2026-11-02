@@ -13,6 +13,7 @@
 <div class="export-grid">
   <div class="form-section">
     <form action="{{ url_for('export.generate_export', scan_id=scan.id) }}" method="POST" id="export-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="section-header">
         <span class="section-icon neon-green">◫</span>
         <span class="section-title">SELECT FORMAT</span>

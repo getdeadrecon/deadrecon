@@ -54,6 +54,28 @@ docker-compose up -d
 
 Open **http://localhost:5000**.
 
+### Signing in
+
+The console has one operator account. On first run the server prints a one-time
+setup token; enter it at **http://localhost:5000** to create the account. On
+Docker, read it with `docker logs phantomsignal`.
+
+| Task | Command |
+|------|---------|
+| Create the account without the browser, or reset a forgotten password | `phantomsignal set-password` |
+| Create a REST API token (revokes the previous one) | `phantomsignal api-token` |
+
+Run these with the same working directory or `PHANTOMSIGNAL_DB_URL` as the server,
+so they use the same database. On Docker, use `docker exec -it phantomsignal phantomsignal set-password`.
+
+Docker publishes the console on loopback only. To reach it from other machines,
+put it behind a TLS reverse proxy and set:
+
+| Variable | Value |
+|----------|-------|
+| `PHANTOMSIGNAL_SECURE_COOKIES` | `true` |
+| `PHANTOMSIGNAL_ALLOWED_ORIGINS` | The public URL, for example `https://psig.example.com`. Separate several with commas. |
+
 ### First-run checklist
 
 | Step | Action |

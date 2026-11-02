@@ -18,6 +18,7 @@
       <span class="section-title">API KEYS — DATA SOURCES</span>
     </div>
     <form action="{{ url_for('settings.save_api_keys') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="api-keys-grid">
         {% set api_groups = {
           'Network & Infrastructure': ['shodan', 'censys', 'censys_id', 'censys_secret', 'zoomeye', 'binaryedge', 'securitytrails', 'spyse'],

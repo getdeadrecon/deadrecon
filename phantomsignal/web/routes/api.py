@@ -100,7 +100,11 @@ def list_apis():
 
 @api_bp.route("/health", methods=["GET"])
 def health():
+    """Public for container healthchecks, so details need a logged-in session."""
+    from flask_login import current_user
     from phantomsignal import __version__
     with get_db() as db:
         scan_count = db.query(Scan).count()
+    if not current_user.is_authenticated:
+        return _json_ok({"status": "operational"})
     return _json_ok({"status": "operational", "version": __version__, "scans": scan_count})

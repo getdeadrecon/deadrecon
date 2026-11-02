@@ -25,6 +25,7 @@
         <span class="brand-tag">// OSINT</span>
       </a>
     </div>
+    {% if current_user.is_authenticated %}
     <div class="nav-links">
       <a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
         <span class="nav-icon">⬡</span> Dashboard
@@ -54,11 +55,13 @@
         <span class="nav-icon">⚙</span> Settings
       </a>
     </div>
+    {% endif %}
     <div class="theme-seg" id="theme-seg" role="radiogroup" aria-label="Theme">
       <button type="button" class="theme-seg-btn" data-theme-val="light" role="radio" aria-checked="false" title="Light theme" aria-label="Light theme">☀</button>
       <button type="button" class="theme-seg-btn" data-theme-val="dark" role="radio" aria-checked="true" title="Dark theme" aria-label="Dark theme">☾</button>
     </div>
     <div class="nav-status">
+      {% if current_user.is_authenticated %}
       <span class="status-dot" id="connection-dot"></span>
       <span class="status-text" id="connection-status">CONNECTING...</span>
       {% if stealth %}
@@ -69,6 +72,11 @@
       </a>
       {% endif %}
       <span class="version-tag">v{{ version }}</span>
+      <form action="{{ url_for('auth.logout') }}" method="POST" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm" title="Signed in as {{ current_user.username }}">Sign out</button>
+      </form>
+      {% endif %}
     </div>
   </nav>
 
@@ -116,7 +124,9 @@
   <div id="toast-container"></div>
 
   <!-- Core scripts -->
+  {% if current_user.is_authenticated %}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+  {% endif %}
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>

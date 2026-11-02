@@ -18,6 +18,7 @@
       <span class="section-title">SCAN BEHAVIOUR</span>
     </div>
     <form action="{{ url_for('settings.save_scraper_settings') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="settings-grid">
         <div class="form-group">
           <label class="form-label">REQUEST DELAY (seconds)</label>
@@ -113,6 +114,7 @@
       <!-- Fetch from a feed / URL -->
       <form action="{{ url_for('settings.fetch_proxies') }}" method="POST"
             class="form-group form-group-wide">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="form-label">FETCH FROM FEED</label>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
           <select name="source" class="input-field select-field" style="flex:1;min-width:220px;">
@@ -140,6 +142,7 @@
       <!-- Upload a list file -->
       <form action="{{ url_for('settings.upload_proxies') }}" method="POST"
             enctype="multipart/form-data" class="form-group form-group-wide">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="form-label">UPLOAD A LIST FILE</label>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
           <input type="file" name="proxy_file" accept=".txt,.csv,.list,text/plain"

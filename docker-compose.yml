@@ -6,7 +6,9 @@ services:
     image: phantomsignal:latest
     container_name: phantomsignal
     ports:
-      - "5000:5000"
+      # Loopback only. Publish more widely only behind a TLS reverse proxy, and
+      # set PHANTOMSIGNAL_SECURE_COOKIES=true + PHANTOMSIGNAL_ALLOWED_ORIGINS.
+      - "127.0.0.1:5000:5000"
     volumes:
       - phantomsignal-data:/app/data
       - phantomsignal-exports:/app/exports
@@ -15,6 +17,7 @@ services:
       - PHANTOMSIGNAL_HOST=0.0.0.0
       - PHANTOMSIGNAL_PORT=5000
       - PHANTOMSIGNAL_DB_URL=sqlite:////app/data/phantomsignal.db
+      - PHANTOMSIGNAL_EXPORT_DIR=/app/exports
       # Add your API keys as environment variables:
       # - SHODAN_API_KEY=your-key
       # - VIRUSTOTAL_API_KEY=your-key
@@ -39,8 +42,8 @@ services:
     image: dperson/torproxy:latest
     container_name: phantomsignal-tor
     ports:
-      - "9050:9050"
-      - "8118:8118"
+      - "127.0.0.1:9050:9050"
+      - "127.0.0.1:8118:8118"
     restart: unless-stopped
     profiles: ["covert"]
 

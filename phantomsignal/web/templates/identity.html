@@ -97,7 +97,7 @@
 const row = (k, v, risk) => {
   if (v === undefined || v === null || v === "") v = "—";
   const r = risk ? `<span class="risk risk-${risk}">${risk === 'high' ? 'HIGH' : 'MED'}</span>` : "";
-  return `<div class="id-row"><span class="id-k">${k}${r}</span><span class="id-v">${v}</span></div>`;
+  return `<div class="id-row"><span class="id-k">${k}${r}</span><span class="id-v">${escapeHtml(v)}</span></div>`;
 };
 
 // ── Client-side browser fingerprint ──────────────────────────────────────────
@@ -167,7 +167,7 @@ const row = (k, v, risk) => {
       pc.close();
       const list = [...ips];
       const pub = list.filter((ip) => !/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.|169\.254\.|fe80:|::1)/i.test(ip));
-      const val = list.length ? list.join("<br>") : "none exposed";
+      const val = list.length ? list.join(", ") : "none exposed";
       const risk = pub.length ? "high" : (list.length ? "med" : null);
       document.getElementById("webrtc-slot").innerHTML = row("WebRTC local IPs", val, risk);
     }, 1600);
@@ -222,7 +222,7 @@ async function loadEgress() {
     th += row("JA3", tls && tls.ja3 ? tls.ja3 : "—");
     th += row("JA4", tls && tls.ja4 ? tls.ja4 : "—");
     th += row("UA seen by target", tls && tls.seen_ua ? tls.seen_ua : "—");
-    th += `<div class="id-row" style="border-top:1px solid rgba(var(--ink-dim-rgb),0.16);margin-top:0.4rem;padding-top:0.5rem;"><span class="id-k">Stealth profile</span><span class="id-v mut">${st.profile}</span></div>`;
+    th += `<div class="id-row" style="border-top:1px solid rgba(var(--ink-dim-rgb),0.16);margin-top:0.4rem;padding-top:0.5rem;"><span class="id-k">Stealth profile</span><span class="id-v mut">${escapeHtml(st.profile)}</span></div>`;
     th += row("TLS impersonation", st.impersonate ? "on — " + (st.impersonate_as || "browser") : "off (standard TLS fingerprint)", st.impersonate ? null : "med");
     th += row("Egress", st.proxied ? `proxied (${st.proxy_count})${st.rotation ? " · " + st.rotation : ""}` : "direct");
     document.getElementById("tls-body").innerHTML = th;

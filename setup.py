@@ -18,7 +18,7 @@ setup(
     long_description_content_type="text/markdown",
     author="the-clipper",
     url="https://github.com/getphantomsignal/phantomsignal",
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests", "tests.*")),
     include_package_data=True,
     python_requires=">=3.10",
     install_requires=requirements,

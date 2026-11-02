@@ -1,5 +1,10 @@
 """PhantomSignal Export Routes — report generation."""
-from flask import Blueprint, render_template, request, jsonify, send_file, flash, redirect, url_for
+import os
+
+from flask import (
+    Blueprint, after_this_request, current_app, flash, jsonify, redirect, render_template, request,
+    send_file, url_for,
+)
 from phantomsignal.exporters.manager import ExportManager
 from phantomsignal.core.database import get_db
 from phantomsignal.core.models import Scan
@@ -38,6 +43,16 @@ def generate_export(scan_id):
             encrypt=encrypt,
             encryption_password=password,
         )
+
+        @after_this_request
+        def remove_download(response):
+            """The browser now has its copy, so don't leave personal data on disk."""
+            try:
+                os.unlink(result["file_path"])
+            except OSError as exc:
+                current_app.logger.warning("Could not remove export file: %s", exc)
+            return response
+
         return send_file(
             result["file_path"],
             as_attachment=True,

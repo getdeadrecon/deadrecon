@@ -6,4 +6,33 @@ __pycache__
 dist
 *.pyc
 *.pyo
+
+# Private tests and planning
+tests
+ROADMAP.md
+.claude
+
+# Secrets and local data must never be baked into an image
 .env
+.env.*
+config
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.enc
+*.kml
+*.geojson
+exports
+data
+scans
+reports
+screenshots
+instance

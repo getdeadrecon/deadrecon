@@ -12,9 +12,11 @@ import asyncio
 import logging
 import threading
 from datetime import datetime
+from functools import wraps
 from typing import Optional
 
 from flask import Flask
+from flask_login import current_user
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 from phantomsignal import __version__, __codename__
@@ -23,13 +25,32 @@ from phantomsignal.core.database import init_db
 
 logger = logging.getLogger("phantomsignal.web")
 
-socketio = SocketIO(async_mode="threading", cors_allowed_origins="*", logger=False)
+socketio = SocketIO(async_mode="threading", logger=False)
+
+
+def _allowed_origins():
+    """Extra Socket.IO origins (e.g. a reverse proxy's public URL). None means
+    same-origin only."""
+    origins = phantomsignal_config.get("server", "allowed_origins", default=None)
+    if isinstance(origins, str):
+        origins = [o.strip() for o in origins.split(",") if o.strip()]
+    return origins or None
+
+
+def _socket_auth_required(handler):
+    """Re-check per event: a socket outlives the login it connected with."""
+    @wraps(handler)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return None
+        return handler(*args, **kwargs)
+    return wrapper
 
 
 def create_app(config_path: Optional[str] = None) -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
 
-    app.config["SECRET_KEY"] = phantomsignal_config.get("server", "secret_key")
+    app.config["SECRET_KEY"] = phantomsignal_config.get_or_create_secret_key()
     app.config["SQLALCHEMY_DATABASE_URI"] = phantomsignal_config.get("database", "url", default="sqlite:///phantomsignal.db")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["PHANTOMSIGNAL_VERSION"] = __version__
@@ -41,7 +62,10 @@ def create_app(config_path: Optional[str] = None) -> Flask:
     phantom_engine._socketio = socketio
     app.phantom_engine = phantom_engine
 
-    socketio.init_app(app)
+    socketio.init_app(app, cors_allowed_origins=_allowed_origins())
+
+    from phantomsignal.web.auth import init_auth
+    init_auth(app)
 
     from phantomsignal.web.routes.dashboard import dashboard_bp
     from phantomsignal.web.routes.scans import scans_bp
@@ -96,6 +120,8 @@ def create_app(config_path: Optional[str] = None) -> Flask:
 def _register_socketio_handlers(app: Flask) -> None:
     @socketio.on("connect")
     def on_connect():
+        if not current_user.is_authenticated:
+            return False  # refuses the connection
         emit("server_ready", {
             "message": "Connected. Ready to scan.",
             "version": __version__,
@@ -107,6 +133,7 @@ def _register_socketio_handlers(app: Flask) -> None:
         logger.debug("Client disconnected from the grid")
 
     @socketio.on("join_scan")
+    @_socket_auth_required
     def on_join_scan(data):
         scan_id = data.get("scan_id")
         if scan_id:
@@ -129,12 +156,14 @@ def _register_socketio_handlers(app: Flask) -> None:
                     pass
 
     @socketio.on("leave_scan")
+    @_socket_auth_required
     def on_leave_scan(data):
         scan_id = data.get("scan_id")
         if scan_id:
             leave_room(f"scan_{scan_id}")
 
     @socketio.on("abort_scan")
+    @_socket_auth_required
     def on_abort_scan(data):
         scan_id = data.get("scan_id")
         if scan_id:
@@ -142,6 +171,7 @@ def _register_socketio_handlers(app: Flask) -> None:
             emit("scan_aborted", {"scan_id": scan_id})
 
     @socketio.on("ping")
+    @_socket_auth_required
     def on_ping():
         emit("pong", {"timestamp": datetime.utcnow().isoformat()})
 

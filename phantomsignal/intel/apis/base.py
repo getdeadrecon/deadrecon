@@ -141,7 +141,9 @@ class BaseIntelAPI(abc.ABC):
         operator's configured egress/profile. Only used when STEALTH_ROUTED."""
         if self._stealth is None:
             from phantomsignal.core.http import stealth_client
-            self._stealth = stealth_client(self.config, timeout=30.0)
+            # Always verify TLS here: these sources can carry API credentials, and
+            # an unverified connection through a proxy would expose them.
+            self._stealth = stealth_client(self.config, timeout=30.0, verify=True)
         return self._stealth
 
     def _http(self):
