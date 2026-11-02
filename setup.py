@@ -13,7 +13,7 @@ def read_requirements(path):
 
 setup(
     name="phantomsignal",
-    version="1.27.0",
+    version="1.28.0",
     description="PhantomSignal :: Open-Source OSINT Intelligence Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",

@@ -9,6 +9,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
+
+## [1.28.0] — 2026-11-02
+
+**Console login and data protection.** The web console now requires sign-in,
+stored data is private to your user, and packages and the Docker image install
+correctly. This release has breaking changes; see **Changed**.
+
 ### Security
 - **The web console now requires a login.** A single operator account protects
   every route, created on first run with a setup token printed to the server log.
