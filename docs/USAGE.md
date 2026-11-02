@@ -453,11 +453,9 @@ fuser -k 5000/tcp
 python run.py
 ```
 
-**`pip install` fails with missing system libs (WeasyPrint / cryptography)**
+**`pip install` fails with missing system libs (cryptography)**
 ```bash
-sudo apt-get install -y \
-  build-essential libssl-dev libffi-dev \
-  libcairo2 libpango-1.0-0 libgdk-pixbuf2.0-0
+sudo apt-get install -y build-essential libssl-dev libffi-dev
 pip install -e .
 ```
 
@@ -500,12 +498,6 @@ brew install openssl rust
 export LDFLAGS="-L$(brew --prefix openssl)/lib"
 export CPPFLAGS="-I$(brew --prefix openssl)/include"
 pip install cryptography
-```
-
-**WeasyPrint errors (PDF export)**
-```bash
-brew install cairo pango gdk-pixbuf libffi
-pip install weasyprint
 ```
 
 **Port 5000 blocked by AirPlay Receiver (macOS Monterey+)**

@@ -3,12 +3,13 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 
-with open("requirements.txt", "r") as f:
-    requirements = [
-        line.strip()
-        for line in f
-        if line.strip() and not line.startswith("#") and not line.startswith("# ──")
-    ]
+
+
+def read_requirements(path):
+    with open(path, "r", encoding="utf-8") as f:
+        lines = (line.split("#", 1)[0].strip() for line in f)
+        return [line for line in lines if line]
+
 
 setup(
     name="phantomsignal",
@@ -21,7 +22,8 @@ setup(
     packages=find_packages(exclude=("tests", "tests.*")),
     include_package_data=True,
     python_requires=">=3.10",
-    install_requires=requirements,
+    install_requires=read_requirements("requirements.txt"),
+    extras_require={"dev": read_requirements("requirements-dev.txt")},
     entry_points={
         "console_scripts": [
             "phantomsignal=phantomsignal.cli:main",

@@ -12,6 +12,8 @@ services:
     volumes:
       - phantomsignal-data:/app/data
       - phantomsignal-exports:/app/exports
+      # API keys, console settings and the session key saved at runtime
+      - phantomsignal-home:/root/.phantomsignal
       - ./config:/app/config:ro
     environment:
       - PHANTOMSIGNAL_HOST=0.0.0.0
@@ -50,3 +52,4 @@ services:
 volumes:
   phantomsignal-data:
   phantomsignal-exports:
+  phantomsignal-home:

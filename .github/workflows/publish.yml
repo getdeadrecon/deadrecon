@@ -27,6 +27,9 @@ jobs:
       - name: Build sdist and wheel
         run: python -m build
 
+      - name: Check package contents
+        run: python scripts/check_package.py dist/*.whl dist/*.tar.gz
+
       - name: Verify version matches tag
         run: |
           PKG_VERSION=$(python -c "import phantomsignal; print(phantomsignal.__version__)")

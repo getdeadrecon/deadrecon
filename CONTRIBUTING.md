@@ -12,7 +12,7 @@ Before you start: read the [Code of Conduct](CODE_OF_CONDUCT.md). It is short, d
 git clone https://github.com/getphantomsignal/phantomsignal
 cd phantomsignal
 python3 -m venv .venv && source .venv/bin/activate
-pip install -e .
+pip install -e ".[dev]"
 phantomsignal init          # creates ~/.phantomsignal/config.yaml
 phantomsignal web           # http://localhost:5000
 ```

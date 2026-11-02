@@ -1,8 +1,10 @@
 include requirements.txt
+include requirements-dev.txt
 include LICENSE
 include README.md
 recursive-include phantomsignal/web/templates *.html
 recursive-include phantomsignal/web/static *
 recursive-include phantomsignal/scrapers/data *.json *.md
+recursive-include phantomsignal/intel/signatures/templates *.yaml
 prune tests
 prune config

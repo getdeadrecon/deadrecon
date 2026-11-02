@@ -39,7 +39,19 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - **The Identity page and live feed escape external data**, closing a script
   injection path through plain-HTTP egress lookups.
 
+### Fixed
+- **Signature templates now ship in wheels and sdists.** Installs from PyPI loaded
+  0 of the 4 templates, with no error.
+- **The Docker image builds from a fresh clone.** It no longer needs a pre-downloaded
+  `wheels/` folder, and it drops the unused Playwright, Chromium and Tesseract layers.
+- **Docker keeps saved settings across upgrades.** API keys, console settings and the
+  session key now live on a volume, instead of being lost when a container is recreated.
+- CI and the publish workflow now check package contents. CI also installs the wheel
+  in a clean environment, and builds and boots the Docker image.
+
 ### Changed
+- **Smaller install:** 36 declared packages that the code never imports directly were removed.
+- **Dev tools moved** to `requirements-dev.txt`; install them with `pip install -e ".[dev]"`.
 - **Exports:** the default directory moved; set `PHANTOMSIGNAL_EXPORT_DIR` to override.
 - **Breaking:** REST API calls need `Authorization: Bearer <token>`.
 - **Breaking:** `GET /api/v1/health` returns only `status` unless signed in.
