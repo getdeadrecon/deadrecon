@@ -40,6 +40,7 @@
 
 <div class="gr-form">
   <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="form-group" style="margin-bottom:0.75rem;"><label class="form-label">SOURCE</label>
       <select name="mode" class="input-field select-field" onchange="grMode(this.value)">
         <option value="free" {% if form.mode != 'shodan' %}selected{% endif %}>Free / passive — no key (domain or ASN scope)</option>

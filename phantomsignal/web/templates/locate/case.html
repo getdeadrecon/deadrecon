@@ -109,6 +109,7 @@
     <a class="btn btn-ghost" href="{{ url_for('locate.export', case_id=case.id, fmt='kml') }}">↓ KML</a>
     <form action="{{ url_for('locate.delete_case', case_id=case.id) }}" method="POST" style="display:inline;"
           onsubmit="return confirm('Purge this case and all its signals + audit trail? This cannot be undone.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-danger">✕ Purge case</button>
     </form>
   </div>
@@ -216,6 +217,7 @@
           <td style="text-align:right;">
             <form action="{{ url_for('locate.delete_signal', case_id=case.id, signal_id=s.id) }}" method="POST" style="display:inline;"
                   onsubmit="return confirm('Remove this signal from the case?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="opened_by" value="{{ case.opened_by or 'operator' }}">
               <button type="submit" class="sig-del" title="Remove signal">✕</button>
             </form>
@@ -231,6 +233,7 @@
     <div class="lc-sec">
       <h3>Add a known signal</h3>
       <form class="mini-form" action="{{ url_for('locate.add_signal', case_id=case.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group"><label class="form-label">KIND</label>
           <select name="kind" class="input-field select-field">
             <option value="checkin">check-in (hard)</option>
@@ -255,6 +258,7 @@
     <div class="lc-sec">
       <h3>Add location from photo (EXIF)</h3>
       <form class="mini-form" action="{{ url_for('locate.add_image', case_id=case.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
           <label class="form-label">IMAGE URL</label>
           <input class="input-field" name="image_url" placeholder="https://…/original-photo.jpg" required>

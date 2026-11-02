@@ -254,7 +254,8 @@ All formats support **ZIP compression** and **AES-256-GCM encryption**.
 git clone https://github.com/getphantomsignal/phantomsignal
 cd phantomsignal
 docker-compose up -d
-# Open http://localhost:5000
+docker logs phantomsignal   # copy the first-run setup token
+# Open http://localhost:5000 and create your operator account
 ```
 
 ### Option 2: Manual Installation
@@ -361,19 +362,25 @@ phantomsignal/
 
 ## 🛡 REST API
 
+Every endpoint except the health check needs a token. Create one with
+`phantomsignal api-token` (this revokes the previous token).
+
 ```bash
+export PSIG_TOKEN=psig_...
+
 # Create a scan
 curl -X POST http://localhost:5000/api/v1/scans \
+  -H "Authorization: Bearer $PSIG_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"target": "example.com", "scan_type": "web_recon"}'
 
 # Get results
-curl http://localhost:5000/api/v1/scans/{scan_id}
+curl -H "Authorization: Bearer $PSIG_TOKEN" http://localhost:5000/api/v1/scans/{scan_id}
 
 # List all APIs
-curl http://localhost:5000/api/v1/apis
+curl -H "Authorization: Bearer $PSIG_TOKEN" http://localhost:5000/api/v1/apis
 
-# Health check
+# Health check (no token needed)
 curl http://localhost:5000/api/v1/health
 ```
 

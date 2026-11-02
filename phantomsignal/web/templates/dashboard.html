@@ -167,6 +167,7 @@
       </div>
       <div class="panel-body">
         <form action="{{ url_for('scans.launch_scan') }}" method="POST" class="quick-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="profile" value="quick">
           <input type="hidden" name="modules" value="dns_recon">
           <input type="hidden" name="modules" value="port_scan">

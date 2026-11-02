@@ -16,6 +16,7 @@
 <div class="intel-layout">
   <div class="intel-form-panel">
     <form action="{{ url_for('intel.person_search') }}" method="POST" id="person-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-section">
         <div class="section-header">
           <span class="section-icon neon-purple">◉</span>

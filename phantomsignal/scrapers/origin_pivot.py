@@ -299,7 +299,8 @@ class OriginPivot:
             return []
 
         try:
-            async with stealth_client(self.config, timeout=15) as client:
+            # verify=True: this request carries the Shodan API key.
+            async with stealth_client(self.config, timeout=15, verify=True) as client:
                 r = await client.get(
                     "https://api.shodan.io/shodan/host/search",
                     params={"key": key, "query": f"http.favicon.hash:{fhash}",

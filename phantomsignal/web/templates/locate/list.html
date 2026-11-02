@@ -40,6 +40,7 @@
 
 <div class="lc-form">
   <form action="{{ url_for('locate.new_case') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="lc-grid">
       <div class="form-group"><label class="form-label">FIRST NAME</label>
         <input class="input-field" name="first_name" placeholder="Alex"></div>
@@ -75,6 +76,7 @@
   <span><b>{{ expired }}</b> case(s) past their retention horizon.</span>
   <form action="{{ url_for('locate.purge_expired') }}" method="POST" style="margin-left:auto;"
         onsubmit="return confirm('Purge all {{ expired }} case(s) past retention? This cannot be undone.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="btn btn-danger btn-sm">✕ Purge expired</button>
   </form>
 </div>
@@ -93,6 +95,7 @@
   </a>
   <form action="{{ url_for('locate.delete_case', case_id=c.id) }}" method="POST" style="display:inline;"
         onsubmit="return confirm('Purge case for {{ (c.subject or 'subject')|e }}? This cannot be undone.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="case-del" title="Purge case">✕</button>
   </form>
 </div>

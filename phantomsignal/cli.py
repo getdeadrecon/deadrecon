@@ -769,6 +769,9 @@ def web(host, port, debug, open_browser):
     console.print(f"   Grid interface: [bold cyan]http://{_host}:{_port}[/bold cyan]")
     console.print(f"   Mode: {'[yellow]DEBUG[/yellow]' if _debug else '[green]STEALTH[/green]'}")
     console.print("   [dim]Press Ctrl+C to sever the connection[/dim]\n")
+    if _host not in ("127.0.0.1", "localhost", "::1"):
+        console.print("[bold yellow]⚠ Listening beyond this machine over plain HTTP — passwords and "
+                      "results can be read on the network. Use a TLS reverse proxy.[/bold yellow]\n")
 
     if open_browser:
         import threading
@@ -791,7 +794,7 @@ def web(host, port, debug, open_browser):
 @click.option("--profile", "-p",
               type=click.Choice(["quick", "standard", "deep", "covert"]),
               default="standard")
-@click.option("--output", "-o", default=None, help="Output directory (defaults to /tmp)")
+@click.option("--output", "-o", default=None, help="Output directory (defaults to ~/.phantomsignal/exports)")
 @click.option("--format", "-f", "fmt",
               type=click.Choice(["json", "csv", "html", "xml", "pdf", "markdown", "stix"]),
               default="json", help="Output format")
@@ -1031,7 +1034,7 @@ def status():
 @click.argument("scan_id")
 @click.option("--format", "-f", "fmt", default="json",
               type=click.Choice(["json", "csv", "html", "xml", "pdf", "markdown", "stix"]))
-@click.option("--output", "-o", default=None, help="Output directory (defaults to /tmp)")
+@click.option("--output", "-o", default=None, help="Output directory (defaults to ~/.phantomsignal/exports)")
 @click.option("--compress", is_flag=True)
 @click.option("--encrypt", is_flag=True)
 @click.option("--password", default=None)
@@ -1072,6 +1075,49 @@ def diff(target):
     for r in results:
         r["result_type"] = r["type"]
     _asm_diff_panel(console, results)
+
+
+def _print_db_location():
+    from sqlalchemy.engine import make_url
+    from phantomsignal.core.config import config as cfg
+    url = make_url(cfg.get("database", "url", default="sqlite:///phantomsignal.db"))
+    console.print(f"  [dim]Database: {url.render_as_string(hide_password=True)}[/dim]")
+
+
+@main.command("set-password")
+@click.option("--username", "-u", default="operator", show_default=True,
+              help="Username, when creating the account")
+def set_password_command(username):
+    """Create the console's operator account, or reset its password."""
+    from phantomsignal.core import auth
+    from phantomsignal.core.database import init_db
+    init_db()
+    _print_db_location()
+    password = click.prompt("New password", hide_input=True, confirmation_prompt=True)
+    try:
+        if auth.has_operator():
+            auth.set_password(password)
+            console.print("[bold green]✓ Password changed.[/bold green] Existing sessions are signed out.")
+        else:
+            auth.create_operator(username, password)
+            console.print(f"[bold green]✓ Operator account '{username}' created.[/bold green]")
+    except auth.OperatorError as exc:
+        raise click.ClickException(str(exc))
+
+
+@main.command("api-token")
+def api_token_command():
+    """Issue a REST API token. This revokes the previous token."""
+    from phantomsignal.core import auth
+    from phantomsignal.core.database import init_db
+    init_db()
+    _print_db_location()
+    try:
+        token = auth.rotate_api_token()
+    except auth.OperatorError as exc:
+        raise click.ClickException(f"{exc} Run `phantomsignal set-password` first.")
+    click.echo(token)
+    console.print("[yellow]Shown once. Send it as: Authorization: Bearer <token>[/yellow]")
 
 
 @main.command()

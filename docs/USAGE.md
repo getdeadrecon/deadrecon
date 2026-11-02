@@ -54,6 +54,28 @@ docker-compose up -d
 
 Open **http://localhost:5000**.
 
+### Signing in
+
+The console has one operator account. On first run the server prints a one-time
+setup token; enter it at **http://localhost:5000** to create the account. On
+Docker, read it with `docker logs phantomsignal`.
+
+| Task | Command |
+|------|---------|
+| Create the account without the browser, or reset a forgotten password | `phantomsignal set-password` |
+| Create a REST API token (revokes the previous one) | `phantomsignal api-token` |
+
+Run these with the same working directory or `PHANTOMSIGNAL_DB_URL` as the server,
+so they use the same database. On Docker, use `docker exec -it phantomsignal phantomsignal set-password`.
+
+Docker publishes the console on loopback only. To reach it from other machines,
+put it behind a TLS reverse proxy and set:
+
+| Variable | Value |
+|----------|-------|
+| `PHANTOMSIGNAL_SECURE_COOKIES` | `true` |
+| `PHANTOMSIGNAL_ALLOWED_ORIGINS` | The public URL, for example `https://psig.example.com`. Separate several with commas. |
+
 ### First-run checklist
 
 | Step | Action |
@@ -431,11 +453,9 @@ fuser -k 5000/tcp
 python run.py
 ```
 
-**`pip install` fails with missing system libs (WeasyPrint / cryptography)**
+**`pip install` fails with missing system libs (cryptography)**
 ```bash
-sudo apt-get install -y \
-  build-essential libssl-dev libffi-dev \
-  libcairo2 libpango-1.0-0 libgdk-pixbuf2.0-0
+sudo apt-get install -y build-essential libssl-dev libffi-dev
 pip install -e .
 ```
 
@@ -478,12 +498,6 @@ brew install openssl rust
 export LDFLAGS="-L$(brew --prefix openssl)/lib"
 export CPPFLAGS="-I$(brew --prefix openssl)/include"
 pip install cryptography
-```
-
-**WeasyPrint errors (PDF export)**
-```bash
-brew install cairo pango gdk-pixbuf libffi
-pip install weasyprint
 ```
 
 **Port 5000 blocked by AirPlay Receiver (macOS Monterey+)**

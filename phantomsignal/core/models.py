@@ -205,6 +205,17 @@ class ShadowProfile(Base):
         }
 
 
+class Operator(Base):
+    """The account that owns this console. See core/auth.py."""
+    __tablename__ = "operators"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    username = Column(String(128), nullable=False, unique=True)
+    password_hash = Column(String(255), nullable=False)
+    api_token_hash = Column(String(64), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class APIKeyStore(Base):
     """Encrypted API key store."""
     __tablename__ = "api_keys"

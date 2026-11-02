@@ -39,10 +39,12 @@
     <a href="{{ url_for('scans.scan_summary', scan_id=scan.id) }}" class="btn btn-secondary">▦ Summary view</a>
     {% if scan.status == 'running' %}
       <form action="{{ url_for('scans.abort_scan', scan_id=scan.id) }}" method="POST" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-danger">⬛ ABORT</button>
       </form>
     {% else %}
       <form action="{{ url_for('scans.rescan', scan_id=scan.id) }}" method="POST" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-primary">↻ Re-scan</button>
       </form>
       <a href="{{ url_for('export.export_options', scan_id=scan.id) }}" class="btn btn-secondary">
@@ -51,6 +53,7 @@
     {% endif %}
     <form action="{{ url_for('scans.delete_scan', scan_id=scan.id) }}" method="POST" style="display:inline"
           onsubmit="return confirm('Delete this scan?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button class="btn btn-ghost">✕ Delete</button>
     </form>
   </div>

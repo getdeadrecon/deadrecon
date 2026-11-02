@@ -10,6 +10,7 @@
 </div>
 
 <form action="{{ url_for('scans.launch_scan') }}" method="POST" id="scan-form" class="scan-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="form-layout">
 
     <!-- Left column: main config -->

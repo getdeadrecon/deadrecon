@@ -44,6 +44,52 @@ jobs:
             echo "No test suite yet — import check passed."
           fi
 
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Build
+        run: |
+          pip install build -q
+          python -m build
+
+      - name: Check package contents
+        run: python scripts/check_package.py dist/*.whl dist/*.tar.gz
+
+      - name: Install the wheel and load its data files
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install -q dist/*.whl
+          cd /tmp
+          /tmp/clean/bin/phantomsignal --help > /dev/null
+          /tmp/clean/bin/python -c "from phantomsignal.intel.signatures.engine import load_templates; assert load_templates(); from phantomsignal.web.app import create_app; create_app()"
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: docker build -t phantomsignal:ci .
+
+      - name: Start and check health
+        run: |
+          docker run -d --name phantomsignal-ci -p 127.0.0.1:5000:5000 phantomsignal:ci
+          for i in $(seq 1 30); do
+            if curl -fs http://127.0.0.1:5000/api/v1/health; then exit 0; fi
+            sleep 2
+          done
+          docker logs phantomsignal-ci
+          exit 1
+
   lint:
     name: Lint
     runs-on: ubuntu-latest

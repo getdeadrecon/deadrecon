@@ -89,7 +89,7 @@ function appendTerminalLine(termId, module, message, level) {
 
   const ts = new Date().toTimeString().slice(0,8);
   line.innerHTML = `
-    <span class="term-prompt">[${ts}][${(module || 'SYS').slice(0,10).padEnd(10)}]</span>
+    <span class="term-prompt">[${ts}][${escapeHtml((module || 'SYS').slice(0,10).padEnd(10))}]</span>
     <span class="term-msg">${escapeHtml(message)}</span>
   `;
 
@@ -130,7 +130,8 @@ function escapeHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function copyToClipboard(text) {

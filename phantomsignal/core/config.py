@@ -8,6 +8,8 @@ License: MIT — see LICENSE
 from __future__ import annotations
 
 import os
+import secrets
+import tempfile
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -18,6 +20,25 @@ load_dotenv()
 
 _DEFAULT_CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "phantomsignal.yaml"
 _USER_CONFIG_PATH = Path.home() / ".phantomsignal" / "config.yaml"
+
+
+def default_export_dir() -> Path:
+    return _USER_CONFIG_PATH.parent / "exports"
+
+
+def _write_private(path: Path, text: str) -> None:
+    """Atomically write an owner-only file. These hold API keys, proxy credentials
+    and the session signing key, so they must not be readable by other users."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    os.chmod(path.parent, 0o700)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")  # created 0600
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
 
 
 class PhantomSignalConfig:
@@ -50,7 +71,9 @@ class PhantomSignalConfig:
                 "host": "127.0.0.1",
                 "port": 5000,
                 "debug": False,
-                "secret_key": os.urandom(32).hex(),
+                "secret_key": None,  # see get_or_create_secret_key()
+                "secure_cookies": False,
+                "allowed_origins": [],
                 "workers": 4,
             },
             "database": {
@@ -103,7 +126,7 @@ class PhantomSignalConfig:
             },
             "export": {
                 "default_format": "json",
-                "output_dir": "/tmp",
+                "output_dir": None,  # default_export_dir()
                 "compression": False,
                 "encryption": False,
                 "encryption_algorithm": "AES-256-GCM",
@@ -157,6 +180,8 @@ class PhantomSignalConfig:
             "PHANTOMSIGNAL_DEBUG": ("server", "debug"),
             "PHANTOMSIGNAL_DB_URL": ("database", "url"),
             "PHANTOMSIGNAL_SECRET_KEY": ("server", "secret_key"),
+            "PHANTOMSIGNAL_SECURE_COOKIES": ("server", "secure_cookies"),
+            "PHANTOMSIGNAL_ALLOWED_ORIGINS": ("server", "allowed_origins"),
             "PHANTOMSIGNAL_TOR_ENABLED": ("scraper", "tor_enabled"),
             "PHANTOMSIGNAL_PROXY": ("scraper", "proxy"),
             "PHANTOMSIGNAL_EXPORT_DIR": ("export", "output_dir"),
@@ -287,8 +312,21 @@ class PhantomSignalConfig:
                 saved_scraper[k] = scraper[k]
         existing["scraper"] = saved_scraper
 
-        with open(_USER_CONFIG_PATH, "w") as f:
-            yaml.dump(existing, f, default_flow_style=False, sort_keys=False)
+        _write_private(_USER_CONFIG_PATH,
+                       yaml.dump(existing, default_flow_style=False, sort_keys=False))
+
+    def get_or_create_secret_key(self) -> str:
+        """The session signing key: configured, or generated once and kept in an
+        owner-only file so logins survive a restart."""
+        configured = self.get("server", "secret_key")
+        if configured:
+            return configured
+        path = _USER_CONFIG_PATH.parent / "secret_key"
+        if path.exists():
+            return path.read_text().strip()
+        key = secrets.token_hex(32)
+        _write_private(path, key + "\n")
+        return key
 
     def as_dict(self) -> Dict[str, Any]:
         import copy
@@ -296,6 +334,8 @@ class PhantomSignalConfig:
         for k in d.get("api_keys", {}):
             if d["api_keys"][k]:
                 d["api_keys"][k] = "***REDACTED***"
+        if d.get("server", {}).get("secret_key"):
+            d["server"]["secret_key"] = "***REDACTED***"
         return d
 
     @property

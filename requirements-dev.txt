@@ -1,0 +1,10 @@
+# Development tools: pip install -e ".[dev]"
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+black>=23.12.0
+isort>=5.13.2
+flake8>=7.0.0
+mypy>=1.8.0
+pre-commit>=3.6.0
+build>=1.0.0
