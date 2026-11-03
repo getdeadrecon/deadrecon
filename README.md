@@ -463,6 +463,11 @@ PhantomSignal is a dual-use tool. Operators are responsible for:
 
 **The developers provide this software as-is with no warranty. Misuse is your responsibility.**
 
+This software is intended for authorized security research, OSINT investigation, and educational
+purposes only. Users are solely responsible for ensuring their use complies with all applicable
+local, state, national, and international laws. The authors assume no liability for misuse or
+damage caused by this software.
+
 ---
 
 ## 🏷 Topics
@@ -504,6 +509,8 @@ PhantomSignal is a dual-use tool. Operators are responsible for:
 ## 📜 License
 
 MIT License — see [LICENSE](https://github.com/getphantomsignal/phantomsignal/blob/main/LICENSE)
+
+Copyright (c) 2026 the-clipper. AI architecture and implementation by Claude (Anthropic).
 
 ---
 

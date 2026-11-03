@@ -7,6 +7,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **GitHub now recognizes the MIT license.** `LICENSE` holds only the standard MIT text. The usage
+  disclaimer moved to the README's Legal & Ethics section, and the Claude credit moved to its
+  License section. The license terms haven't changed.
+
 ## [1.29.2] - 2026-11-03
 
 ### Fixed
