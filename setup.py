@@ -13,8 +13,8 @@ def read_requirements(path):
 
 setup(
     name="phantomsignal",
-    version="1.29.0",
-    description="PhantomSignal :: Open-Source OSINT Intelligence Framework",
+    version="1.29.1",
+    description="The OPSEC-native OSINT framework: stealth egress, one-click Tor, and an honest per-scan report of what you leaked.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="the-clipper",
@@ -51,7 +51,9 @@ setup(
     keywords="osint intelligence reconnaissance security pentest phantom signal",
     project_urls={
         "Homepage": "https://phantomsignal.sh",
-        "Documentation": "https://phantomsignal.sh",
+        "Documentation": "https://github.com/getphantomsignal/phantomsignal/blob/main/docs/USAGE.md",
+        "Changelog": "https://github.com/getphantomsignal/phantomsignal/blob/main/CHANGELOG.md",
+        "Releases": "https://github.com/getphantomsignal/phantomsignal/releases",
         "Bug Reports": "https://github.com/getphantomsignal/phantomsignal/issues",
         "Source": "https://github.com/getphantomsignal/phantomsignal",
     },

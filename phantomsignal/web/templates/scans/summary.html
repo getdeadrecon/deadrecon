@@ -254,7 +254,7 @@ body.sum-compact .cat-grid { grid-template-columns:repeat(auto-fill, minmax(240p
     <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0;">⚠ {{ attribution.local_dns_tools | join(", ") }} looked up names through your local DNS resolver, even though their traffic was proxied.</p>
     {% endif %}
     {% if attribution.tor %}
-    <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0;">🧅 Confirmed routed through Tor before the scan started.</p>
+    <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0;">🧅 Confirmed routed through Tor before the scan started.{% if attribution.tor_grade_note %} {{ attribution.tor_grade_note }}{% endif %}</p>
     {% endif %}
     {% if attribution.skipped_modules %}
     {% for module, reason in attribution.skipped_modules | dictsort %}

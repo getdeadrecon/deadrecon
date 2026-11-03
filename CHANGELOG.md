@@ -7,6 +7,28 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.29.1] - 2026-11-03
+
+### Changed
+- **Tor scans explain a Partial grade.** The scan report and CLI now say when every counted
+  request went through Tor and the grade is Partial only because of TLS fingerprinting. The
+  CLI also confirms the scan was on Tor. The grade itself is unchanged.
+
+### Fixed
+- **The CLI's API key hint works.** It pointed at `phantomsignal config --list-apis`, which doesn't
+  exist; it now points at `phantomsignal status`, as does the site.
+
+### Documentation
+- **The PyPI page, README and project site now cover 1.29.** The PyPI page had still led with
+  1.27.0, and its relative links were broken.
+- **Corrected claims that went too far.** Not every network source uses the stealth layer: keyed
+  API providers and some keyless sources connect directly unless Tor is on. The source count is
+  now 50+ rather than 54+, and "Provably Masked" is gone from the site.
+- **Quick starts mention the first-run setup token**, and the README no longer points at a config
+  file that isn't in the repo.
+- **`docs/RELEASING.md` matches the current API-token setup**, and sets the token through a
+  hidden prompt.
+
 ## [1.29.0] - 2026-11-02
 
 ### Security

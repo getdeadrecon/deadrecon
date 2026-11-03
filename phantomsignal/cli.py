@@ -671,7 +671,7 @@ def _summary_footer(con, scan_dict, results_list):
     con.print(f"  Threat Level   [bold][{t_color}]{threat}[/{t_color}][/bold]")
     con.print(f"  Data Points    {len(results_list)} results harvested")
     con.print()
-    con.print("[dim]  ◦ Extend coverage with API keys: phantomsignal config --list-apis[/dim]")
+    con.print("[dim]  ◦ Extend coverage with API keys: see phantomsignal status[/dim]")
     con.print("[dim]    shodan · virustotal · abuseipdb · greynoise · censys · securitytrails[/dim]\n")
 
 
@@ -916,6 +916,9 @@ def scan(target, scan_type, modules, profile, output, fmt, compress, encrypt,
             f"{attribution.get('impersonated', 0)} JA3-impersonated · "
             f"{attribution.get('waf_blocks', 0)} WAF challenge(s)"
             f"{' · counts include one entry per external tool run' if attribution.get('tool_runs') else ''}[/dim]"
+            + ("\n  [dim]🧅 Confirmed on Tor before the scan started."
+               + (f" {attribution['tor_grade_note']}" if attribution.get("tor_grade_note") else "")
+               + "[/dim]" if attribution.get("tor") else "")
             + (f"\n  [yellow]⚠ {', '.join(attribution['modules_by_opsec']['attributable'])} connected directly; "
                "counts only cover HTTP[/yellow]" if (attribution.get("modules_by_opsec") or {}).get("attributable") else "")
             + "".join(f"\n  [dim]⊘ {m} skipped: {r}[/dim]"

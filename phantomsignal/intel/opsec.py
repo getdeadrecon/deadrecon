@@ -110,6 +110,16 @@ def _grade(summary: Dict, module_opsec: Dict[str, str],
     return "exposed"
 
 
+def _tor_grade_note(summary: Dict, grade: str, by_level: Dict[str, List[str]]) -> Optional[str]:
+    """Why a Tor scan reads Partial when nothing was seen going direct, so the grade
+    isn't mistaken for a leak. Only says what the counts support."""
+    if (grade != "partial" or not summary.get("tor") or summary.get("direct")
+            or by_level.get(OpsecLevel.ATTRIBUTABLE.value)):
+        return None
+    return ("Every counted request went through Tor, with none direct. This scan is Partial "
+            "because some requests or modules didn't use a browser TLS fingerprint.")
+
+
 def build_attribution_result(summary: Dict, module_opsec: Dict[str, str],
                              pool_status: Optional[List[Dict]] = None,
                              proxy_configured: Optional[bool] = None) -> Dict:
@@ -131,6 +141,9 @@ def build_attribution_result(summary: Dict, module_opsec: Dict[str, str],
     }
     if pool_status:
         data["proxy_pool"] = pool_status
+    tor_note = _tor_grade_note(summary, grade, by_level)
+    if tor_note:
+        data["tor_grade_note"] = tor_note
 
     return {
         "type": "attribution_surface",
