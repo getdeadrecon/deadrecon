@@ -23,6 +23,8 @@ import re
 import socket
 from typing import Dict, List, Optional
 
+from phantomsignal.core.dns_egress import configured_proxies, make_resolver
+
 logger = logging.getLogger("phantomsignal.geo.passive")
 
 INTERNETDB = "https://internetdb.shodan.io/{ip}"
@@ -99,12 +101,17 @@ async def asn_prefixes(client, asn: int) -> List[str]:
         return []
 
 
-async def resolve_domain_ips(domain: str) -> List[str]:
-    """Resolve a domain + a small subdomain set to A records (system resolver)."""
+async def resolve_domain_ips(domain: str, config=None) -> List[str]:
+    """Resolve a domain + a small subdomain set to A records, respecting the
+    configured egress."""
     loop = asyncio.get_event_loop()
+    proxied = bool(config and configured_proxies(config))
+    resolver = make_resolver(config) if proxied else None
 
     def _resolve(host):
         try:
+            if resolver is not None:
+                return [str(record) for record in resolver.resolve(host, "A")]
             return list({ai[4][0] for ai in socket.getaddrinfo(host, None, socket.AF_INET)})
         except Exception:
             return []

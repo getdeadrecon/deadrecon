@@ -21,6 +21,7 @@ import asyncio
 import logging
 from typing import Dict, List, Optional
 
+from phantomsignal.core.dns_egress import make_resolver
 from phantomsignal.core.http import stealth_client
 
 try:
@@ -142,7 +143,7 @@ class TakeoverDetector:
     def __init__(self, config):
         self.config = config
         if dns is not None:
-            self._resolver = dns.resolver.Resolver()
+            self._resolver = make_resolver(config)
             self._resolver.timeout = 2
             self._resolver.lifetime = 3
         else:  # pragma: no cover

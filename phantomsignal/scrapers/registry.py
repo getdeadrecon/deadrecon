@@ -71,19 +71,19 @@ def module_names() -> List[str]:
 # actually routes target-facing traffic through StealthClient (verified per
 # module) — deliberately conservative so the attribution report never overclaims.
 
-@register_module("dns_recon", opsec=OpsecLevel.ATTRIBUTABLE, label="DNS Recon")
+@register_module("dns_recon", opsec=OpsecLevel.PROXIED, label="DNS Recon")
 def _dns_recon(config, target, opts):
     from phantomsignal.scrapers.dns_recon import DNSRecon
     return DNSRecon(config).run(target)
 
 
-@register_module("subdomain_enum", opsec=OpsecLevel.ATTRIBUTABLE, label="Subdomain Enum")
+@register_module("subdomain_enum", opsec=OpsecLevel.PROXIED, label="Subdomain Enum")
 def _subdomain_enum(config, target, opts):
     from phantomsignal.scrapers.subdomain_enum import SubdomainEnumerator
     return SubdomainEnumerator(config).run(target)
 
 
-@register_module("takeover", opsec=OpsecLevel.STEALTH_GUARANTEED, label="Takeover Detection")
+@register_module("takeover", opsec=OpsecLevel.PROXIED, label="Takeover Detection")
 def _takeover(config, target, opts):
     from phantomsignal.scrapers.takeover import TakeoverDetector
     return TakeoverDetector(config).run(target)
@@ -95,7 +95,7 @@ def _js_mine(config, target, opts):
     return JSMiner(config).run(target)
 
 
-@register_module("archive_mine", opsec=OpsecLevel.ATTRIBUTABLE, label="Archive URL Mining")
+@register_module("archive_mine", opsec=OpsecLevel.PROXIED, label="Archive URL Mining")
 def _archive_mine(config, target, opts):
     from phantomsignal.scrapers.archive_miner import ArchiveURLMiner
     return ArchiveURLMiner(config).run(target)
@@ -125,13 +125,13 @@ def _doc_metadata(config, target, opts):
     return DocMetadataExtractor(config).run(target)
 
 
-@register_module("username_enum", opsec=OpsecLevel.ATTRIBUTABLE, label="Username Enum")
+@register_module("username_enum", opsec=OpsecLevel.PROXIED, label="Username Enum")
 def _username_enum(config, target, opts):
     from phantomsignal.scrapers.username_enum import UsernameEnumerator
     return UsernameEnumerator(config).run(target)
 
 
-@register_module("profile_pivot", opsec=OpsecLevel.ATTRIBUTABLE, label="Profile Pivot")
+@register_module("profile_pivot", opsec=OpsecLevel.PROXIED, label="Profile Pivot")
 def _profile_pivot(config, target, opts):
     from phantomsignal.intel.people.profile_pivot import ProfilePivotEngine
     return ProfilePivotEngine(config).run(target)
@@ -143,7 +143,7 @@ def _darkweb(config, target, opts):
     return DarkWebMonitor(config).run(target)
 
 
-@register_module("email_oracle", opsec=OpsecLevel.ATTRIBUTABLE, label="Email Oracle")
+@register_module("email_oracle", opsec=OpsecLevel.PROXIED, label="Email Oracle")
 def _email_oracle(config, target, opts):
     from phantomsignal.scrapers.email_oracle import EmailOracle
     return EmailOracle(config).run(target)
@@ -189,7 +189,7 @@ def _intel(config, target, opts):
 # self-declared in each finding's data["opsec"] and reflected in the grade.
 
 # Active vuln scanning is loud — opt-in only, never in the default sweep.
-@register_module("vuln_scan", opsec=OpsecLevel.PROXIED,
+@register_module("vuln_scan", opsec=OpsecLevel.ATTRIBUTABLE,
                  label="Vulnerability Scan (nuclei)", default=False)
 def _vuln_scan(config, target, opts):
     from phantomsignal.scrapers.vuln_scanner import NucleiScanner

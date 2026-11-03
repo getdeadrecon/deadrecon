@@ -352,6 +352,7 @@ a:hover { color: var(--green); }
 .c-green { color: var(--green); }
 .c-cyan  { color: var(--cyan); }
 .c-dim   { color: var(--text-dim); }
+.c-amber { color: #e0a63a; }
 
 /* ── Shadow Score ────────────────────────────────────────────── */
 .score-grid {

@@ -37,10 +37,15 @@ import logging
 import random
 import time
 from dataclasses import dataclass, field
-from typing import Dict, Iterator, Optional, Set, Tuple
-from urllib.parse import urlparse
+from typing import Any, Dict, Iterator, Optional, Set, Tuple
+from urllib.parse import urljoin, urlparse
 
 import httpx
+
+from phantomsignal.core.tor import floor_timeout, tor_circuits, tor_enabled, tor_proxy_url  # noqa: F401
+from phantomsignal.core.netguard import (
+    check_redirect, check_request_url, curl_pin, environment_proxy_active, guarded_client,
+)
 
 logger = logging.getLogger("phantomsignal.http")
 
@@ -64,6 +69,10 @@ class AttributionLedger:
     waf_blocks: int = 0                              # defence-challenge responses
     backoffs: int = 0                                # adaptive backoff sleeps
     hosts: Set[str] = field(default_factory=set)
+    local_dns_tools: Set[str] = field(default_factory=set)  # tools that use the local resolver
+    tool_runs: Dict[str, int] = field(default_factory=dict)  # external tool → runs
+    skipped_modules: Dict[str, str] = field(default_factory=dict)  # module → why it didn't run
+    tor: bool = False
     proxies_used: Set[str] = field(default_factory=set)
     ja3_profiles: Dict[str, int] = field(default_factory=dict)   # imp target → n
     block_names: Dict[str, int] = field(default_factory=dict)    # waf name → n
@@ -83,6 +92,12 @@ class AttributionLedger:
             self.ja3_profiles[impersonate_target] = (
                 self.ja3_profiles.get(impersonate_target, 0) + 1
             )
+
+    def record_tool_run(self, tool: str, host: str, proxy: Optional[str]) -> None:
+        """Counts as one request, because a tool's own requests aren't visible here.
+        ``tool_runs`` lets the report say the real number is higher."""
+        self.record_request(host, proxy, None)
+        self.tool_runs[tool] = self.tool_runs.get(tool, 0) + 1
 
     def record_block(self, name: Optional[str]) -> None:
         self.waf_blocks += 1
@@ -104,6 +119,10 @@ class AttributionLedger:
             "waf_blocks": self.waf_blocks,
             "backoffs": self.backoffs,
             "hosts_touched": len(self.hosts),
+            "local_dns_tools": sorted(self.local_dns_tools),
+            "tool_runs": dict(self.tool_runs),
+            "skipped_modules": dict(self.skipped_modules),
+            "tor": self.tor,
             "proxies_used": len(self.proxies_used),
             "ja3_profiles": dict(self.ja3_profiles),
             "block_names": dict(self.block_names),
@@ -131,6 +150,7 @@ def attribution_scope(ledger: Optional[AttributionLedger] = None) -> Iterator[At
 # real browser's TLS (JA3/JA4) + HTTP/2 fingerprint instead of Python's static,
 # trivially-fingerprinted stack. Absent it, we fall back to httpx transparently.
 try:
+    from curl_cffi import CurlOpt as _CurlOpt
     from curl_cffi.requests import AsyncSession as _CurlSession
     from curl_cffi.requests.exceptions import RequestException as _CurlError
     _CURL_AVAILABLE = True
@@ -139,6 +159,11 @@ except Exception:  # pragma: no cover - optional dependency
     _CurlSession = None
     _CURL_AVAILABLE = False
     _CURL_ERRORS = ()
+
+_MAX_IMPERSONATED_REDIRECTS = 10
+_MAX_PINNED_SESSIONS = 64
+_REMOTE_DNS_SCHEMES = {"socks5://": "socks5h://", "socks4://": "socks4a://"}
+_REDIRECT_CODES = (301, 302, 303, 307, 308)
 
 _TRANSPORT_ERRORS: Tuple[type, ...] = (httpx.TimeoutException, httpx.TransportError) + _CURL_ERRORS
 
@@ -293,6 +318,18 @@ class _HostState:
     blocked: bool = False            # sticky "we were challenged here" flag
 
 
+# Each module builds its own client. Sharing this keeps one browser per host across a
+# scan, instead of a target seeing a different browser from each module.
+_host_identities: Dict[str, int] = {}
+_MAX_REMEMBERED_HOSTS = 4096
+
+
+def _sticky_identity(host: str) -> int:
+    if host not in _host_identities and len(_host_identities) >= _MAX_REMEMBERED_HOSTS:
+        _host_identities.clear()
+    return _host_identities.setdefault(host, random.randrange(len(_IDENTITIES)))
+
+
 class _RateLimiter:
     """Owns per-host pacing state and the AIMD adaptation loop."""
 
@@ -304,7 +341,7 @@ class _RateLimiter:
         st = self._hosts.get(host)
         if st is None:
             st = _HostState(
-                ident=random.randrange(len(_IDENTITIES)),
+                ident=_sticky_identity(host),
                 interval=self.profile.base_interval,
                 sem=asyncio.Semaphore(self.profile.max_concurrency),
                 lock=asyncio.Lock(),
@@ -325,6 +362,7 @@ class _RateLimiter:
         st = self._state(host)
         choices = [i for i in range(len(_IDENTITIES)) if i != st.ident]
         st.ident = random.choice(choices)
+        _host_identities[host] = st.ident
 
     def impersonate(self, host: str) -> str:
         """curl_cffi impersonation target matching this host's identity."""
@@ -374,6 +412,17 @@ class _ProxyHealth:
     fails: int = 0
     disabled_until: float = 0.0     # monotonic time the proxy is usable again
     requests: int = 0
+
+
+def _remote_dns_proxy(proxy: Optional[str]) -> Optional[str]:
+    """Make libcurl send hostnames to a SOCKS proxy. With plain socks5:// it resolves
+    them locally, leaking every target to the local DNS resolver. httpx always sends
+    the name, so this only applies to the curl_cffi path."""
+    if proxy:
+        for plain, remote in _REMOTE_DNS_SCHEMES.items():
+            if proxy.lower().startswith(plain):
+                return remote + proxy[len(plain):]
+    return proxy
 
 
 class ProxyPool:
@@ -519,6 +568,7 @@ class StealthClient:
         # AND the optional dependency is present (else transparently use httpx).
         self._impersonate = bool(impersonate) and _CURL_AVAILABLE
         self._imp_session = None
+        self._pinned_sessions: Dict[str, Any] = {}
         # One egress list drives everything: an explicit pool, else the single
         # proxy, else direct-only.
         self._pool = ProxyPool(pool if pool else [proxy], rotation=rotation)
@@ -529,12 +579,8 @@ class StealthClient:
     def _client_for(self, proxy: Optional[str]) -> httpx.AsyncClient:
         c = self._clients.get(proxy)
         if c is None:
-            c = httpx.AsyncClient(
-                timeout=self._timeout,
-                verify=self._verify,
-                follow_redirects=self._follow,
-                proxy=proxy,
-            )
+            options = {"timeout": self._timeout, "verify": self._verify, "follow_redirects": self._follow}
+            c = guarded_client(**options) if proxy is None else httpx.AsyncClient(proxy=proxy, **options)
             self._clients[proxy] = c
         return c
 
@@ -544,6 +590,20 @@ class StealthClient:
         if self._imp_session is None:
             self._imp_session = _CurlSession()
         return self._imp_session
+
+    def _pinned_session(self, pin: Optional[str]) -> Tuple[Any, bool]:
+        """A session for a vetted address, and whether the caller must close it.
+        curl_cffi only takes RESOLVE per session, so each pin has its own."""
+        if pin is None:
+            return self._session(), False
+        session = self._pinned_sessions.get(pin)
+        if session is not None:
+            return session, False
+        session = _CurlSession(curl_options={_CurlOpt.RESOLVE: [pin]})
+        if len(self._pinned_sessions) >= _MAX_PINNED_SESSIONS:
+            return session, True
+        self._pinned_sessions[pin] = session
+        return session, False
 
     @property
     def impersonating(self) -> bool:
@@ -563,6 +623,12 @@ class StealthClient:
         for c in self._clients.values():
             await c.aclose()
         self._clients.clear()
+        for session in self._pinned_sessions.values():
+            try:
+                await session.close()
+            except Exception:
+                pass
+        self._pinned_sessions.clear()
         if self._imp_session is not None:
             try:
                 await self._imp_session.close()
@@ -605,6 +671,39 @@ class StealthClient:
             return None
         return {k: v for k, v in headers.items() if k.lower() != "user-agent"}
 
+    async def _impersonated_request(self, method, url, headers, imp_target, proxy, **kw):
+        """Send through curl_cffi. libcurl follows redirects internally, where the
+        network guard can't see them, so direct requests follow them here."""
+        guarded = proxy is None and not environment_proxy_active()
+        proxy = _remote_dns_proxy(proxy)
+        if guarded:
+            await check_request_url(url)
+        follow_here = guarded and self._follow
+        for _ in range(_MAX_IMPERSONATED_REDIRECTS):
+            session, disposable = self._pinned_session(await curl_pin(url) if guarded else None)
+            try:
+                resp = await session.request(
+                    method, url, headers=headers, impersonate=imp_target, proxy=proxy,
+                    allow_redirects=self._follow and not follow_here,
+                    verify=self._verify, timeout=self._timeout, **kw)
+            finally:
+                if disposable:
+                    await session.close()
+            location = resp.headers.get("location")
+            if not (follow_here and location and resp.status_code in _REDIRECT_CODES):
+                return resp
+            await check_redirect(url, location)
+            target = urljoin(url, location)
+            if urlparse(target).netloc != urlparse(url).netloc:
+                headers = None  # never carry credentials to another host
+            if resp.status_code not in (307, 308):
+                method = "HEAD" if method == "HEAD" else "GET"
+                kw.pop("data", None)
+                kw.pop("json", None)
+            kw.pop("params", None)  # Location is a complete URL; don't re-send query params
+            url = target
+        return resp
+
     async def request(self, method: str, url: str, *, headers: Optional[Dict] = None, **kw) -> httpx.Response:
         host = urlparse(url).netloc
         retries = self._profile.max_retries
@@ -621,16 +720,8 @@ class StealthClient:
             sem = await self._limiter.acquire(host)
             try:
                 if self._impersonate:
-                    resp = await self._session().request(
-                        method, url,
-                        headers=self._caller_headers(headers),
-                        impersonate=imp_target,
-                        proxy=proxy,
-                        allow_redirects=self._follow,
-                        verify=self._verify,
-                        timeout=self._timeout,
-                        **kw,
-                    )
+                    resp = await self._impersonated_request(
+                        method, url, self._caller_headers(headers), imp_target, proxy, **kw)
                 else:
                     merged = self._headers_for(host, headers)
                     resp = await self._client_for(proxy).request(method, url, headers=merged, **kw)
@@ -725,6 +816,10 @@ class StealthClient:
 
 
 # ── Factory ──────────────────────────────────────────────────────────────────
+_scan_stealth_profile: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+    "ps_scan_stealth_profile", default=None)
+
+
 def resolve_profile(config, override: Optional[str] = None) -> Profile:
     """Pick the active stealth profile from an explicit override, else config.
 
@@ -733,8 +828,8 @@ def resolve_profile(config, override: Optional[str] = None) -> Profile:
     if present, feeds the paranoid tuning). Defaults to 'off' — no behaviour
     change unless the operator opts in.
     """
-    if override:
-        name = override
+    if override or _scan_stealth_profile.get():
+        name = override or _scan_stealth_profile.get()
     else:
         # scraper.stealth_profile is the fine control; a non-"off" value wins.
         # Otherwise the simple evasive.enabled on-switch raises "off" to "quiet".
@@ -745,6 +840,8 @@ def resolve_profile(config, override: Optional[str] = None) -> Profile:
             name = "quiet"
         else:
             name = "off"
+    if name == "off" and tor_enabled(config):
+        name = "quiet"  # thirty parallel requests would swamp a Tor circuit
     prof = PROFILES.get(name, PROFILES["off"])
 
     # Let a configured jitter_range widen the chosen profile's jitter.
@@ -757,13 +854,50 @@ def resolve_profile(config, override: Optional[str] = None) -> Profile:
     return prof
 
 
+def _ledger_hook(proxy: Optional[str]):
+    """Count a request in the active scan's ledger. Runs on each hop, before the
+    request is sent, so traffic that later fails is still counted."""
+    async def hook(request: httpx.Request) -> None:
+        ledger = _current_ledger.get()
+        if ledger is not None:
+            ledger.record_request(request.url.host, proxy, None)
+    return hook
+
+
+def counted_client(**kwargs) -> httpx.AsyncClient:
+    """A direct client for traffic that's deliberately unproxied, such as keyed API
+    providers. It still appears in the attribution report. Tor overrides this: with Tor
+    on, nothing is deliberately direct."""
+    from phantomsignal.core.config import config as active_config
+    if tor_enabled(active_config):
+        return egress_client(active_config, **kwargs)
+    return guarded_client(extra_request_hooks=[_ledger_hook(None)], **kwargs)
+
+
+def egress_client(config, **kwargs) -> httpx.AsyncClient:
+    """An httpx client for modules that don't need the full stealth client. It uses a
+    configured proxy when there is one, and is always counted in the ledger."""
+    egress, _ = resolve_egress(config)
+    proxies = [proxy for proxy in egress if proxy]
+    if "timeout" in kwargs:
+        kwargs["timeout"] = floor_timeout(config, kwargs["timeout"])
+    if proxies:
+        proxy = random.choice(proxies)
+        return httpx.AsyncClient(proxy=proxy, event_hooks={"request": [_ledger_hook(proxy)]}, **kwargs)
+    return counted_client(**kwargs)
+
+
 def resolve_egress(config, proxy=..., pool=...) -> Tuple[list, str]:
     """Resolve the egress list + rotation mode from config.
 
-    Precedence: an explicit ``proxy_pool`` list wins; else the single
+    Precedence: ``tor_enabled`` wins unless a caller passes its own proxy or pool;
+    then an explicit ``proxy_pool`` list; else the single
     ``scraper.proxy``; else direct-only. ``scraper.proxy_rotation`` selects
     sticky (per-host) or every (per-request) rotation.
     """
+    if proxy is ... and pool is ... and config.get("scraper", "tor_enabled", default=False):
+        # An exclusive route: if Tor is down, requests fail rather than leave directly.
+        return tor_circuits(config), config.get("scraper", "proxy_rotation", default="sticky")
     if pool is ...:
         pool = config.get("scraper", "proxy_pool", default=None)
     if proxy is ...:
@@ -802,9 +936,9 @@ def stealth_status(config) -> Dict:
     proxies = [e for e in egress if e]
     proxied = bool(proxies)
     profile_on = prof.name != "off"
-    impersonate = (bool(config.get("scraper", "tls_impersonate", default=False))
+    impersonate = ((bool(config.get("scraper", "tls_impersonate", default=False)) or tor_enabled(config))
                    and _CURL_AVAILABLE)
-    tor = bool(config.get("scraper", "tor_enabled", default=False))
+    tor = tor_enabled(config)
 
     if proxied and profile_on:
         level, label = "stealth", prof.name.upper()
@@ -818,7 +952,7 @@ def stealth_status(config) -> Dict:
         "label": label,
         "profile": prof.name,
         "proxied": proxied,
-        "pool_size": len(proxies),
+        "pool_size": 1 if tor else len(proxies),
         "rotation": rotation,
         "impersonate": impersonate,
         "tor": tor,
@@ -839,15 +973,15 @@ def stealth_client(
     """Construct a StealthClient using PhantomSignal config for defaults."""
     prof = resolve_profile(config, override=profile)
     egress, rotation = resolve_egress(config, proxy=proxy, pool=pool)
-    if impersonate is None:
-        impersonate = bool(config.get("scraper", "tls_impersonate", default=False))
+    if impersonate is None:  # Tor hides the IP; without this the TLS fingerprint still stands out
+        impersonate = bool(config.get("scraper", "tls_impersonate", default=False)) or tor_enabled(config)
     if impersonate and not _CURL_AVAILABLE:
         logger.warning("tls_impersonate is on but curl_cffi is not installed; "
                        "falling back to standard TLS. Run: pip install curl_cffi")
         impersonate = False
     return StealthClient(
         profile=prof,
-        timeout=timeout,
+        timeout=floor_timeout(config, timeout),
         verify=verify,
         follow_redirects=follow_redirects,
         pool=egress,

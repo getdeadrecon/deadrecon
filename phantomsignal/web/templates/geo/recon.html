@@ -42,7 +42,7 @@
   <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="form-group" style="margin-bottom:0.75rem;"><label class="form-label">SOURCE</label>
-      <select name="mode" class="input-field select-field" onchange="grMode(this.value)">
+      <select name="mode" class="input-field select-field" id="gr-mode-select">
         <option value="free" {% if form.mode != 'shodan' %}selected{% endif %}>Free / passive — no key (domain or ASN scope)</option>
         <option value="shodan" {% if form.mode == 'shodan' %}selected{% endif %}>Shodan — paid index (city / lat,lon)</option>
       </select></div>
@@ -70,13 +70,14 @@
     <button type="submit" class="btn btn-primary" style="margin-top:0.8rem;">◎ Run geo recon</button>
   </form>
 </div>
-<script>
+<script nonce="{{ csp_nonce() }}">
 function grMode(m){
   document.querySelectorAll('[data-mode="free"]').forEach(e => e.style.display = m==="shodan" ? "none":"");
   document.querySelectorAll('[data-mode="shodan"]').forEach(e => e.style.display = m==="shodan" ? "":"none");
   document.getElementById("gr-hint").style.display = m==="shodan" ? "none":"block";
 }
 grMode("{{ form.mode or 'free' }}");
+document.getElementById("gr-mode-select").addEventListener("change", (event) => grMode(event.target.value));
 </script>
 
 {% if result is not none %}
@@ -138,9 +139,9 @@ grMode("{{ form.mode or 'free' }}");
 
 {% block scripts %}
 {% if mapcfg.enabled and result is not none and result.assets %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script nonce="{{ csp_nonce() }}">
 const ASSETS = {{ result.assets | tojson }};
 const CENTER = {{ result.center | tojson }};
 const MAP_CFG = {{ mapcfg | tojson }};
@@ -154,18 +155,27 @@ const MAP_CFG = {{ mapcfg | tojson }};
   }
   const isLight = () => document.documentElement.getAttribute("data-theme") === "light";
   const map = L.map("gr-map");
-  const tiles = L.tileLayer(isLight() ? MAP_CFG.tile_url : MAP_CFG.tile_url_dark,
-    { attribution: MAP_CFG.attribution, maxZoom: 19 }).addTo(map);
-  new MutationObserver(() => tiles.setUrl(isLight() ? MAP_CFG.tile_url : MAP_CFG.tile_url_dark))
-    .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  const tileUrl = () => isLight() ? MAP_CFG.tile_url : MAP_CFG.tile_url_dark;
+  if (tileUrl()) {
+    const tiles = L.tileLayer(tileUrl(), { attribution: MAP_CFG.attribution, maxZoom: 19 }).addTo(map);
+    // Swap the basemap live when the site theme toggles (no reload).
+    new MutationObserver(() => tiles.setUrl(tileUrl()))
+      .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  } else {
+    const note = document.createElement("p");
+    note.className = "text-dim";
+    note.style.cssText = "font-size:0.75rem;margin:0.4rem 0 0;";
+    note.textContent = "No basemap: points are plotted without a background map. Set geo.tile_url to add one.";
+    document.getElementById("gr-map").after(note);
+  }
   const bounds = [];
   pts.forEach(a => {
     const vuln = (a.vulns || []).length > 0;
     const color = vuln ? "#e26d6d" : "#4d9fd6";
     L.circleMarker([a.lat, a.lon], { radius: 5, color, fillColor: color, fillOpacity: 0.5, weight: 1.5 })
       .addTo(map)
-      .bindPopup(`<b>${a.ip}:${a.port}</b><br>${a.product || ""} ${a.version || ""}<br>${a.org || ""}` +
-                 (vuln ? `<br><b style="color:#e26d6d">${a.vulns.join(", ")}</b>` : ""));
+      .bindPopup(`<b>${escapeHtml(a.ip)}:${escapeHtml(a.port)}</b><br>${escapeHtml(a.product || "")} ${escapeHtml(a.version || "")}<br>${escapeHtml(a.org || "")}` +
+                 (vuln ? `<br><b style="color:#e26d6d">${escapeHtml(a.vulns.join(", "))}</b>` : ""));
     bounds.push([a.lat, a.lon]);
   });
   if (CENTER) bounds.push(CENTER);

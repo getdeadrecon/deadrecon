@@ -24,7 +24,7 @@ import re
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 from urllib.parse import parse_qs, urlparse
 
-import httpx
+from phantomsignal.core.http import egress_client
 
 logger = logging.getLogger("phantomsignal.scrapers.archive_miner")
 
@@ -173,10 +173,11 @@ class ArchiveURLMiner:
         return self._build_results(domain, scoped, interesting, subs, params, source_counts)
 
     async def _gather(self, domain: str) -> Tuple[Set[str], Dict[str, int]]:
-        async with httpx.AsyncClient(
+        async with egress_client(
+            self.config,
             timeout=25, follow_redirects=True,
             headers={"User-Agent": "PhantomSignal-OSINT/1.0"},
-        ) as client:
+                    ) as client:
             sources = {
                 "wayback": self._src_wayback(client, domain),
                 "otx": self._src_otx(client, domain),
@@ -196,7 +197,7 @@ class ArchiveURLMiner:
         return merged, counts
 
     async def _src_wayback(self, client, domain) -> Set[str]:
-        url = ("http://web.archive.org/cdx/search/cdx"
+        url = ("https://web.archive.org/cdx/search/cdx"
                f"?url=*.{domain}/*&output=json&fl=original&collapse=urlkey&limit={MAX_URLS}")
         r = await client.get(url)
         return parse_wayback_cdx(r.json()) if r.status_code == 200 else set()

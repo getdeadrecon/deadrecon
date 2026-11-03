@@ -188,7 +188,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 // Auto-refresh active scan status
 document.addEventListener("DOMContentLoaded", () => {
   {% if stats.active_scans > 0 %}

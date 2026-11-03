@@ -19,6 +19,8 @@ from typing import Any, ClassVar, Dict, List, Optional, Type
 
 import httpx
 
+from phantomsignal.core.http import counted_client
+
 logger = logging.getLogger("phantomsignal.intel.api")
 
 _REGISTRY: Dict[str, Type["BaseIntelAPI"]] = {}
@@ -129,7 +131,7 @@ class BaseIntelAPI(abc.ABC):
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
-            self._client = httpx.AsyncClient(
+            self._client = counted_client(
                 timeout=30,
                 follow_redirects=True,
                 headers=self._default_headers(),

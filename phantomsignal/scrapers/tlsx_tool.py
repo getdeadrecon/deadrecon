@@ -71,7 +71,7 @@ class TlsxTool(ExternalTool):
 
     def command(self, target: str, opts: Dict) -> List[str]:
         return ["tlsx", "-u", host_only(target), "-json", "-silent", "-duc",
-                "-jarm", "-cn", "-san", "-hash", "sha256"]
+                "-jarm", "-hash", "sha256"]
 
     def parse(self, stdout: str, opsec: str) -> List[Dict]:
         return parse_tlsx(stdout, opsec)

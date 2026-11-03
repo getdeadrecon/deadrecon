@@ -1,8 +1,10 @@
-version: "3.9"
-
 services:
   phantomsignal:
-    build: .
+    build:
+      context: .
+      args:
+        # Set to true to include nuclei, katana, subfinder, naabu and tlsx
+        RECON_TOOLS: ${PHANTOMSIGNAL_RECON_TOOLS:-false}
     image: phantomsignal:latest
     container_name: phantomsignal
     ports:
@@ -13,13 +15,12 @@ services:
       - phantomsignal-data:/app/data
       - phantomsignal-exports:/app/exports
       # API keys, console settings and the session key saved at runtime
-      - phantomsignal-home:/root/.phantomsignal
+      - phantomsignal-home:/home/app/.phantomsignal
       - ./config:/app/config:ro
     environment:
-      - PHANTOMSIGNAL_HOST=0.0.0.0
-      - PHANTOMSIGNAL_PORT=5000
       - PHANTOMSIGNAL_DB_URL=sqlite:////app/data/phantomsignal.db
       - PHANTOMSIGNAL_EXPORT_DIR=/app/exports
+      - PHANTOMSIGNAL_TOR_ENABLED
       # Add your API keys as environment variables:
       # - SHODAN_API_KEY=your-key
       # - VIRUSTOTAL_API_KEY=your-key
@@ -39,14 +40,19 @@ services:
       timeout: 10s
       retries: 3
 
-  # Optional: Tor proxy for covert scans
-  tor:
-    image: dperson/torproxy:latest
-    container_name: phantomsignal-tor
-    ports:
-      - "127.0.0.1:9050:9050"
-      - "127.0.0.1:8118:8118"
-    restart: unless-stopped
+  # Tor is built into the image: click the Tor button in the console. This profile
+  # just turns it on, for anyone who starts with --profile covert.
+  covert:
+    image: phantomsignal:latest
+    command: ["phantomsignal", "tor", "on"]
+    entrypoint: []
+    volumes:
+      - phantomsignal-home:/home/app/.phantomsignal
+    restart: "no"
+    healthcheck:
+      disable: true
+    depends_on:
+      - phantomsignal
     profiles: ["covert"]
 
 volumes:

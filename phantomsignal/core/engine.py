@@ -13,7 +13,13 @@ import logging
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
+from phantomsignal.core import tor, tor_service
 from phantomsignal.core.config import config
+from phantomsignal.core.http import _scan_stealth_profile
+from phantomsignal.core.tor import (
+    TorUnavailable, is_onion, onion_block_reason, target_host, tor_block_reason, tor_enabled, verify_tor,
+)
+from phantomsignal.intel.opsec import OpsecLevel
 from phantomsignal.core.database import get_db
 from phantomsignal.core.models import Scan, ScanResult, ScanStatus, ThreatLevel
 
@@ -63,28 +69,47 @@ class PhantomEngine:
         await asyncio.sleep(1.0)
 
         try:
+            from phantomsignal.core.dns_egress import configured_proxies
             from phantomsignal.core.http import attribution_scope
+            from phantomsignal.intel.opsec import effective_opsec
 
             modules = scan.modules_enabled or []
-            total_modules = len(modules) or 1
             completed = 0
+            config.refresh_tor_setting()
+            tor_on = tor_enabled(config)
+            covert = scan.profile == "covert"
+            onion = is_onion(target_host(scan.target))
 
-            pipeline, opsec_map = self._build_pipeline(scan, modules)
+            if onion and not tor_on:
+                raise TorUnavailable("This is an .onion target, so it needs Tor. Click the Tor button, "
+                                     "then scan again. Nothing was sent.")
+            if tor_on:
+                await asyncio.to_thread(tor_service.service.wait_ready, config,
+                                        progress=lambda text: self._log(scan_id, "system", text))
+                await verify_tor(config)
+                self._log(scan_id, "system", "Tor confirmed. All scan traffic will use Tor.")
+
+            _scan_stealth_profile.set("paranoid" if covert else None)
+            pipeline, opsec_map, skipped = self._build_pipeline(scan, modules, tor_on, covert, onion)
+            total_modules = len(pipeline) or 1
+            module_timeout = tor.MODULE_TIMEOUT if tor_on or covert else 300
 
             # Every StealthClient request made underneath records into this
             # ledger, so the scan can report its own attribution surface.
             with attribution_scope() as ledger:
+                ledger.tor = tor_on
+                ledger.skipped_modules.update(skipped)
+                for module_name, reason in skipped.items():
+                    self._log(scan_id, module_name, f"Module skipped: {reason}", level="warning")
+                proxy_configured = bool(configured_proxies(config))
                 for module_name, module_coro, opsec_level in pipeline:
+                    direct_before = ledger.direct
+                    results = None
                     self._log(scan_id, module_name, f"Module online: {module_name.upper()}")
                     self.emit("module_start", {"scan_id": scan_id, "module": module_name}, scan_id)
                     try:
-                        results = await asyncio.wait_for(module_coro, timeout=300)
+                        results = await asyncio.wait_for(module_coro, timeout=module_timeout)
                         await self._store_results(scan_id, module_name, results, opsec_level)
-                        # Reflect the module's ACTUAL posture (external tools
-                        # proxy only when a proxy is configured) so the grade
-                        # stays honest, not just the static registry tag.
-                        from phantomsignal.intel.opsec import effective_opsec
-                        opsec_map[module_name] = effective_opsec(results, opsec_level)
                         completed += 1
                         progress = int((completed / total_modules) * 100)
                         self._update_progress(scan_id, progress)
@@ -99,6 +124,10 @@ class PhantomEngine:
                     except Exception as e:
                         self._log(scan_id, module_name, f"Module error [{module_name}]: {e}", level="error")
                         logger.exception(f"Module {module_name} failed for scan {scan_id}")
+                    # The module's actual posture for this run, even if it failed or
+                    # timed out after sending traffic.
+                    opsec_map[module_name] = effective_opsec(
+                        results, opsec_level, proxy_configured, ledger.direct - direct_before)
 
             await self._finalize_scan(scan_id, ledger, opsec_map)
 
@@ -112,13 +141,15 @@ class PhantomEngine:
                     scan.completed_at = datetime.utcnow()
             self.emit("scan_failed", {"scan_id": scan_id, "error": str(e)}, scan_id)
 
-    def _build_pipeline(self, scan: Scan, modules: List[str]):
+    def _build_pipeline(self, scan: Scan, modules: List[str], tor_on: bool = False,
+                        covert: bool = False, onion: bool = False):
         """Assemble the module pipeline for a given scan.
 
-        Returns ``(pipeline, opsec_map)`` where ``pipeline`` is a list of
+        Returns ``(pipeline, opsec_map, skipped)`` where ``pipeline`` is a list of
         ``(module_name, coroutine, opsec_level)`` and ``opsec_map`` maps each
         module that will run to its ``OpsecLevel`` value (for the attribution
-        report). Modules are resolved from the scraper registry, so new modules
+        report), and ``skipped`` gives the reason for each module left out because
+        it would bypass Tor or a Covert scan. Modules are resolved from the scraper registry, so new modules
         join the pipeline by registering rather than by editing the engine.
         """
         from phantomsignal.scrapers.registry import (
@@ -127,6 +158,8 @@ class PhantomEngine:
 
         registry = get_registered_modules()
         target = scan.target
+        if onion and "://" not in target:
+            target = f"http://{target}"  # most onion services have no TLS certificate
         # Pass scan_type through options so registry factories keep a uniform
         # (config, target, opts) signature.
         opts = {**(scan.options or {}), "_scan_type": scan.scan_type.value}
@@ -138,13 +171,29 @@ class PhantomEngine:
 
         pipeline = []
         opsec_map: Dict[str, str] = {}
+        skipped: Dict[str, str] = {}
         for mod in modules:
             spec = registry.get(mod)
-            if spec:
-                pipeline.append((mod, spec.factory(config, target, opts), spec.opsec.value))
-                opsec_map[mod] = spec.opsec.value
+            if not spec:
+                continue
+            reason = None
+            if onion:
+                reason = onion_block_reason(mod)
+            if not reason and tor_on:
+                reason = tor_block_reason(mod)
+            elif not reason and covert:
+                reason = tor_block_reason(mod)
+                if not reason and spec.opsec == OpsecLevel.ATTRIBUTABLE:
+                    reason = "This module connects directly from your IP."
+            if reason:
+                skipped[mod] = reason
+                continue
+            # With Tor on, keyed APIs and RDAP use Tor instead of connecting directly.
+            level = OpsecLevel.PROXIED.value if tor_on and mod == "intel" else spec.opsec.value
+            pipeline.append((mod, spec.factory(config, target, opts), level))
+            opsec_map[mod] = level
 
-        return pipeline, opsec_map
+        return pipeline, opsec_map, skipped
 
     async def _store_results(
         self, scan_id: str, module: str, results: Optional[List[Dict]],
@@ -178,9 +227,12 @@ class PhantomEngine:
         # flagship's headline artifact. Best-effort; never fails the scan.
         if ledger is not None:
             try:
+                from phantomsignal.core.dns_egress import configured_proxies
                 from phantomsignal.intel.opsec import build_attribution_result
 
-                attribution = build_attribution_result(ledger.summary(), opsec_map or {})
+                attribution = build_attribution_result(
+                    ledger.summary(), opsec_map or {},
+                    proxy_configured=bool(configured_proxies(config)))
                 await self._store_results(scan_id, "opsec", [attribution])
                 self._log(scan_id, "opsec",
                           f"Attribution surface: {attribution['data']['grade']} — "

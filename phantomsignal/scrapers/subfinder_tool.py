@@ -73,6 +73,11 @@ class SubfinderTool(ExternalTool):
     PROXY_FLAG = "-proxy"
     TIMEOUT = 300.0
 
+    def proxied_args(self) -> List[str]:
+        # subfinder's crtsh source opens a direct Postgres connection to crt.sh, which
+        # ignores the proxy and exposes the operator's IP.
+        return ["-es", "crtsh"]
+
     def command(self, target: str, opts: Dict) -> List[str]:
         return ["subfinder", "-d", _domain(target), "-silent", "-duc"]
 

@@ -19,11 +19,14 @@ from __future__ import annotations
 
 import json
 import logging
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from phantomsignal.scrapers._external import ExternalTool
 
 logger = logging.getLogger("phantomsignal.scrapers.vuln_scanner")
+
+_NO_RESOLVERS_FILE = Path(__file__).parent / "data" / "no_resolvers.txt"
 
 # nuclei severities → our normalised ladder (matches scans.py _SEV_ORDER).
 _SEV_MAP = {
@@ -103,8 +106,19 @@ class NucleiScanner(ExternalTool):
     scan bounded; tunable via ``vuln`` config or scan options."""
 
     BINARY = "nuclei"
+    LOCAL_DNS = True
+    # Across the full template set, some HTTP templates connect directly to the target
+    # and to third parties such as checkip.amazonaws.com, even with -proxy-internal.
+    BYPASSES_PROXY = True
     PROXY_FLAG = "-proxy"
     TIMEOUT = 900.0
+
+    def proxied_args(self) -> List[str]:
+        # By default nuclei also asks 1.1.1.1 and 8.8.8.8 for the target's name, in
+        # plaintext from the operator's IP. An unreachable resolver list stops that.
+        # Its DNS, TCP, SSL and JavaScript templates would bypass the proxy too, so
+        # proxied runs are limited to HTTP templates.
+        return ["-r", str(_NO_RESOLVERS_FILE), "-pt", "http"]
 
     def command(self, target: str, opts: Dict) -> List[str]:
         url = _as_url(target)

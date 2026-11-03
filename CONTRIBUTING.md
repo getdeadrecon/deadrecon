@@ -79,3 +79,15 @@ For security vulnerabilities, **do not open a public issue.** Follow the process
 ## License
 
 By contributing you agree your code will be released under the [MIT License](LICENSE).
+
+## Updating the Docker lockfile
+
+The Docker image installs from `requirements.lock`, which pins every dependency by
+hash. After changing `requirements.txt` or `requirements-server.txt`, regenerate it
+on Linux with the image's Python version:
+
+```bash
+docker run --rm -v "$PWD":/work -w /work python:3.12-slim sh -c \
+  "pip install -q pip-tools && pip-compile -q --generate-hashes --allow-unsafe --strip-extras \
+   -o requirements.lock requirements.txt requirements-server.txt"
+```

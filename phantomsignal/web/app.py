@@ -14,6 +14,7 @@ import threading
 from datetime import datetime
 from functools import wraps
 from typing import Optional
+from urllib.parse import urlsplit
 
 from flask import Flask
 from flask_login import current_user
@@ -21,11 +22,25 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 
 from phantomsignal import __version__, __codename__
 from phantomsignal.core.config import config as phantomsignal_config
+from phantomsignal.core import tor_service
 from phantomsignal.core.database import init_db
+from phantomsignal.web.auth import csp_nonce
 
 logger = logging.getLogger("phantomsignal.web")
 
+MAX_REQUEST_BYTES = 16 * 1024 * 1024
+
 socketio = SocketIO(async_mode="threading", logger=False)
+
+
+def safe_url(value) -> str:
+    """Template filter for links built from scan data: only http(s) URLs pass, so
+    a hostile source can't plant a javascript: link."""
+    try:
+        parts = urlsplit(str(value).strip())
+    except ValueError:
+        return "#"
+    return str(value).strip() if parts.scheme.lower() in ("http", "https") and parts.netloc else "#"
 
 
 def _allowed_origins():
@@ -55,8 +70,11 @@ def create_app(config_path: Optional[str] = None) -> Flask:
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["PHANTOMSIGNAL_VERSION"] = __version__
     app.config["PHANTOMSIGNAL_CODENAME"] = __codename__
+    app.config["MAX_CONTENT_LENGTH"] = MAX_REQUEST_BYTES
+    app.add_template_filter(safe_url, "safe_url")
 
     init_db()
+    tor_service.resume(phantomsignal_config)
 
     from phantomsignal.core.engine import engine as phantom_engine
     phantom_engine._socketio = socketio
@@ -100,6 +118,7 @@ def create_app(config_path: Optional[str] = None) -> Flask:
             "version": __version__,
             "codename": __codename__,
             "stealth": stealth,
+            "csp_nonce": csp_nonce,
         }
 
     @app.errorhandler(404)

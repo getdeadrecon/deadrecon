@@ -93,7 +93,9 @@ class PhantomSignalConfig:
                 "javascript_rendering": False,
                 "proxy": None,
                 "tor_enabled": False,
+                "tor_host": "127.0.0.1",
                 "tor_port": 9050,
+                "tor_verify": True,
                 # Stealth posture for target-facing HTTP: off | quiet | paranoid.
                 # Consumed by core.http; "off" preserves legacy fast behaviour.
                 "stealth_profile": "off",
@@ -139,12 +141,12 @@ class PhantomSignalConfig:
                 "jitter_range": [0.5, 3.0],
             },
             "geo": {
-                # Locate map: Leaflet + CARTO basemaps (external) behind this
-                # toggle. Light/dark tilesets swap with the site theme.
+                # Locate map. No basemap by default: a tile provider sees which areas
+                # the operator views. Set tile_url to your own or a keyed provider.
                 "map_tiles": True,
-                "tile_url": "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-                "tile_url_dark": "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-                "tile_attribution": "© OpenStreetMap contributors © CARTO",
+                "tile_url": "",
+                "tile_url_dark": "",
+                "tile_attribution": "",
             },
             "neural_profiler": {
                 "enabled": False,
@@ -183,6 +185,8 @@ class PhantomSignalConfig:
             "PHANTOMSIGNAL_SECURE_COOKIES": ("server", "secure_cookies"),
             "PHANTOMSIGNAL_ALLOWED_ORIGINS": ("server", "allowed_origins"),
             "PHANTOMSIGNAL_TOR_ENABLED": ("scraper", "tor_enabled"),
+            "PHANTOMSIGNAL_TOR_HOST": ("scraper", "tor_host"),
+            "PHANTOMSIGNAL_TOR_PORT": ("scraper", "tor_port"),
             "PHANTOMSIGNAL_PROXY": ("scraper", "proxy"),
             "PHANTOMSIGNAL_EXPORT_DIR": ("export", "output_dir"),
         }
@@ -280,6 +284,19 @@ class PhantomSignalConfig:
         "tls_impersonate", "tor_enabled", "respect_robots_txt",
         "download_delay", "concurrent_requests",
     )
+
+    def refresh_tor_setting(self) -> None:
+        """Picks up ``phantomsignal tor on`` from another process, such as the Docker
+        covert profile. An environment variable still wins."""
+        if os.getenv("PHANTOMSIGNAL_TOR_ENABLED") or not _USER_CONFIG_PATH.exists():
+            return
+        try:
+            with open(_USER_CONFIG_PATH) as f:
+                saved = (yaml.safe_load(f) or {}).get("scraper") or {}
+        except Exception:
+            return
+        if "tor_enabled" in saved:
+            self.set("scraper", "tor_enabled", value=bool(saved["tor_enabled"]))
 
     def persist(self) -> None:
         """Persist the scraper/egress settings to the user config file so they

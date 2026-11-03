@@ -230,10 +230,13 @@ egress presents.
 
 | Key | Default | Purpose |
 |---|---|---|
-| `map_tiles` | `true` | Show the Leaflet map (external tiles). Set `false` for a no-external-dependency deployment. |
-| `tile_url` | CARTO `light_all` | Light-theme basemap tiles |
-| `tile_url_dark` | CARTO `dark_all` | Dark-theme basemap tiles |
-| `tile_attribution` | `© OpenStreetMap contributors © CARTO` | Map attribution |
+| `map_tiles` | `true` | Show the Leaflet map. Set `false` to hide it. |
+| `tile_url` | empty | Basemap tiles. Empty plots points with no background map. |
+| `tile_url_dark` | empty | Dark-theme tiles. Falls back to `tile_url`. |
+| `tile_attribution` | empty | Attribution your tile provider requires |
+
+There's no default basemap because a tile provider sees which areas you view. Use your
+own tile server or a provider you hold a key for.
 
 Geocoding uses Nominatim (OpenStreetMap) and is cached (forward + reverse,
 including negatives) so re-runs don't re-hit it.

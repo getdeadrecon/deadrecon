@@ -28,7 +28,7 @@ import secrets
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import httpx
+from phantomsignal.core.http import egress_client
 
 logger = logging.getLogger("phantomsignal.scrapers.username_enum")
 
@@ -116,10 +116,11 @@ class UsernameEnumerator:
             return []
 
         logger.info("Username enum for '%s' across %d sites", username, len(self._sites))
-        async with httpx.AsyncClient(
+        async with egress_client(
+            self.config,
             timeout=self.timeout, follow_redirects=True,
             headers={"User-Agent": "Mozilla/5.0 (PhantomSignal-OSINT)"},
-        ) as client:
+                    ) as client:
             hits = await self._check_all(client, username)
             if self.fp_check and hits:
                 hits = await self._drop_false_positives(client, hits)

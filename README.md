@@ -93,7 +93,9 @@ or **quiet** — computed from real egress telemetry, not marketing:
   which are traceable back to you.
 
 The grade is deliberately unflattering: any attributable module, or under-50%
-proxied traffic, caps it. The point of an OPSEC-native tool is to tell you the
+proxied traffic, caps it, and no scan can read as masked or quiet without a proxy.
+**Masked** takes stealth-level modules only, no direct requests, and TLS impersonation
+on nearly every request, so a port scan or a Go tool in the run rules it out. The point of an OPSEC-native tool is to tell you the
 truth about your footprint — not to always read green.
 
 ### 🧅 Stealth layer under every module
@@ -131,7 +133,7 @@ $ phantomsignal scan example.com --profile standard --opsec quiet --format html
 [5/6] Web crawl .......... 128 URLs · 3 exposed endpoints
 [6/6] Scoring ............ Risk Score 34 / 100 (MEDIUM)
 
-◈  OPSEC ............. MASKED · 94% proxied · JA3: chrome124 · 0 direct
+◈  OPSEC ............. EXPOSED · 100% of HTTP proxied · attributable: port_scan, intel
 ✓  Report written → ./reports/example.com.html
 ```
 
@@ -163,7 +165,7 @@ PhantomSignal is a **community-powered, open-source OSINT intelligence framework
 ## 🔥 Features
 
 ### 🕷 Web Reconnaissance
-- **Scrapy-powered** deep web crawler with JavaScript rendering support
+- **Same-site web crawler** that runs through the stealth layer, honoring proxies and robots.txt
 - **Technology detection** — fingerprints 50+ technologies (CMS, frameworks, CDNs, WAFs)
 - **API endpoint hunter** — discovers REST APIs, GraphQL, Swagger docs, admin panels, `.env` leaks
 - **Security header analysis** with graded posture scoring
@@ -231,7 +233,7 @@ All formats support **ZIP compression** and **AES-256-GCM encryption**.
   burned egresses — **seed it in one click** from curated free feeds, a custom
   list URL, or an uploaded file (Settings → Scan Settings)
 - **Live egress posture chip** in the navbar — STEALTH / PARTIAL / DIRECT at a glance
-- Tor proxy integration (Docker compose profile: `covert`)
+- **One-click Tor:** click the 🧅 button and PhantomSignal starts Tor for you, with nothing to install or configure. Each scan confirms it's on Tor before touching the target, targets get separate circuits, `.onion` targets work, and modules that would bypass Tor are skipped and reported
 - Configurable request jitter and delays, toggled via **Evasive** mode
 - **Egress settings persist** across restarts
 
@@ -256,6 +258,9 @@ cd phantomsignal
 docker-compose up -d
 docker logs phantomsignal   # copy the first-run setup token
 # Open http://localhost:5000 and create your operator account
+
+# Optional: include nuclei, katana, subfinder, naabu and tlsx (about 500 MB more)
+PHANTOMSIGNAL_RECON_TOOLS=true docker-compose up -d --build
 ```
 
 ### Option 2: Manual Installation
@@ -347,7 +352,7 @@ Then import it in `phantomsignal/intel/orchestrator.py` and it auto-registers.
 ```
 phantomsignal/
 ├── core/               — Engine, config, database, models
-├── scrapers/           — Scrapy crawler, tech detector, port scanner, API hunter, DNS recon
+├── scrapers/           — Web crawler, tech detector, port scanner, API hunter, DNS recon
 ├── intel/
 │   ├── apis/           — 54+ API integrations (plugin architecture; incl. keyless identity sources)
 │   └── people/         — People intelligence aggregation + Profiler→scan persistence

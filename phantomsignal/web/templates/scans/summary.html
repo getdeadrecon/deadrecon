@@ -250,6 +250,23 @@ body.sum-compact .cat-grid { grid-template-columns:repeat(auto-fill, minmax(240p
     <div class="opsec-stat"><span class="n">{{ attribution.backoffs }}</span><span class="k">Adaptive backoffs</span></div>
   </div>
   <div class="opsec-chips">
+    {% if attribution.local_dns_tools %}
+    <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0;">⚠ {{ attribution.local_dns_tools | join(", ") }} looked up names through your local DNS resolver, even though their traffic was proxied.</p>
+    {% endif %}
+    {% if attribution.tor %}
+    <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0;">🧅 Confirmed routed through Tor before the scan started.</p>
+    {% endif %}
+    {% if attribution.skipped_modules %}
+    {% for module, reason in attribution.skipped_modules | dictsort %}
+    <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0;">⊘ {{ module }} was skipped. {{ reason }}</p>
+    {% endfor %}
+    {% endif %}
+    {% if attribution.modules_by_opsec and attribution.modules_by_opsec.attributable %}
+    <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0;">⚠ {{ attribution.modules_by_opsec.attributable | join(", ") }} connected directly from your IP. The counts above only cover HTTP requests, so they don't include all of this traffic.</p>
+    {% endif %}
+    {% if attribution.tool_runs %}
+    <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0;">Request counts include one entry per run of {{ attribution.tool_runs | dictsort | map("first") | join(", ") }}. Their own requests can't be seen from here, so the real total is higher.</p>
+    {% endif %}
     {% set mbo = attribution.modules_by_opsec or {} %}
     <span class="opsec-chip c-stealth">stealth-guaranteed · {{ (mbo.stealth_guaranteed or [])|length }}</span>
     <span class="opsec-chip c-proxied">proxied · {{ (mbo.proxied or [])|length }}</span>
@@ -346,7 +363,7 @@ body.sum-compact .cat-grid { grid-template-columns:repeat(auto-fill, minmax(240p
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 // Density toggle — compact collapses each card to its header row.
 (function () {
   const btn = document.getElementById('density-toggle');

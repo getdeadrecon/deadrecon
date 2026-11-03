@@ -41,7 +41,7 @@
                 {% if config.api_keys.get(key_name) %}● SET{% else %}○ NOT SET{% endif %}
               </span>
               {% if config.api_keys.get(key_name) %}
-              <button type="button" class="btn-test btn-sm" onclick="testAPI('{{ key_name }}', this)">TEST</button>
+              <button type="button" class="btn-test btn-sm" data-api="{{ key_name }}">TEST</button>
               {% endif %}
             </div>
             <div class="key-input-row">
@@ -94,7 +94,11 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
+document.querySelectorAll('.btn-test[data-api]').forEach((btn) => {
+  btn.addEventListener('click', () => testAPI(btn.dataset.api, btn));
+});
+
 function testAPI(apiName, btn) {
   btn.textContent = '...';
   btn.disabled = true;

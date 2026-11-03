@@ -56,8 +56,11 @@ def worst_level(levels: List[OpsecLevel]) -> Optional[OpsecLevel]:
     return max(levels, key=lambda lvl: _RANK.get(lvl, 0))
 
 
-def effective_opsec(results: Optional[List[Dict]], static: str) -> str:
-    """A module's actual posture for a run.
+def effective_opsec(results: Optional[List[Dict]], static: str,
+                    proxy_configured: Optional[bool] = None,
+                    direct_requests: int = 0) -> str:
+    """A module's actual posture for a run. With no proxy configured, or when the
+    ledger saw it send a direct request, a module is attributable whatever its tag says.
 
     Modules whose posture is dynamic (external tools that proxy only when a proxy
     is configured) self-declare ``data["opsec"]`` per finding; the module's
@@ -70,6 +73,8 @@ def effective_opsec(results: Optional[List[Dict]], static: str) -> str:
         val = data.get("opsec") if isinstance(data, dict) else None
         if val in _RANK_BY_VALUE:
             seen.append(OpsecLevel(val))
+    if proxy_configured is False or direct_requests > 0:
+        seen.append(OpsecLevel.ATTRIBUTABLE)
     worst = worst_level(seen)
     return worst.value if worst else static
 
@@ -77,7 +82,8 @@ def effective_opsec(results: Optional[List[Dict]], static: str) -> str:
 _RANK_BY_VALUE = {lvl.value: r for lvl, r in _RANK.items()}
 
 
-def _grade(summary: Dict, module_opsec: Dict[str, str]) -> str:
+def _grade(summary: Dict, module_opsec: Dict[str, str],
+           proxy_configured: Optional[bool] = None) -> str:
     """A one-word operator posture grade from the run's telemetry + module mix.
 
     Honest, not flattering: any attributable module, or unproxied target-facing
@@ -90,11 +96,14 @@ def _grade(summary: Dict, module_opsec: Dict[str, str]) -> str:
     proxied_pct = summary.get("proxied_pct", 0.0)
     impersonated = summary.get("impersonated", 0)
 
-    if worst == OpsecLevel.ATTRIBUTABLE:
+    if worst == OpsecLevel.ATTRIBUTABLE or proxy_configured is False:
         return "exposed"
     if total == 0:
         return "quiet"
-    if proxied_pct >= 90 and impersonated > 0:
+    # "Masked" is a claim about the whole run: no direct requests, nearly all traffic
+    # impersonated, stealth-level modules only, and no local DNS.
+    if (proxied_pct >= 90 and impersonated >= 0.9 * total and not summary.get("direct")
+            and worst == OpsecLevel.STEALTH_GUARANTEED and not summary.get("local_dns_tools")):
         return "masked"
     if proxied_pct >= 50:
         return "partial"
@@ -102,14 +111,15 @@ def _grade(summary: Dict, module_opsec: Dict[str, str]) -> str:
 
 
 def build_attribution_result(summary: Dict, module_opsec: Dict[str, str],
-                             pool_status: Optional[List[Dict]] = None) -> Dict:
+                             pool_status: Optional[List[Dict]] = None,
+                             proxy_configured: Optional[bool] = None) -> Dict:
     """Compose the ``attribution_surface`` finding for a completed scan.
 
     ``summary`` is ``AttributionLedger.summary()``; ``module_opsec`` maps each
     module that ran to its ``OpsecLevel`` value; ``pool_status`` is optional
     proxy-pool health for context.
     """
-    grade = _grade(summary, module_opsec)
+    grade = _grade(summary, module_opsec, proxy_configured)
     by_level: Dict[str, List[str]] = {lvl.value: [] for lvl in OpsecLevel}
     for module, lvl in module_opsec.items():
         by_level.setdefault(lvl, []).append(module)

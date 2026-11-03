@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from flask import Blueprint, jsonify, request
+from phantomsignal.core.targets import InvalidTarget, validate_target
 from phantomsignal.core.database import get_db
 from phantomsignal.core.models import Scan, ScanResult, ScanType
 
@@ -32,9 +33,10 @@ def create_scan():
     from phantomsignal.web.app import run_scan_async
     from flask import current_app
     data = request.get_json() or {}
-    target = data.get("target", "").strip()
-    if not target:
-        return _json_err("target is required")
+    try:
+        target = validate_target(data.get("target", ""), data.get("scan_type", "web_recon"))
+    except InvalidTarget as exc:
+        return _json_err(str(exc))
 
     try:
         scan_type = ScanType(data.get("scan_type", "web_recon"))

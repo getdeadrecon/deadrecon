@@ -30,6 +30,7 @@ import re
 from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
+from phantomsignal.core.dns_egress import make_resolver
 from phantomsignal.core.http import stealth_client
 
 logger = logging.getLogger("phantomsignal.origin_pivot")
@@ -113,7 +114,7 @@ def fingerprint_response(status: int, text: str) -> Dict:
         "status": status,
         "title": title,
         "len": len(text),
-        "hash": hashlib.sha1(norm[:8000].encode("utf-8", "ignore")).hexdigest()[:16],
+        "hash": hashlib.sha1(norm[:8000].encode("utf-8", "ignore"), usedforsecurity=False).hexdigest()[:16],
     }
 
 
@@ -158,7 +159,7 @@ class OriginPivot:
 
         fronted, cdn_name, detail = detect_cdn(baseline["headers"], edge_ips)
         results.append({
-            "result_type": "cdn_detected",
+            "type": "cdn_detected",
             "source": "origin_pivot",
             "confidence": 0.9,
             "relevance_score": 0.55,
@@ -225,13 +226,10 @@ class OriginPivot:
     async def _resolve_a(self, host: str) -> List[str]:
         return await self._resolve(host, "A")
 
-    @staticmethod
-    async def _resolve(name: str, rtype: str) -> List[str]:
-        import dns.resolver
-
+    async def _resolve(self, name: str, rtype: str) -> List[str]:
         def _q():
             try:
-                res = dns.resolver.Resolver()
+                res = make_resolver(self.config)
                 res.lifetime = res.timeout = 4.0
                 return [r.to_text() for r in res.resolve(name, rtype)]
             except Exception:
@@ -341,7 +339,7 @@ class OriginPivot:
         srcs = sorted(sources)
         if best is None:
             return {
-                "result_type": "origin_candidate",
+                "type": "origin_candidate",
                 "source": "origin_pivot",
                 "confidence": 0.3,
                 "relevance_score": 0.5,
@@ -353,7 +351,7 @@ class OriginPivot:
         score = similarity(baseline, best)
         if score >= 0.6:
             return {
-                "result_type": "origin_confirmed",
+                "type": "origin_confirmed",
                 "source": "origin_pivot",
                 "confidence": round(min(0.99, 0.6 + score / 2), 2),
                 "relevance_score": 0.98,
@@ -369,7 +367,7 @@ class OriginPivot:
                 },
             }
         return {
-            "result_type": "origin_candidate",
+            "type": "origin_candidate",
             "source": "origin_pivot",
             "confidence": round(0.3 + score / 2, 2),
             "relevance_score": 0.6,

@@ -23,8 +23,7 @@ import re
 from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
-import httpx
-
+from phantomsignal.core.http import egress_client
 from phantomsignal.scrapers.username_enum import (
     UsernameEnumerator, clean_username, is_valid_username,
 )
@@ -74,8 +73,8 @@ _INFRA_DOMAINS = {
 
 def _registered_domain(host: str) -> str:
     try:
-        import tldextract
-        ext = tldextract.extract(host)
+        from phantomsignal.core.domains import extract as extract_domain
+        ext = extract_domain(host)
         if ext.domain and ext.suffix:
             return f"{ext.domain}.{ext.suffix}".lower()
     except Exception:
@@ -155,10 +154,11 @@ class ProfilePivotEngine:
         gravatars: Dict[str, Set[str]] = {}
         profiles_seen: Set[str] = set()
 
-        async with httpx.AsyncClient(
+        async with egress_client(
+            self.config,
             timeout=self.timeout, follow_redirects=True,
             headers={"User-Agent": "Mozilla/5.0 (PhantomSignal-OSINT)"},
-        ) as client:
+                    ) as client:
             frontier = [seed]
             for depth in range(self.max_depth + 1):
                 next_handles: Set[str] = set()

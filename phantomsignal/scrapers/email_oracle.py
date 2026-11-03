@@ -27,7 +27,7 @@ import re
 from typing import Dict, List, Tuple
 from urllib.parse import quote
 
-import httpx
+from phantomsignal.core.http import egress_client
 
 logger = logging.getLogger("phantomsignal.scrapers.email_oracle")
 
@@ -41,7 +41,7 @@ def is_valid_email(email: str) -> bool:
 
 
 def email_md5(email: str) -> str:
-    return hashlib.md5((email or "").strip().lower().encode("utf-8")).hexdigest()
+    return hashlib.md5((email or "").strip().lower().encode("utf-8"), usedforsecurity=False).hexdigest()
 
 
 # A GET existence oracle: request ``url`` (templated with {md5}/{email}); the
@@ -102,10 +102,11 @@ class EmailOracle:
             return []
         md5 = email_md5(email)
 
-        async with httpx.AsyncClient(
+        async with egress_client(
+            self.config,
             timeout=self.timeout, follow_redirects=True,
             headers={"User-Agent": "Mozilla/5.0 (PhantomSignal-OSINT)"},
-        ) as client:
+                    ) as client:
             found: List[str] = []
             for rule in self.oracles:
                 url = rule["url"].format(md5=md5, email=quote(email))

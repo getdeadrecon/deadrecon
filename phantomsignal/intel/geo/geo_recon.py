@@ -116,7 +116,7 @@ class GeoReconEngine:
                 if asn is not None:
                     ips = passive.sample_ips_from_prefixes(await passive.asn_prefixes(client, asn))
                 elif domain:
-                    ips = await passive.resolve_domain_ips(domain)
+                    ips = await passive.resolve_domain_ips(domain, self.config)
                 else:
                     return {"query": None, "center": center, "configured": True, "mode": "free",
                             "total": 0, "assets": [], "summary": summarize([])}

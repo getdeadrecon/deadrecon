@@ -26,7 +26,7 @@ from phantomsignal.intel.geo.signals import GeoSignal
 
 logger = logging.getLogger("phantomsignal.geo.archive")
 
-CDX = "http://web.archive.org/cdx/search/cdx"
+CDX = "https://web.archive.org/cdx/search/cdx"
 _MAX_URLS = 6            # cap profile URLs we probe per case
 _MAX_SNAPS = 2           # oldest N snapshots per URL
 
@@ -57,7 +57,7 @@ def parse_cdx_snapshots(payload) -> List[Tuple[str, str]]:
     for row in rows[1:]:
         if isinstance(row, list) and len(row) >= 2 and str(row[0]).isdigit():
             ts, original = row[0], row[1]
-            out.append((ts, f"http://web.archive.org/web/{ts}id_/{original}"))
+            out.append((ts, f"https://web.archive.org/web/{ts}id_/{original}"))
     return out
 
 

@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/phantomsignal.css') }}">
   <!-- Apply saved theme before first paint (dark = default/no attribute). -->
-  <script>(function(){try{var t=localStorage.getItem('phantomsignal-theme');if(t&&t!=='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <script nonce="{{ csp_nonce() }}">(function(){try{var t=localStorage.getItem('phantomsignal-theme');if(t&&t!=='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   {% block head_extra %}{% endblock %}
 </head>
 <body>
@@ -64,6 +64,11 @@
       {% if current_user.is_authenticated %}
       <span class="status-dot" id="connection-dot"></span>
       <span class="status-text" id="connection-status">CONNECTING...</span>
+      <button type="button" id="tor-toggle" class="stealth-chip tor-chip" data-url="{{ url_for('settings.tor_toggle') }}"
+              data-csrf="{{ csrf_token() }}" data-state="{{ 'starting' if stealth and stealth.tor else 'off' }}"
+              title="Route scans through Tor" aria-pressed="{{ 'true' if stealth and stealth.tor else 'false' }}">
+        <span aria-hidden="true">🧅</span> <span id="tor-label">Tor</span>
+      </button>
       {% if stealth %}
       <a href="{{ url_for('settings.scan_settings') }}" class="stealth-chip stealth-{{ stealth.level }}"
          title="Egress profile: {{ stealth.profile }}{% if stealth.proxied %} · proxy pool {{ stealth.pool_size }} ({{ stealth.rotation }} rotation){% else %} · no proxy (direct){% endif %}{% if stealth.impersonate %} · JA3 impersonation on{% endif %}{% if stealth.tor %} · Tor{% endif %} — click to configure">
@@ -92,7 +97,7 @@
                 {% if category == 'success' %}✓{% elif category == 'error' %}✗{% elif category == 'warning' %}⚠{% else %}ℹ{% endif %}
               </span>
               <span class="flash-message">{{ message }}</span>
-              <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+              <button class="flash-close">×</button>
             </div>
           {% endfor %}
         </div>
@@ -125,7 +130,7 @@
 
   <!-- Core scripts -->
   {% if current_user.is_authenticated %}
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
   {% endif %}
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   {% block scripts %}{% endblock %}

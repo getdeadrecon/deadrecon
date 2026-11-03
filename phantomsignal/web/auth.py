@@ -21,6 +21,7 @@ from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 from flask import (
+    g,
     Blueprint, Flask, current_app, flash, jsonify, redirect, render_template,
     request, session, url_for,
 )
@@ -219,6 +220,42 @@ def _announce_setup_token(token: str) -> None:
     )
 
 
+def _tile_sources() -> List[str]:
+    """Map-tile hosts for img-src. A {s} subdomain placeholder becomes a wildcard."""
+    sources = []
+    for key in ("tile_url", "tile_url_dark"):
+        url = config.get("geo", key, default=None)
+        if url:
+            parts = urlparse(str(url).replace("{s}", "*"))
+            if parts.scheme in ("http", "https") and parts.netloc:
+                sources.append(f"{parts.scheme}://{parts.netloc}")
+    return list(dict.fromkeys(sources))
+
+
+def csp_nonce() -> str:
+    """This response's script nonce. Only tagged inline scripts run, so markup injected
+    from scan data can't execute. Inline styles are still allowed."""
+    if "csp_nonce" not in g:
+        g.csp_nonce = secrets.token_urlsafe(16)
+    return g.csp_nonce
+
+
+def _content_security_policy() -> str:
+    """Limits where the console can load from and send data to."""
+    return "; ".join([
+        "default-src 'self'",
+        f"script-src 'self' 'nonce-{csp_nonce()}' https://cdnjs.cloudflare.com https://unpkg.com",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        " ".join(["img-src 'self' data: https://unpkg.com", *_tile_sources()]),
+        "connect-src 'self'",
+        "object-src 'none'",
+        "base-uri 'none'",
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+    ])
+
+
 def _configured_flag(value) -> bool:
     return str(value).strip().lower() in ("1", "true", "yes", "on")
 
@@ -250,6 +287,7 @@ def init_auth(app: Flask) -> None:
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "same-origin")
+        response.headers.setdefault("Content-Security-Policy", _content_security_policy())
         return response
 
     if not operators.has_operator():
