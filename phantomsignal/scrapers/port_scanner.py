@@ -410,6 +410,10 @@ class PortScanner:
             logger.error(f"Cannot resolve host: {target}")
             return []
 
+        # The web form sends a profile name ("common", "top1000", "full"), not a port list.
+        if isinstance(ports, str):
+            ports, scan_profile = None, ports
+
         if ports is None:
             if scan_profile == "common":
                 ports = COMMON_PORTS

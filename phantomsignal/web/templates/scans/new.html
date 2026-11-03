@@ -56,8 +56,7 @@
             <div class="profile-content">
               <div class="profile-icon">⚡</div>
               <div class="profile-name">QUICK</div>
-              <div class="profile-desc">Fast surface scan. DNS, top ports, tech stack.</div>
-              <div class="profile-time">~30s</div>
+              <div class="profile-desc">For a quick check. You choose the modules and ports below.</div>
             </div>
           </label>
           <label class="profile-card selected">
@@ -65,8 +64,7 @@
             <div class="profile-content">
               <div class="profile-icon">◈</div>
               <div class="profile-name">STANDARD</div>
-              <div class="profile-desc">Balanced depth. All modules, moderate crawl.</div>
-              <div class="profile-time">~2-5min</div>
+              <div class="profile-desc">The default. You choose the modules and ports below.</div>
             </div>
           </label>
           <label class="profile-card">
@@ -74,8 +72,7 @@
             <div class="profile-content">
               <div class="profile-icon">⬡</div>
               <div class="profile-name">DEEP</div>
-              <div class="profile-desc">Thorough crawl, full port scan, all intel APIs.</div>
-              <div class="profile-time">~10-30min</div>
+              <div class="profile-desc">Currently the same as Standard. Set crawl depth and port range in Advanced Options.</div>
             </div>
           </label>
           <label class="profile-card ghost-card">
@@ -83,8 +80,7 @@
             <div class="profile-content">
               <div class="profile-icon">🕶</div>
               <div class="profile-name">COVERT</div>
-              <div class="profile-desc">Low and slow — request throttling, identity rotation, minimal footprint.</div>
-              <div class="profile-time">Variable</div>
+              <div class="profile-desc">Slowest pacing, and skips modules that connect directly from your IP.</div>
             </div>
           </label>
         </div>
@@ -325,7 +321,7 @@
           <div class="form-group">
             <label class="form-label">PORT PROFILE</label>
             <select name="port_profile" class="input-field select-field">
-              <option value="common">Common (67 ports)</option>
+              <option value="common">Common (99 ports)</option>
               <option value="top1000">Top 1000</option>
               <option value="full">Full range (65535)</option>
             </select>
