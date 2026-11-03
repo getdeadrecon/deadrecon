@@ -6,19 +6,18 @@ flask>=3.0.0
 flask-socketio>=5.3.6
 flask-login>=0.6.3
 flask-wtf>=1.2.1
+simple-websocket>=1.0.0
 werkzeug>=3.0.0
 
 # Database
 sqlalchemy>=2.0.0
 
-# Web crawling
-scrapy>=2.11.0
-twisted>=23.10.0
-
 # HTTP
 httpx>=0.26.0
+httpcore>=1.0.0
+brotli>=1.1.0     # the stealth client advertises br, as browsers do, so it must decode it
 socksio>=1.0.0    # SOCKS proxies and optional Tor .onion enrichment
-curl_cffi>=0.7.0  # optional browser TLS (JA3/JA4) impersonation
+curl_cffi>=0.17.0  # optional browser TLS (JA3/JA4) impersonation
 
 # DNS and network
 dnspython>=2.4.0
@@ -26,6 +25,7 @@ python-whois>=0.9.4
 
 # Security
 cryptography>=42.0.0
+defusedxml>=0.7.1   # XML from scanned targets is hostile input
 
 # CLI
 click>=8.1.0

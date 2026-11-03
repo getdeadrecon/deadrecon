@@ -33,6 +33,9 @@ import logging
 import socket
 from typing import Dict, List, Optional, Tuple
 
+from phantomsignal.core.tor import tor_enabled
+from phantomsignal.core.dns_egress import make_resolver
+
 logger = logging.getLogger("phantomsignal.scrapers.service_enum")
 
 # Small, high-signal username probe list for SMTP enumeration.
@@ -166,6 +169,8 @@ class ServiceEnumerator:
         self.config = config
 
     async def run(self, target: str) -> List[Dict]:
+        if tor_enabled(self.config):  # these probes can't use Tor
+            return []
         host, domain = self._resolve(target)
         if not host:
             return []
@@ -310,9 +315,8 @@ class ServiceEnumerator:
         if not domain:
             return None
         try:
-            import dns.resolver
             answers = await asyncio.get_event_loop().run_in_executor(
-                None, lambda: dns.resolver.resolve(domain, "MX"))
+                None, lambda: make_resolver(self.config).resolve(domain, "MX"))
             mx = sorted(answers, key=lambda r: r.preference)
             return str(mx[0].exchange).rstrip(".") if mx else None
         except Exception:

@@ -108,7 +108,7 @@
     <a class="btn btn-ghost" href="{{ url_for('locate.export', case_id=case.id, fmt='geojson') }}">↓ GeoJSON</a>
     <a class="btn btn-ghost" href="{{ url_for('locate.export', case_id=case.id, fmt='kml') }}">↓ KML</a>
     <form action="{{ url_for('locate.delete_case', case_id=case.id) }}" method="POST" style="display:inline;"
-          onsubmit="return confirm('Purge this case and all its signals + audit trail? This cannot be undone.');">
+          data-confirm="Purge this case and all its signals + audit trail? This cannot be undone.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-danger">✕ Purge case</button>
     </form>
@@ -193,7 +193,7 @@
           <tr>
             <td class="ad-kind">{{ s.kind }}{% if s.polarity == 'negative' %} <span class="sig-neg">NEG</span>{% endif %}</td>
             <td>eff {{ "%.2f"|format(s.effective_confidence) }} <span class="lk-sub">({{ "%.2f"|format(s.kind_confidence) }}×{{ "%.2f"|format(s.attribution_confidence) }})</span></td>
-            <td class="ad-src">{% if s.source_url %}<a href="{{ s.source_url }}" target="_blank" rel="noopener">{{ s.source }} ↗</a>{% else %}{{ s.source }}{% endif %}</td>
+            <td class="ad-src">{% if s.source_url %}<a href="{{ s.source_url | safe_url }}" target="_blank" rel="noopener">{{ s.source }} ↗</a>{% else %}{{ s.source }}{% endif %}</td>
             <td>{{ s.observed_at[:10] if s.observed_at else 'undated' }}</td>
           </tr>
           {% endfor %}
@@ -212,11 +212,11 @@
           <td><span class="kbadge">{{ s.kind }}</span>{% if s.polarity == 'negative' %} <span class="sig-neg">NEG</span>{% endif %}{% if s.entry == 'manual' %} ✎{% endif %}{% if s.scrubbed %} <span class="scrub-badge" title="Present in an archived snapshot but removed from the current profile">⚑ scrubbed</span>{% endif %}</td>
           <td>{{ s.place.city or s.place.region or s.place.country or '—' }}{% if s.place.zip %} {{ s.place.zip }}{% endif %}</td>
           <td>{{ "%.2f"|format(s.effective_confidence) }} <span class="lk-sub">({{ "%.2f"|format(s.kind_confidence) }}×{{ "%.2f"|format(s.attribution_confidence) }})</span></td>
-          <td>{% if s.source_url %}<a href="{{ s.source_url }}" target="_blank" rel="noopener" class="bc-link">{{ s.source }} ↗</a>{% else %}{{ s.source }}{% endif %}</td>
+          <td>{% if s.source_url %}<a href="{{ s.source_url | safe_url }}" target="_blank" rel="noopener" class="bc-link">{{ s.source }} ↗</a>{% else %}{{ s.source }}{% endif %}</td>
           <td>{{ s.observed_at[:10] if s.observed_at else '—' }}</td>
           <td style="text-align:right;">
             <form action="{{ url_for('locate.delete_signal', case_id=case.id, signal_id=s.id) }}" method="POST" style="display:inline;"
-                  onsubmit="return confirm('Remove this signal from the case?');">
+                  data-confirm="Remove this signal from the case?">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="opened_by" value="{{ case.opened_by or 'operator' }}">
               <button type="submit" class="sig-del" title="Remove signal">✕</button>
@@ -283,10 +283,10 @@
 
 {% block scripts %}
 {% if mapcfg.enabled %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 {% endif %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 const CLUSTERS = {{ footprint.clusters | tojson }};
 const SIGNALS = {{ footprint.signals | tojson }};
 const CONFLICTS = {{ footprint.conflicts | tojson }};
@@ -322,11 +322,19 @@ const MAP_CFG = {{ mapcfg | tojson }};
 
   const isLight = () => document.documentElement.getAttribute("data-theme") === "light";
   const map = L.map("lc-map");
-  const tiles = L.tileLayer(isLight() ? MAP_CFG.tile_url : MAP_CFG.tile_url_dark,
-    { attribution: MAP_CFG.attribution, maxZoom: 19 }).addTo(map);
-  // Swap the basemap live when the site theme toggles (no reload).
-  new MutationObserver(() => tiles.setUrl(isLight() ? MAP_CFG.tile_url : MAP_CFG.tile_url_dark))
-    .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  const tileUrl = () => isLight() ? MAP_CFG.tile_url : MAP_CFG.tile_url_dark;
+  if (tileUrl()) {
+    const tiles = L.tileLayer(tileUrl(), { attribution: MAP_CFG.attribution, maxZoom: 19 }).addTo(map);
+    // Swap the basemap live when the site theme toggles (no reload).
+    new MutationObserver(() => tiles.setUrl(tileUrl()))
+      .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  } else {
+    const note = document.createElement("p");
+    note.className = "text-dim";
+    note.style.cssText = "font-size:0.75rem;margin:0.4rem 0 0;";
+    note.textContent = "No basemap: points are plotted without a background map. Set geo.tile_url to add one.";
+    document.getElementById("lc-map").after(note);
+  }
 
   const bounds = [];
   const markers = {};                        // place_key -> {marker, circle, appears}
@@ -350,8 +358,8 @@ const MAP_CFG = {{ mapcfg | tojson }};
     const m = L.circleMarker([c.lat, c.lon], {
       radius: 6 + conf * 10, color: color, fillColor: color, fillOpacity: 0.5, weight: 2,
     }).addTo(map).bindPopup(
-      `<b>${c.label}</b><br>${c.pol ? c.pol + " · " : ""}confidence ${(conf*100).toFixed(0)}%<br>` +
-      `${c.signal_count} signal(s) · ±${(c.radius_km||0).toFixed(0)} km<br>${(c.sources||[]).join(", ")}`
+      `<b>${escapeHtml(c.label)}</b><br>${c.pol ? escapeHtml(c.pol) + " · " : ""}confidence ${(conf*100).toFixed(0)}%<br>` +
+      `${c.signal_count} signal(s) · ±${(c.radius_km||0).toFixed(0)} km<br>${escapeHtml((c.sources||[]).join(", "))}`
     );
     markers[c.place_key] = { marker: m, circle: circle, appears: earliest[c.place_key] ?? -Infinity };
     // Fit to the point here (circle.getBounds() would throw before the map has

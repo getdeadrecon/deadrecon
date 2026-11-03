@@ -122,7 +122,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById('person-form').addEventListener('submit', function() {
   const btn = document.getElementById('search-btn');
   document.getElementById('search-text').textContent = 'Searching...';

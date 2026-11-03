@@ -83,14 +83,7 @@
             <span class="toggle-text">TLS IMPERSONATION — JA3/JA4 (needs curl_cffi)</span>
           </label>
         </div>
-        <div class="toggle-row">
-          <label class="toggle-label">
-            <input type="checkbox" name="tor_enabled" class="toggle-check"
-                   {% if config.scraper.tor_enabled %}checked{% endif %}>
-            <span class="toggle-switch"></span>
-            <span class="toggle-text">TOR PROXY (port 9050)</span>
-          </label>
-        </div>
+        <p class="text-dim" style="font-size:0.78rem;margin:0.6rem 0 0;">To route scans through Tor, click the 🧅 Tor button at the top of any page. It replaces the proxy settings here.</p>
       </div>
 
       <button type="submit" class="btn btn-secondary" style="margin-top:1rem;">Save Settings</button>

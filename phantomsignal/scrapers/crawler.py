@@ -1,6 +1,9 @@
 """
-PhantomSignal Web Crawler — Shadow Spider Network
-Scrapy-powered async web reconnaissance engine.
+PhantomSignal Web Crawler — same-site crawl over the stealth client.
+
+Every request goes through the shared stealth client, so the crawl inherits the
+proxy pool, adaptive pacing, browser identity, attribution ledger and network
+guard like any other module.
 
 Author:  the-clipper
 AI:      Claude (Anthropic)
@@ -8,352 +11,218 @@ License: MIT — see LICENSE
 """
 from __future__ import annotations
 
-import asyncio
 import logging
-from typing import Any, Dict, List
-from urllib.parse import urljoin, urlparse
+import re
+from html.parser import HTMLParser
+from typing import Any, Dict, List, Optional, Set, Tuple
+from urllib.parse import urldefrag, urljoin, urlparse
+from urllib.robotparser import RobotFileParser
 
-from scrapy import signals
-from scrapy.crawler import CrawlerRunner
-from scrapy.http import Response
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.utils.log import configure_logging
-from scrapy.utils.project import get_project_settings
+from phantomsignal.core.http import stealth_client
+from phantomsignal.core.netguard import BlockedDestination
 
-logger = logging.getLogger("phantomsignal.crawler")
+logger = logging.getLogger("phantomsignal.scrapers.crawler")
+
+DEFAULT_MAX_PAGES = 200
+MAX_PARSE_CHARS = 2_000_000
+MAX_LINKS_PER_PAGE = 200
+MAX_COMMENTS_PER_PAGE = 20
+
+SKIPPED_EXTENSIONS = {
+    "png", "jpg", "jpeg", "gif", "svg", "ico", "woff", "woff2", "ttf", "eot",
+    "mp4", "mp3", "zip", "tar", "gz", "pdf", "webp", "css",
+}
+SECURITY_HEADERS = (
+    "content-security-policy", "x-frame-options", "x-xss-protection",
+    "x-content-type-options", "strict-transport-security", "referrer-policy",
+    "permissions-policy",
+)
+SOCIAL_PLATFORMS = {
+    "twitter.com": "twitter", "x.com": "twitter", "facebook.com": "facebook",
+    "linkedin.com": "linkedin", "instagram.com": "instagram", "youtube.com": "youtube",
+    "github.com": "github", "reddit.com": "reddit", "tiktok.com": "tiktok",
+    "discord.com": "discord", "telegram.me": "telegram", "t.me": "telegram",
+}
+API_PATTERNS = (
+    (r"/api/v?\d*/[\w/]+", "REST API path"),
+    (r"/graphql", "GraphQL endpoint"),
+    (r"swagger\.json|swagger\.yaml|openapi\.json", "OpenAPI spec"),
+    (r"/\.well-known/[\w\-]+", "Well-known resource"),
+    (r"api[_\-]?key\s*[:=]\s*['\"]?([A-Za-z0-9_\-]{16,})", "API key in source"),
+    (r"authorization\s*[:=]\s*['\"]?Bearer\s+([A-Za-z0-9_\-\.]+)", "Bearer token"),
+)
+EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
+PHONE_RE = re.compile(r"(?:\+?1[-.\s]?)?\(?\b\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b")
 
 
-class PhantomSignalSpider(CrawlSpider):
-    """
-    Shadow Spider — the PhantomSignal core Scrapy spider.
-    Harvests all navigable links, forms, emails, API hints,
-    technologies, and metadata from a target web presence.
-    """
-    name = "phantomsignal_spider"
-    custom_settings = {
-        "ROBOTSTXT_OBEY": True,
-        "CONCURRENT_REQUESTS": 16,
-        "DOWNLOAD_DELAY": 1.0,
-        "RANDOMIZE_DOWNLOAD_DELAY": True,
-        "COOKIES_ENABLED": True,
-        "TELNETCONSOLE_ENABLED": False,
-        "DEFAULT_REQUEST_HEADERS": {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en",
-        },
-        "DOWNLOADER_MIDDLEWARES": {
-            "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,
-            "scrapy_user_agents.middlewares.RandomUserAgentMiddleware": 400,
-            "scrapy.downloadermiddlewares.retry.RetryMiddleware": 550,
-        },
-        "ITEM_PIPELINES": {
-            "phantomsignal.scrapers.pipelines.PhantomSignalPipeline": 300,
-        },
-        "AUTOTHROTTLE_ENABLED": True,
-        "AUTOTHROTTLE_START_DELAY": 0.5,
-        "AUTOTHROTTLE_MAX_DELAY": 10,
-        "HTTPCACHE_ENABLED": False,
-        "LOG_LEVEL": "WARNING",
+class _PageParser(HTMLParser):
+    """Collects what the crawl reports. Tolerates malformed HTML, as targets may
+    serve anything."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.title = ""
+        self.links: List[str] = []
+        self.scripts: List[str] = []
+        self.forms: List[Dict[str, Any]] = []
+        self.meta: Dict[str, str] = {}
+        self.comments: List[str] = []
+        self._in_title = False
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        a = {key: (value or "") for key, value in attrs}
+        if tag == "title":
+            self._in_title = True
+        elif tag == "a" and a.get("href"):
+            self.links.append(a["href"])
+        elif tag == "script" and a.get("src"):
+            self.scripts.append(a["src"])
+        elif tag == "form":
+            self.forms.append({"action": a.get("action", ""),
+                               "method": a.get("method", "get").upper(), "inputs": []})
+        elif tag in ("input", "textarea", "select") and self.forms:
+            self.forms[-1]["inputs"].append({"name": a.get("name", ""),
+                                             "type": a.get("type", "text"),
+                                             "id": a.get("id", "")})
+        elif tag == "meta":
+            name = a.get("name") or a.get("property")
+            if name and a.get("content"):
+                self.meta[name] = a["content"]
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "title":
+            self._in_title = False
+
+    def handle_data(self, data: str) -> None:
+        if self._in_title and not self.title:
+            self.title = data.strip()
+
+    def handle_comment(self, data: str) -> None:
+        text = data.strip()
+        if len(text) > 3 and len(self.comments) < MAX_COMMENTS_PER_PAGE:
+            self.comments.append(text)
+
+
+def _security_headers(headers: Dict[str, str]) -> Dict[str, Any]:
+    present = {name: headers[name] for name in SECURITY_HEADERS if headers.get(name)}
+    missing = [name for name in SECURITY_HEADERS if name not in present]
+    return {"present": present, "missing": missing,
+            "score": int(len(present) / len(SECURITY_HEADERS) * 100)}
+
+
+def analyze_page(url: str, status: int, headers: Dict[str, str], body: str) -> Dict[str, Any]:
+    """Turn one fetched page into a ``web_page`` record. Pure, for easy testing."""
+    text = body[:MAX_PARSE_CHARS]
+    parser = _PageParser()
+    try:
+        parser.feed(text)
+    except Exception as exc:  # a hostile page must not end the crawl
+        logger.debug("HTML parse stopped early on %s: %s", url, exc)
+    links = list(dict.fromkeys(urljoin(url, href) for href in parser.links))[:MAX_LINKS_PER_PAGE]
+    social: Dict[str, str] = {}
+    for link in parser.links:
+        host = (urlparse(link).hostname or "").lower()
+        for domain, name in SOCIAL_PLATFORMS.items():
+            if host == domain or host.endswith("." + domain):
+                social[name] = link
+    hints = [{"type": label, "value": match}
+             for pattern, label in API_PATTERNS
+             for match in re.findall(pattern, text, re.IGNORECASE)]
+    lowered = {key.lower(): value for key, value in headers.items()}
+    return {
+        "type": "web_page",
+        "url": url,
+        "status_code": status,
+        "content_type": lowered.get("content-type", ""),
+        "title": parser.title,
+        "description": parser.meta.get("description", ""),
+        "headers": lowered,
+        "links": links,
+        "forms": parser.forms,
+        "emails": sorted(set(EMAIL_RE.findall(text))),
+        "phone_numbers": sorted(set(PHONE_RE.findall(text))),
+        "api_hints": hints,
+        "js_files": [urljoin(url, src) for src in parser.scripts],
+        "comments": parser.comments,
+        "meta_tags": parser.meta,
+        "social_links": social,
+        "security_headers": _security_headers(lowered),
     }
 
-    rules = (
-        Rule(LinkExtractor(deny_extensions=[
-            "png", "jpg", "jpeg", "gif", "svg", "ico", "woff", "woff2",
-            "ttf", "eot", "mp4", "mp3", "zip", "tar", "gz", "pdf",
-        ]), callback="parse_page", follow=True),
-    )
 
-    def __init__(self, target: str, depth: int = 2, options: dict = None, *args, **kwargs):
-        self.start_urls = [target if target.startswith("http") else f"https://{target}"]
-        self.allowed_domains = [urlparse(self.start_urls[0]).netloc]
-        self.custom_settings["DEPTH_LIMIT"] = depth
-        if options:
-            self._apply_options(options)
-        super().__init__(*args, **kwargs)
-        self.harvested_data: List[Dict] = []
-
-    def _apply_options(self, options: dict) -> None:
-        if not options.get("respect_robots", True):
-            self.custom_settings["ROBOTSTXT_OBEY"] = False
-        if options.get("proxy"):
-            self.custom_settings["HTTP_PROXY"] = options["proxy"]
-            self.custom_settings["HTTPS_PROXY"] = options["proxy"]
-        if options.get("concurrent_requests"):
-            self.custom_settings["CONCURRENT_REQUESTS"] = options["concurrent_requests"]
-
-    def parse_page(self, response: Response):
-        url = response.url
-
-        page_data = {
-            "type": "web_page",
-            "url": url,
-            "status_code": response.status,
-            "content_type": response.headers.get("Content-Type", b"").decode("utf-8", errors="ignore"),
-            "title": response.css("title::text").get(""),
-            "description": response.css('meta[name="description"]::attr(content)').get(""),
-            "headers": self._parse_headers(response),
-            "links": self._extract_links(response),
-            "forms": self._extract_forms(response),
-            "emails": self._extract_emails(response),
-            "phone_numbers": self._extract_phones(response),
-            "api_hints": self._extract_api_hints(response),
-            "js_files": self._extract_js_files(response),
-            "comments": self._extract_html_comments(response),
-            "meta_tags": self._extract_meta_tags(response),
-            "social_links": self._extract_social_links(response),
-            "security_headers": self._analyze_security_headers(response),
-        }
-
-        self.harvested_data.append(page_data)
-        yield page_data
-
-    def _parse_headers(self, response: Response) -> Dict[str, str]:
-        return {
-            k.decode("utf-8", errors="ignore"): v.decode("utf-8", errors="ignore")
-            for k, v in response.headers.items()
-        }
-
-    def _extract_links(self, response: Response) -> List[str]:
-        links = set()
-        for href in response.css("a::attr(href)").getall():
-            full = urljoin(response.url, href)
-            links.add(full)
-        return list(links)[:200]
-
-    def _extract_forms(self, response: Response) -> List[Dict]:
-        forms = []
-        for form in response.css("form"):
-            forms.append({
-                "action": form.attrib.get("action", ""),
-                "method": form.attrib.get("method", "get").upper(),
-                "inputs": [
-                    {
-                        "name": inp.attrib.get("name", ""),
-                        "type": inp.attrib.get("type", "text"),
-                        "id": inp.attrib.get("id", ""),
-                    }
-                    for inp in form.css("input, textarea, select")
-                ],
-            })
-        return forms
-
-    def _extract_emails(self, response: Response) -> List[str]:
-        import re
-        emails = set(re.findall(
-            r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}",
-            response.text
-        ))
-        return list(emails)
-
-    def _extract_phones(self, response: Response) -> List[str]:
-        import re
-        phones = set(re.findall(
-            r"(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}",
-            response.text
-        ))
-        return list(phones)
-
-    def _extract_api_hints(self, response: Response) -> List[Dict]:
-        import re
-        hints = []
-        api_patterns = [
-            (r"/api/v?\d*/[\w/]+", "REST API path"),
-            (r"/graphql", "GraphQL endpoint"),
-            (r"swagger\.json|swagger\.yaml|openapi\.json", "OpenAPI spec"),
-            (r"/\.well-known/[\w\-]+", "Well-known resource"),
-            (r"api[_\-]?key\s*[:=]\s*['\"]?([A-Za-z0-9_\-]{16,})", "API key in source"),
-            (r"authorization\s*[:=]\s*['\"]?Bearer\s+([A-Za-z0-9_\-\.]+)", "Bearer token"),
-        ]
-        for pattern, label in api_patterns:
-            matches = re.findall(pattern, response.text, re.IGNORECASE)
-            for match in matches:
-                hints.append({"type": label, "value": match})
-        return hints
-
-    def _extract_js_files(self, response: Response) -> List[str]:
-        files = response.css("script::attr(src)").getall()
-        return [urljoin(response.url, f) for f in files if f]
-
-    def _extract_html_comments(self, response: Response) -> List[str]:
-        import re
-        comments = re.findall(r"<!--(.*?)-->", response.text, re.DOTALL)
-        return [c.strip() for c in comments if len(c.strip()) > 3][:20]
-
-    def _extract_meta_tags(self, response: Response) -> Dict[str, str]:
-        meta = {}
-        for tag in response.css("meta"):
-            name = tag.attrib.get("name") or tag.attrib.get("property", "")
-            content = tag.attrib.get("content", "")
-            if name and content:
-                meta[name] = content
-        return meta
-
-    def _extract_social_links(self, response: Response) -> Dict[str, str]:
-        social = {}
-        platforms = {
-            "twitter.com": "twitter", "x.com": "twitter",
-            "facebook.com": "facebook", "linkedin.com": "linkedin",
-            "instagram.com": "instagram", "youtube.com": "youtube",
-            "github.com": "github", "reddit.com": "reddit",
-            "tiktok.com": "tiktok", "discord.com": "discord",
-            "telegram.me": "telegram", "t.me": "telegram",
-        }
-        for link in response.css("a::attr(href)").getall():
-            for domain, name in platforms.items():
-                if domain in link:
-                    social[name] = link
-        return social
-
-    def _analyze_security_headers(self, response: Response) -> Dict[str, Any]:
-        headers = {k.decode().lower(): v.decode() for k, v in response.headers.items()}
-        security_headers = {
-            "content-security-policy": headers.get("content-security-policy"),
-            "x-frame-options": headers.get("x-frame-options"),
-            "x-xss-protection": headers.get("x-xss-protection"),
-            "x-content-type-options": headers.get("x-content-type-options"),
-            "strict-transport-security": headers.get("strict-transport-security"),
-            "referrer-policy": headers.get("referrer-policy"),
-            "permissions-policy": headers.get("permissions-policy"),
-        }
-        missing = [k for k, v in security_headers.items() if not v]
-        return {
-            "present": {k: v for k, v in security_headers.items() if v},
-            "missing": missing,
-            "score": int((len(security_headers) - len(missing)) / len(security_headers) * 100),
-        }
+def _crawlable(url: str, netloc: str) -> bool:
+    parts = urlparse(url)
+    if parts.scheme not in ("http", "https") or parts.netloc != netloc:
+        return False
+    extension = parts.path.rsplit(".", 1)[-1].lower() if "." in parts.path.rsplit("/", 1)[-1] else ""
+    return extension not in SKIPPED_EXTENSIONS
 
 
 class WebCrawler:
-    """PhantomSignal Web Crawler — manages Scrapy spider lifecycle."""
+    """Breadth-first crawl of one site, bounded by depth and page count."""
 
     def __init__(self, config):
         self.config = config
 
-    async def crawl(self, target: str, depth: int = 2, options: dict = None) -> List[Dict]:
-        """Launch a shadow spider against the target."""
-        results = []
-
+    async def _load_robots(self, client, start_url: str) -> Optional[RobotFileParser]:
+        if not self.config.get("scraper", "respect_robots_txt", default=True):
+            return None
+        robots = RobotFileParser()
         try:
-            configure_logging(install_root_handler=False)
-            settings = get_project_settings()
-            settings.setdict({
-                "LOG_ENABLED": False,
-                "ROBOTSTXT_OBEY": self.config.get("scraper", "respect_robots_txt", default=True),
-                "DOWNLOAD_DELAY": self.config.get("scraper", "download_delay", default=1.0),
-                "CONCURRENT_REQUESTS": self.config.get("scraper", "concurrent_requests", default=16),
-            })
+            response = await client.get(urljoin(start_url, "/robots.txt"))
+        except Exception as exc:
+            logger.debug("robots.txt unavailable: %s", exc)
+            return None
+        if response.status_code != 200:
+            return None
+        robots.parse(response.text[:MAX_PARSE_CHARS].splitlines())
+        return robots
 
-            runner = CrawlerRunner(settings)
-            spider_results = []
+    async def crawl(self, target: str, depth: int = 2, options: Optional[dict] = None) -> List[Dict]:
+        options = options or {}
+        start = target if target.startswith(("http://", "https://")) else f"https://{target}"
+        start = urldefrag(start)[0]
+        netloc = urlparse(start).netloc
+        max_pages = int(options.get("max_pages") or self.config.get(
+            "scraper", "max_pages", default=DEFAULT_MAX_PAGES))
 
-            def item_scraped(item, response, spider):
-                spider_results.append(dict(item))
+        results: List[Dict] = []
+        seen: Set[str] = {start}
+        frontier: List[Tuple[str, int]] = [(start, 0)]
 
-            crawler = runner.create_crawler(PhantomSignalSpider)
-            crawler.signals.connect(item_scraped, signal=signals.item_scraped)
+        async with stealth_client(self.config, follow_redirects=True, timeout=30) as client:
+            robots = await self._load_robots(client, start)
+            user_agent = "*"
+            while frontier and len(results) < max_pages:
+                url, level = frontier.pop(0)
+                if robots is not None and not robots.can_fetch(user_agent, url):
+                    continue
+                try:
+                    response = await client.get(url)
+                except BlockedDestination as exc:
+                    logger.warning("Crawl skipped %s: %s", url, exc)
+                    continue
+                except Exception as exc:
+                    logger.debug("Crawl fetch failed for %s: %s", url, exc)
+                    continue
 
-            deferred = runner.crawl(
-                PhantomSignalSpider,
-                target=target,
-                depth=depth,
-                options=options or {},
-            )
-
-            from twisted.internet import defer
-            d = defer.Deferred()
-
-            def on_complete(_):
-                d.callback(spider_results)
-
-            deferred.addCallback(on_complete)
-            deferred.addErrback(lambda f: d.errback(f))
-
-            results = await asyncio.get_event_loop().run_in_executor(
-                None, self._run_twisted_crawl, target, depth, options
-            )
-        except Exception as e:
-            logger.error(f"Crawler error for {target}: {e}")
-            results = await self._fallback_crawl(target)
-
-        formatted = []
-        for item in results:
-            formatted.append({
-                "type": "web_page",
-                "source": "web_crawler",
-                "data": item,
-                "confidence": 1.0,
-                "relevance_score": 0.8,
-                "tags": ["web", "crawl"],
-            })
-        return formatted
-
-    def _run_twisted_crawl(self, target: str, depth: int, options: dict) -> List[Dict]:
-        """Run Scrapy in a blocking thread (Twisted reactor)."""
-        import threading
-        results = []
-        done = threading.Event()
-
-        try:
-            from scrapy.crawler import CrawlerProcess
-            process = CrawlerProcess({
-                "LOG_ENABLED": False,
-                "ROBOTSTXT_OBEY": self.config.get("scraper", "respect_robots_txt", default=True),
-            })
-
-            spider_inst = None
-
-            def on_spider_opened(spider):
-                nonlocal spider_inst
-                spider_inst = spider
-
-            def run():
-                process.crawl(
-                    PhantomSignalSpider,
-                    target=target,
-                    depth=depth,
-                    options=options or {},
-                )
-                process.start()
-                done.set()
-
-            thread = threading.Thread(target=run, daemon=True)
-            thread.start()
-            done.wait(timeout=120)
-
-            if spider_inst:
-                results = spider_inst.harvested_data
-
-        except Exception as e:
-            logger.error(f"Twisted crawl error: {e}")
-
-        return results
-
-    async def _fallback_crawl(self, target: str) -> List[Dict]:
-        """Fallback crawler using httpx when Scrapy is unavailable."""
-        import re
-
-        from phantomsignal.core.http import stealth_client
-
-        results = []
-        url = target if target.startswith("http") else f"https://{target}"
-
-        try:
-            async with stealth_client(self.config, follow_redirects=True, timeout=30) as client:
-                response = await client.get(url)
-                emails = set(re.findall(
-                    r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}",
-                    response.text
-                ))
+                final_url = str(response.url)
+                if urlparse(final_url).netloc != netloc:
+                    continue  # redirected off-site: out of scope
+                page = analyze_page(final_url, response.status_code, dict(response.headers), response.text)
                 results.append({
-                    "url": str(response.url),
-                    "status_code": response.status_code,
-                    "content_type": response.headers.get("content-type", ""),
-                    "headers": dict(response.headers),
-                    "emails": list(emails),
-                    "title": re.search(r"<title[^>]*>(.*?)</title>", response.text, re.IGNORECASE | re.DOTALL),
+                    "type": "web_page",
+                    "source": "web_crawler",
+                    "data": page,
+                    "confidence": 1.0,
+                    "relevance_score": 0.8,
+                    "tags": ["web", "crawl"],
                 })
-        except Exception as e:
-            logger.error(f"Fallback crawl error: {e}")
-
+                if level >= depth:
+                    continue
+                for link in page["links"]:
+                    candidate = urldefrag(link)[0]
+                    if candidate not in seen and _crawlable(candidate, netloc):
+                        seen.add(candidate)
+                        frontier.append((candidate, level + 1))
         return results

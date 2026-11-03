@@ -13,7 +13,7 @@ def read_requirements(path):
 
 setup(
     name="phantomsignal",
-    version="1.28.0",
+    version="1.29.0",
     description="PhantomSignal :: Open-Source OSINT Intelligence Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -23,7 +23,10 @@ setup(
     include_package_data=True,
     python_requires=">=3.10",
     install_requires=read_requirements("requirements.txt"),
-    extras_require={"dev": read_requirements("requirements-dev.txt")},
+    extras_require={
+        "dev": read_requirements("requirements-dev.txt"),
+        "server": read_requirements("requirements-server.txt"),
+    },
     entry_points={
         "console_scripts": [
             "phantomsignal=phantomsignal.cli:main",

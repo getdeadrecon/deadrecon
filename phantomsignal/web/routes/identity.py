@@ -58,7 +58,9 @@ async def _egress_check() -> dict:
     egress, so the result is what a scan target would observe."""
     from phantomsignal.core.http import stealth_client
 
-    out: dict = {"stealth": _stealth_posture(), "egress": None, "tls": None, "errors": []}
+    from phantomsignal.core.tor import TorUnavailable, forget_verification, tor_enabled, verify_tor
+
+    out: dict = {"stealth": _stealth_posture(), "egress": None, "tls": None, "tor": None, "errors": []}
 
     async def geo():
         fields = ("status,message,query,country,countryCode,regionName,city,zip,"
@@ -71,6 +73,14 @@ async def _egress_check() -> dict:
         async with stealth_client(config, timeout=8, verify=True) as c:
             r = await c.get("https://tls.browserleaks.com/json")
             return r.json()
+
+    if tor_enabled(config):
+        forget_verification()
+        try:
+            await verify_tor(config)
+            out["tor"] = {"confirmed": True, "message": "Confirmed by check.torproject.org"}
+        except TorUnavailable as exc:
+            out["tor"] = {"confirmed": False, "message": str(exc)}
 
     geo_res, tls_res = await asyncio.gather(geo(), tls(), return_exceptions=True)
 

@@ -52,7 +52,7 @@
       </a>
     {% endif %}
     <form action="{{ url_for('scans.delete_scan', scan_id=scan.id) }}" method="POST" style="display:inline"
-          onsubmit="return confirm('Delete this scan?')">
+          data-confirm="Delete this scan?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button class="btn btn-ghost">✕ Delete</button>
     </form>
@@ -139,7 +139,7 @@
       <div class="result-card {% if result.is_anomaly %}result-anomaly{% endif %}"
            data-module="{{ result.module }}"
            data-type="{{ result.result_type }}">
-        <div class="result-header" onclick="toggleResult(this)">
+        <div class="result-header">
           <div class="result-meta">
             <span class="result-module">[{{ result.module }}]</span>
             <span class="result-type">{{ result.result_type }}</span>
@@ -178,7 +178,7 @@
     <div class="results-list">
       {% for result in items %}
       <div class="result-card {% if result.is_anomaly %}result-anomaly{% endif %}">
-        <div class="result-header" onclick="toggleResult(this)">
+        <div class="result-header">
           <div class="result-meta">
             <span class="result-type">{{ result.result_type }}</span>
             <span class="result-source">⚡ {{ result.source or '—' }}</span>
@@ -206,7 +206,7 @@
     <div class="results-list">
       {% for result in results if result.is_anomaly %}
       <div class="result-card result-anomaly">
-        <div class="result-header" onclick="toggleResult(this)">
+        <div class="result-header">
           <div class="result-meta">
             <span class="result-module">[{{ result.module }}]</span>
             <span class="result-type">{{ result.result_type }}</span>
@@ -234,7 +234,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/terminal.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 const SCAN_ID = "{{ scan.id }}";
 const IS_LIVE = {{ 'true' if is_live else 'false' }};
 
@@ -250,6 +250,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // Expand/collapse result cards
+document.addEventListener('click', (event) => {
+  const header = event.target.closest('.result-header');
+  if (header) toggleResult(header);
+});
+
 function toggleResult(header) {
   const body = header.nextElementSibling;
   const icon = header.querySelector('.expand-icon');

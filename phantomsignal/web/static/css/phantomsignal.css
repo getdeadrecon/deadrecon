@@ -1565,3 +1565,29 @@ textarea:focus-visible,
   /* Terminal: shorter height on small screens */
   .terminal-output { height: 150px; }
 }
+
+/* Navigation fit: the status area and Sign out must stay on screen at every width,
+   so the links take whatever is left and scroll sideways instead of pushing them off. */
+.nav-bar { gap: 1rem; padding: 0 1rem; }
+.nav-links { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-link { white-space: nowrap; padding: 0.4rem 0.5rem; }
+.theme-seg { flex-shrink: 0; }
+.nav-brand + .theme-seg { margin-left: auto; }
+.nav-status .btn-sm { white-space: nowrap; }
+@media (max-width: 1600px) {
+  .nav-status .version-tag, .nav-status .status-text, .nav-icon { display: none; }
+}
+@media (max-width: 480px) {
+  .nav-bar { gap: 0.4rem; padding: 0 0.5rem; }
+  .brand-link > :not(:first-child) { display: none; }
+  .nav-status .status-dot { display: none; }
+  .nav-status .btn-sm { padding: 0.3rem 0.4rem; }
+  .nav-link { font-size: 0.7rem; padding: 0.3rem; }
+}
+
+/* One-click Tor */
+.tor-chip { background: transparent; color: var(--ink-dim, inherit); cursor: pointer; font-family: inherit; }
+.tor-chip[data-state="starting"] { border-color: #c9a24a; color: #c9a24a; }
+.tor-chip[data-state="ready"] { border-color: #7d4cdb; background: rgba(125, 76, 219, 0.16); color: #b79bf0; }
+.tor-chip[data-state="failed"] { border-color: #e26d6d; color: #e26d6d; }

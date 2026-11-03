@@ -6,7 +6,7 @@ Author:  the-clipper
 AI:      Claude (Anthropic)
 License: MIT — see LICENSE
 """
-import os, sys
+import os
 
 if __name__ == "__main__":
     from phantomsignal.core.config import config

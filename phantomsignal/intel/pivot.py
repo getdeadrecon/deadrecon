@@ -23,6 +23,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable, Dict, List, Optional, Set, Tuple
 
+from phantomsignal.core import netguard
+
 logger = logging.getLogger("phantomsignal.intel.pivot")
 
 # A pass runner: given a target string, return that target's raw result dicts.
@@ -53,8 +55,8 @@ class PivotEntity:
 def _registered_domain(host: str) -> str:
     """Best-effort eTLD+1 without a dependency. Uses tldextract if present."""
     try:
-        import tldextract  # already a declared dependency
-        ext = tldextract.extract(host)
+        from phantomsignal.core.domains import extract as extract_domain
+        ext = extract_domain(host)
         if ext.domain and ext.suffix:
             return f"{ext.domain}.{ext.suffix}".lower()
     except Exception:
@@ -147,6 +149,8 @@ class RecursivePivotEngine:
         (plus any IP); set ``allow_cross_domain`` to follow co-hosted domains
     """
 
+    _root_is_private = False
+
     def __init__(self, run_pass: RunPass, config: Optional[PivotConfig] = None):
         self._run_pass = run_pass
         self.cfg = config or PivotConfig()
@@ -154,12 +158,25 @@ class RecursivePivotEngine:
     def _in_scope(self, ent: PivotEntity, root_domain: Optional[str]) -> bool:
         if ent.kind not in self.cfg.pivot_kinds:
             return False
+        if ent.kind == "ip" and not self._ip_allowed(ent.value):
+            return False
         if self.cfg.allow_cross_domain or root_domain is None:
             return True
         if ent.kind == "ip":
             return True  # IPs are followed regardless; they can't be scoped by name
         host = ent.value.split("@", 1)[1] if ent.kind == "email" else ent.value
         return _registered_domain(host) == root_domain
+
+    def _ip_allowed(self, ip: str) -> bool:
+        """Scanned data can name any IP, so a public target must not be able to
+        steer a pivot to internal addresses. An internal root may pivot internally."""
+        try:
+            level = netguard.classify_ip(ip)
+        except ValueError:
+            return False
+        if level == netguard.METADATA:
+            return netguard.metadata_requests_allowed()
+        return level == netguard.PUBLIC or self._root_is_private
 
     async def expand(self, target: str) -> Tuple[List[Dict], PivotStats]:
         """
@@ -169,6 +186,9 @@ class RecursivePivotEngine:
         """
         stats = PivotStats()
         root_kind = classify(target)
+        self._root_is_private = False
+        if root_kind == "ip":
+            self._root_is_private = netguard.classify_ip(target.strip().rstrip(".")) == netguard.PRIVATE
         root_domain = None
         if root_kind in ("domain", "subdomain"):
             root_domain = _registered_domain(target)

@@ -26,7 +26,8 @@ import re
 import string
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
-import httpx
+from phantomsignal.core.dns_egress import make_resolver
+from phantomsignal.core.http import egress_client
 
 try:
     import dns.resolver
@@ -197,7 +198,7 @@ class SubdomainEnumerator:
         self.config = config
         self._resolve_sem = asyncio.Semaphore(150)
         if dns is not None:
-            self._resolver = dns.resolver.Resolver()
+            self._resolver = make_resolver(config)
             # Tuned for bulk candidate resolution: fail fast, resolve wide.
             self._resolver.timeout = 2
             self._resolver.lifetime = 3
@@ -229,10 +230,11 @@ class SubdomainEnumerator:
     # ── passive sources ────────────────────────────────────────────────────
 
     async def _gather_passive(self, domain: str) -> Tuple[Set[str], Dict[str, int]]:
-        async with httpx.AsyncClient(
+        async with egress_client(
+            self.config,
             timeout=20, follow_redirects=True,
             headers={"User-Agent": "PhantomSignal-OSINT/1.0"},
-        ) as client:
+                    ) as client:
             sources = {
                 "crt.sh": self._src_crtsh(client, domain),
                 "hackertarget": self._src_hackertarget(client, domain),

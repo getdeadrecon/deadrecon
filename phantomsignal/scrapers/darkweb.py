@@ -29,6 +29,9 @@ from urllib.parse import quote, urlparse
 
 import httpx
 
+from phantomsignal.core.http import egress_client
+from phantomsignal.core.tor import floor_timeout, tor_enabled, tor_proxy_url
+
 logger = logging.getLogger("phantomsignal.scrapers.darkweb")
 
 RANSOMWARE_API = "https://api.ransomware.live/v2"
@@ -61,8 +64,8 @@ def extract_domain(target: str) -> Optional[str]:
 def registered_name(domain: str) -> str:
     """Second-level label used as the leak-site search query (eTLD+1 minus suffix)."""
     try:
-        import tldextract
-        ext = tldextract.extract(domain)
+        from phantomsignal.core.domains import extract as extract_domain
+        ext = extract_domain(domain)
         if ext.domain:
             return ext.domain.lower()
     except Exception:
@@ -204,6 +207,10 @@ class DarkWebMonitor:
         # Tor .onion enrichment of ransomware claim URLs (opt-in, degrades if no Tor).
         self.tor_enrich = config.get("darkweb", "tor_enrich", default=False)
         self.tor_proxy = config.get("darkweb", "tor_proxy", default="socks5://127.0.0.1:9050")
+        if tor_enabled(config):
+            self.tor_enrich = True
+            self.tor_proxy = tor_proxy_url(config)
+            self.timeout = floor_timeout(config, self.timeout)
 
     async def run(self, target: str) -> List[Dict]:
         domain = extract_domain(target)
@@ -293,7 +300,8 @@ class DarkWebMonitor:
             return []
         url = f"{RANSOMWARE_API}/searchvictims/{quote(query)}"
         try:
-            async with httpx.AsyncClient(
+            async with egress_client(
+                self.config,
                 timeout=self.timeout, follow_redirects=True,
                 headers={"User-Agent": "PhantomSignal-OSINT/1.0"},
             ) as client:

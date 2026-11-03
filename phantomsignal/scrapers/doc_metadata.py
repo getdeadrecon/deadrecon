@@ -27,12 +27,10 @@ import asyncio
 import io
 import logging
 import re
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as SafeET
 import zipfile
 from typing import Dict, List, Optional, Set
 from urllib.parse import urlparse
-
-import httpx
 
 from phantomsignal.core.http import stealth_client
 from phantomsignal.scrapers.archive_miner import parse_wayback_cdx
@@ -118,7 +116,7 @@ def _xml_root(data: Optional[bytes]):
     if not data:
         return None
     try:
-        return ET.fromstring(data)
+        return SafeET.fromstring(data)
     except Exception:
         return None
 
@@ -412,13 +410,10 @@ class DocMetadataExtractor:
         return self._build_results(scope, len(urls), docs)
 
     async def _discover(self, domain: str) -> List[str]:
-        cdx = ("http://web.archive.org/cdx/search/cdx"
+        cdx = ("https://web.archive.org/cdx/search/cdx"
                f"?url=*.{domain}/*&output=json&fl=original&collapse=urlkey&limit=5000")
         try:
-            async with httpx.AsyncClient(
-                timeout=25, follow_redirects=True,
-                headers={"User-Agent": "PhantomSignal-OSINT/1.0"},
-            ) as client:
+            async with stealth_client(self.config, timeout=25, verify=True) as client:
                 r = await client.get(cdx)
                 urls = parse_wayback_cdx(r.json()) if r.status_code == 200 else set()
         except Exception as exc:

@@ -231,7 +231,7 @@
   {% endif %}
   {% if d.references %}
     <div class="ri-row ri-gap" style="margin-top:0.3rem;">
-      {% for ref in d.references[:3] %}<a href="{{ ref }}" target="_blank" rel="noopener" class="result-tag">ref ↗</a>{% endfor %}
+      {% for ref in d.references[:3] %}<a href="{{ ref | safe_url }}" target="_blank" rel="noopener" class="result-tag">ref ↗</a>{% endfor %}
     </div>
   {% endif %}
 
@@ -397,8 +397,8 @@
   <div class="ri-mono ri-cyan" style="font-size:0.74rem;word-break:break-all;">{{ d.url }}</div>
   {% if d.result_url %}
     <div class="ri-row ri-gap" style="margin-top:0.35rem;">
-      <a href="{{ d.result_url }}" target="_blank" rel="noopener" class="result-tag">scan report ↗</a>
-      {% if d.screenshot %}<a href="{{ d.screenshot }}" target="_blank" rel="noopener" class="result-tag">screenshot ↗</a>{% endif %}
+      <a href="{{ d.result_url | safe_url }}" target="_blank" rel="noopener" class="result-tag">scan report ↗</a>
+      {% if d.screenshot %}<a href="{{ d.screenshot | safe_url }}" target="_blank" rel="noopener" class="result-tag">screenshot ↗</a>{% endif %}
     </div>
   {% endif %}
 

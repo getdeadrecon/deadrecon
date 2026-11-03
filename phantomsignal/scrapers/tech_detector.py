@@ -13,6 +13,7 @@ import re
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
+from phantomsignal.core.dns_egress import configured_proxies
 from phantomsignal.core.http import stealth_client
 
 logger = logging.getLogger("phantomsignal.tech_detector")
@@ -322,7 +323,8 @@ class TechDetector:
                     })
 
                 # SSL/TLS info
-                if url.startswith("https"):
+                # A direct TLS probe would reveal the operator's IP, so skip it when proxied.
+                if url.startswith("https") and not configured_proxies(self.config):
                     tls_info = await self._get_tls_info(urlparse(url).hostname)
                     if tls_info:
                         results.append({

@@ -9,6 +9,7 @@ let isConnected = false;
 
 function initSocket() {
   if (socket) return;                          // idempotent
+  if (typeof io === 'undefined') return;       // sign-in pages don't load socket.io
   socket = io({ transports: ['websocket', 'polling'], reconnectionAttempts: 10 });
 
   socket.on('connect', () => {
@@ -230,3 +231,84 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { el.style.width = width; }, 300);
   });
 });
+
+// ── Markup behaviours ────────────────────────────────────────
+// The content security policy blocks inline handlers, so these are wired here.
+document.addEventListener('submit', (event) => {
+  const message = event.target.dataset && event.target.dataset.confirm;
+  if (message && !window.confirm(message)) event.preventDefault();
+});
+
+document.addEventListener('click', (event) => {
+  const close = event.target.closest('.flash-close');
+  if (close) close.parentElement.remove();
+  const raw = event.target.closest('[data-toggle-raw]');
+  if (raw) raw.closest('.card').querySelector('.raw-body').classList.toggle('hidden');
+});
+
+document.addEventListener('input', (event) => {
+  const output = event.target.dataset && event.target.dataset.output;
+  if (output) document.getElementById(output).textContent = event.target.value;
+});
+
+// ── One-click Tor ────────────────────────────────────────────
+(function torButton() {
+  const button = document.getElementById('tor-toggle');
+  if (!button) return;
+  const label = document.getElementById('tor-label');
+  let timer = null;
+  let lastState = null;
+
+  function show(status) {
+    const state = status.enabled ? status.state : 'off';
+    button.dataset.state = state;
+    button.setAttribute('aria-pressed', status.enabled ? 'true' : 'false');
+    button.title = status.message + (status.source ? ` (${status.source})` : '');
+    label.textContent = {
+      off: 'Tor',
+      starting: status.percent ? `Tor ${status.percent}%` : 'Tor…',
+      ready: 'Tor on',
+      failed: 'Tor failed',
+    }[state];
+    if (lastState && state !== lastState) {
+      if (state === 'ready') showToast('Tor is on. Scan traffic is confirmed to be using it.', 'success');
+      if (state === 'failed') showToast(status.message, 'error', 12000);
+    }
+    lastState = state;
+    const chip = document.querySelector('a.stealth-chip');
+    if (chip && status.posture) {
+      chip.className = `stealth-chip stealth-${status.posture.level}`;
+      chip.querySelector('.stealth-label').textContent = status.posture.label;
+    }
+    clearTimeout(timer);
+    if (status.enabled) timer = setTimeout(refresh, state === 'starting' ? 1000 : 15000);
+  }
+
+  async function refresh() {
+    try {
+      show(await (await fetch(button.dataset.url)).json());
+    } catch (error) {
+      timer = setTimeout(refresh, 5000);
+    }
+  }
+
+  button.addEventListener('click', async () => {
+    // Clicking a failed button tries again rather than turning Tor off.
+    const enabled = button.getAttribute('aria-pressed') !== 'true' || button.dataset.state === 'failed';
+    button.disabled = true;
+    try {
+      const reply = await fetch(button.dataset.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': button.dataset.csrf },
+        body: JSON.stringify({ enabled }),
+      });
+      show(await reply.json());
+    } catch (error) {
+      showToast('Tor could not be changed. Please try again.', 'error');
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  refresh();
+})();

@@ -11,8 +11,10 @@ from __future__ import annotations
 import asyncio
 import re
 from typing import Dict, List, Optional
+from urllib.parse import quote
 
-import httpx
+from phantomsignal.core.http import counted_client, egress_client
+from phantomsignal.core.tor import tor_enabled
 
 from phantomsignal.intel.apis.base import (
     APICategory, APITier, BaseIntelAPI, register_api
@@ -1154,7 +1156,42 @@ class LocalWHOISAPI(BaseIntelAPI):
     TIER = APITier.FREE
     CATEGORIES = [APICategory.DOMAIN]
 
+    async def _search_rdap(self, query: str) -> List[Dict]:
+        """WHOIS uses raw port 43, which can't go through Tor. RDAP is the same data
+        over HTTPS."""
+        async with egress_client(self.config, timeout=30, follow_redirects=True) as client:
+            resp = await client.get(f"https://rdap.org/domain/{quote(query)}")
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        events = {e.get("eventAction"): e.get("eventDate") for e in data.get("events", [])}
+        registrar = None
+        for entity in data.get("entities", []):
+            if "registrar" in entity.get("roles", []):
+                for item in (entity.get("vcardArray") or [None, []])[1]:
+                    if item[0] == "fn":
+                        registrar = item[3]
+        return [self._wrap_result(
+            "whois_record",
+            {
+                "domain": query,
+                "registrar": registrar,
+                "creation_date": events.get("registration"),
+                "expiration_date": events.get("expiration"),
+                "updated_date": events.get("last changed"),
+                "nameservers": [ns.get("ldhName") for ns in data.get("nameservers", [])],
+                "status": data.get("status"),
+                "source": "rdap",
+            },
+            confidence=0.9, relevance_score=0.8, tags=["whois", "domain", "rdap"],
+        )]
+
     async def search(self, query: str, **kwargs) -> List[Dict]:
+        if tor_enabled(self.config):
+            try:
+                return await self._search_rdap(query)
+            except Exception:
+                return []
         import whois as python_whois
         loop = __import__("asyncio").get_event_loop()
         try:
@@ -1394,7 +1431,7 @@ class TikTokAPI(BaseIntelAPI):
         if not client_key or not client_secret:
             return None
 
-        async with httpx.AsyncClient(timeout=15) as client:
+        async with counted_client(timeout=15) as client:
             resp = await client.post(
                 "https://open.tiktokapis.com/v2/oauth/token/",
                 data={
@@ -1426,7 +1463,7 @@ class TikTokAPI(BaseIntelAPI):
         )
 
         # Research API uses POST for user lookup
-        async with httpx.AsyncClient(timeout=15) as client:
+        async with counted_client(timeout=15) as client:
             resp = await client.post(
                 f"{self.BASE_URL}/research/user/info/",
                 json={"username": username},
@@ -1775,7 +1812,7 @@ class GravatarAPI(BaseIntelAPI):
         if "@" not in query:
             return []
         import hashlib
-        email_hash = hashlib.md5(query.strip().lower().encode()).hexdigest()
+        email_hash = hashlib.md5(query.strip().lower().encode(), usedforsecurity=False).hexdigest()
         data = await self._get(f"{self.BASE_URL}/{email_hash}.json")
         if "error" in data or "entry" not in data:
             return []

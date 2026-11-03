@@ -22,7 +22,9 @@ import dns.message
 import dns.flags
 import dns.name
 import dns.rdatatype
-import httpx
+
+from phantomsignal.core.http import egress_client
+from phantomsignal.core.dns_egress import configured_proxies, lookup_ptr, make_resolver
 
 logger = logging.getLogger("phantomsignal.dns_recon")
 
@@ -94,7 +96,8 @@ class DNSRecon:
 
     def __init__(self, config):
         self.config = config
-        self.resolver = dns.resolver.Resolver()
+        self.resolver = make_resolver(config)
+        self._proxied = bool(configured_proxies(config))
         self.resolver.timeout = 3
         self.resolver.lifetime = 5
 
@@ -184,6 +187,9 @@ class DNSRecon:
     async def _check_zone_transfer(self, domain: str) -> List[Dict]:
         """Attempt AXFR zone transfer against all NS servers."""
         results = []
+        if self._proxied:
+            logger.info("Skipping zone transfer: AXFR connects directly to the target's nameservers")
+            return results
         ns_servers = self._query_record(domain, "NS")
 
         for ns in ns_servers:
@@ -289,7 +295,7 @@ class DNSRecon:
         """Query crt.sh for certificate transparency logs — reveals subdomains."""
         results = []
         try:
-            async with httpx.AsyncClient(timeout=15) as client:
+            async with egress_client(self.config, timeout=15) as client:
                 response = await client.get(
                     f"https://crt.sh/?q=%.{domain}&output=json",
                     headers={"User-Agent": "PhantomSignal OSINT Framework"},
@@ -355,6 +361,8 @@ class DNSRecon:
         return results
 
     def _ptr_lookup(self, ip: str) -> Optional[str]:
+        if self._proxied:
+            return lookup_ptr(self.resolver, ip)
         try:
             return socket.gethostbyaddr(ip)[0]
         except Exception:
@@ -387,6 +395,9 @@ class DNSRecon:
 
     def _authoritative_ns_ips(self, domain: str) -> List[str]:
         """Resolve the domain's authoritative nameservers to IPs."""
+        # Querying a nameserver directly reveals the operator's IP to the target.
+        if self._proxied:
+            return []
         ips: List[str] = []
         for ns in self._query_record(domain, "NS"):
             ips += self._query_record(str(ns).rstrip("."), "A")

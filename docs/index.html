@@ -96,7 +96,7 @@
 <span class="c-dim">[5/6]</span> Web crawl .......... <span class="c-green">128 URLs · 3 exposed endpoints</span>
 <span class="c-dim">[6/6]</span> Scoring ............ <span class="c-green">Risk Score 34 / 100 (MEDIUM)</span>
 
-<span class="c-cyan">◈  Attribution</span> : <span class="c-green">MASKED</span>  <span class="c-dim">— 100% proxied · 0 direct · JA3: chrome124</span>
+<span class="c-cyan">◈  Attribution</span> : <span class="c-amber">EXPOSED</span>  <span class="c-dim">— 100% of HTTP proxied · attributable: port_scan, intel</span>
 <span class="c-green">✓</span>  Report written → <span class="c-cyan">./reports/example.com.html</span></pre>
       </div>
 
@@ -167,9 +167,9 @@
         <div class="feature-card">
           <div class="feature-icon" style="color:var(--green)">🕸️</div>
           <h3 class="feature-title">Web Reconnaissance</h3>
-          <p class="feature-desc">Scrapy-powered deep crawler. Technology fingerprinting across 50+ stacks — CMS, frameworks, CDNs, WAFs. API endpoint discovery, security header analysis, email and link harvesting.</p>
+          <p class="feature-desc">Deep crawler that runs through the stealth layer. Technology fingerprinting across 50+ stacks — CMS, frameworks, CDNs, WAFs. API endpoint discovery, security header analysis, email and link harvesting.</p>
           <div class="feature-tags">
-            <span class="tag">Scrapy</span><span class="tag">Wappalyzer</span><span class="tag">API Hunter</span>
+            <span class="tag">Crawler</span><span class="tag">Wappalyzer</span><span class="tag">API Hunter</span>
           </div>
         </div>
 
@@ -227,7 +227,7 @@
       <div class="ghost-text">
         <div class="section-label">◈ OPSEC &amp; COVERT RECON</div>
         <h2 class="section-title">Low-and-Slow. Provably Masked.</h2>
-        <p class="section-sub">Three stealth profiles (<code>off</code> / <code>quiet</code> / <code>paranoid</code>) drive per-host adaptive pacing, sticky browser identity, and JA3/JA4 impersonation over a rotating proxy pool — seed it in one click from curated free feeds or an uploaded list. Optional Tor routing. And every run reports exactly what it leaked.</p>
+        <p class="section-sub">Three stealth profiles (<code>off</code> / <code>quiet</code> / <code>paranoid</code>) drive per-host adaptive pacing, sticky browser identity, and JA3/JA4 impersonation over a rotating proxy pool — seed it in one click from curated free feeds or an uploaded list. One-click Tor. And every run reports exactly what it leaked.</p>
         <a href="#quickstart" class="btn btn-primary" style="margin-top:1.5rem;">RUN A COVERT SCAN</a>
       </div>
       <div class="ghost-code">
@@ -245,8 +245,9 @@
 <span class="c-cyan">Proxy pool</span>     : Fetch &amp; Add ✓  (curated free feeds)
 <span class="c-cyan">Rotation</span>       : sticky · burned egresses auto-benched
 
-<span class="c-dim"># Docker — route everything through Tor</span>
-<span class="c-green">docker-compose</span> --profile covert up -d
+
+<span class="c-dim"># Tor — one click on 🧅 in the console, or:</span>
+<span class="c-green">phantomsignal</span> scan example.com --tor
 
 <span class="c-dim"># Navbar chip shows live posture:</span>
 <span class="c-green">🕶 PARANOID</span> <span class="c-dim">· pool 42 · JA3 on</span></pre>

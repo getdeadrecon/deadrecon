@@ -22,7 +22,7 @@ from __future__ import annotations
 import logging
 from typing import Dict, List, Optional
 
-import httpx
+from phantomsignal.core.http import counted_client
 
 logger = logging.getLogger("phantomsignal.intel.asm_alert")
 
@@ -84,7 +84,7 @@ async def send_alert(url: str, payload: Optional[Dict], timeout: float = 10.0) -
     if not url or not payload:
         return False
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with counted_client(timeout=timeout) as client:
             resp = await client.post(url, json=payload)
         ok = 200 <= resp.status_code < 300
         if not ok:

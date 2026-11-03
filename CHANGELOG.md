@@ -7,7 +7,113 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [1.29.0] - 2026-11-02
+
+### Security
+- **DNS no longer leaks past the proxy.** With a proxy configured, DNS lookups use
+  DNS-over-HTTPS through the proxy and never fall back to the system resolver. SOCKS
+  proxies now resolve hostnames remotely under TLS impersonation too.
+- **The OPSEC grade now reflects real traffic.** All outbound HTTP is counted, a module
+  that sends a direct request is reported as attributable, and nothing can read as
+  masked or quiet without a proxy. It was verified against packet captures of every module.
+- **"Masked" is harder to earn.** Nearly every request must be proxied and impersonated,
+  from stealth-level modules only. The report also names tools that use local DNS.
+- **`subfinder` no longer bypasses the proxy.** It connected directly to crt.sh's database,
+  so it now skips that source when proxied, which reduces coverage.
+- **`nuclei` is now reported as attributable, even with a proxy.** With a proxy set, its full
+  template set still connects directly to the target and to third parties such as
+  `checkip.amazonaws.com`, and sends names to your local DNS resolver. Proxied runs now use
+  HTTP templates and an unreachable resolver list, which removes most of this traffic but
+  not all of it. Don't rely on a proxy to hide `nuclei` scans.
+- **Six more modules now honor proxies:** `dns_recon`, `subdomain_enum`, `archive_mine`,
+  `username_enum`, `profile_pivot` and `email_oracle`, along with `takeover` and `darkweb`.
+  Public suffix data is no longer downloaded at runtime.
+- **Fewer direct connections while proxied.** Zone transfers, direct nameserver queries,
+  raw TLS and JARM probes are skipped when a proxy is configured, so those results
+  won't appear. Shodan and Wayback lookups in stealth-tagged modules now use the proxy.
+- **The web crawler now honors proxies.** It was rebuilt on the stealth client, so it
+  also gets adaptive pacing, attribution reporting and the network guard.
+- **DNS rebinding is blocked** for direct HTTP, including TLS impersonation, by re-checking
+  each connection and pinning it to the vetted address.
+- **Pivots can't be steered to internal addresses.** A public target can no longer pivot
+  to private or metadata IPs. Set `PHANTOMSIGNAL_ALLOW_METADATA=true` to test a metadata
+  service deliberately.
+- **Scan targets are validated** in the web console, REST API and CLI.
+- **Content-Security-Policy added.** It limits where the console can load from and send
+  data to. Inline scripts need a per-response nonce and inline handlers are blocked, so
+  markup injected from scan data can't run script. Inline styles are still allowed.
+- **Tor now works, in one click.** The old setting saved and showed "Tor" in the navbar
+  while scans connected directly, and the Docker Tor container was never connected to the
+  app. Now the 🧅 button starts Tor for you: it uses a Tor already running, or the installed
+  program, or downloads the official bundle checked against a pinned hash. Tor is also built
+  into the Docker image, which replaces the old container from 2021.
+- **Tor fails closed.** Each scan confirms it's on Tor before touching the target and stops
+  if it can't. All HTTP and DNS use Tor, including keyed APIs and alert webhooks, and targets
+  get separate circuits. Modules that would bypass Tor are skipped and listed in the report.
+  TLS impersonation and `quiet` pacing turn on automatically.
+- **XML from scanned targets is parsed safely.** Document metadata and nmap output now use
+  `defusedxml`, so a crafted document can't use entity expansion against the scanner.
+- **`.onion` addresses can't leak.** They're refused without Tor instead of being sent to a
+  DNS resolver, and only modules that contact nothing but the target run against them.
+- **The Covert profile now does something.** It was stored but ignored. It now uses
+  `paranoid` pacing and skips modules that connect directly from your IP.
+- **One browser identity per target across a scan.** Each module used to pick its own, so
+  a target could see several browsers from one IP.
+- **Reports no longer imply a clean result when non-HTTP traffic went direct.** A scan with
+  a port scan could read "100% proxied, 0 direct". The report now names those modules.
+- **No map tiles by default.** A tile provider sees which areas you view, and the default
+  provider had started refusing requests. Maps plot points with no background until you
+  set `geo.tile_url`.
+- **External tools that can't use a proxy now count as direct.** They were counted as
+  proxied when a proxy was configured, which inflated the proxied percentage.
+- **Timed-out external tools are killed.** They kept running, and kept scanning, after
+  being reported as timed out.
+- **The Docker image runs as a non-root user under gunicorn**, with dependencies pinned
+  by hash in `requirements.lock`. `nmap` keeps only the raw-socket capability.
+- **Scanned sites can't steer requests inward.** Direct HTTP requests never contact
+  cloud metadata or link-local addresses, and a public site can't redirect to a
+  private address. Operators can still scan private targets directly.
+- **Links and map popups are safe from scan data.** Links only accept `http(s)` URLs,
+  and Geo Recon and Locate popups escape their fields. A case name can no longer
+  break out of its delete confirmation.
+- **CDN scripts are integrity-checked**, so a tampered socket.io or Leaflet file won't
+  load in the signed-in console.
+- **CI hardening:** workflows pin actions to commit SHAs, and CI runs with read-only
+  repository access. Requests over 16 MB are refused.
+
+### Fixed
+- **Pages compressed with Brotli can be read without TLS impersonation.** The stealth
+  client advertised Brotli without a decoder installed, so modules received unreadable
+  bytes from those servers and could miss findings. This also broke the Identity page's
+  TLS lookup in Docker.
+- **Origin Pivot findings display again.** They were stored without their type, so the
+  CDN and origin results never appeared in the scan view.
+- **`tls_fingerprint` works.** It passed flags tlsx rejects, so it never ran.
+- **Failed external tools now report it.** They show an `external_tool_error` finding,
+  instead of looking like a clean scan with no results.
+- **The web crawler works again.** It crashed on a missing module, so crawls produced
+  nothing. It no longer needs Scrapy or Twisted.
+- **Sign-in pages no longer throw a script error**, and Sign out stays on screen at
+  every width.
+
+### Added
+- **Optional Go tools in Docker.** Build with `--build-arg RECON_TOOLS=true`, or set
+  `PHANTOMSIGNAL_RECON_TOOLS=true` for Compose, to include nuclei, katana, subfinder, naabu
+  and tlsx. Downloads are pinned by SHA-256, and the image grows by about 500 MB.
+- **`--tor` and `phantomsignal tor on|off|status` on the CLI**, and `PHANTOMSIGNAL_TOR_HOST`
+  and `PHANTOMSIGNAL_TOR_PORT` for pointing at your own Tor service.
+- **The Identity page confirms Tor** with `check.torproject.org` and shows your exit.
+- **The attribution report says when counts include external tools.** Each run counts as
+  one request because a tool's own requests can't be seen, so the real total is higher.
+
+### Changed
+- **`curl_cffi` 0.17 or newer is required**, and `brotli` is a new dependency.
+- **Docker upgrades need a one-time step.** The container no longer runs as root, so
+  volumes made by 1.28.0 or earlier must be handed over to it:
+  `docker compose run --rm --user root phantomsignal chown -R app:app /app/data /app/exports /home/app/.phantomsignal`.
+  The saved-settings volume also moved to `/home/app/.phantomsignal`.
+- **`PHANTOMSIGNAL_HOST` and `PHANTOMSIGNAL_PORT` no longer apply in Docker.** Change
+  the published port in `docker-compose.yml` instead.
 
 ---
 

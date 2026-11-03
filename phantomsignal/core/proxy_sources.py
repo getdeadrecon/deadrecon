@@ -23,7 +23,6 @@ from __future__ import annotations
 import re
 from typing import Dict, List, Optional
 
-import httpx
 
 # ── Curated free proxy-list feeds ─────────────────────────────────────────────
 # Each feed returns plaintext, one proxy per line. ``scheme`` is what a bare
@@ -155,8 +154,9 @@ async def fetch_proxy_source(url: str, default_scheme: str = "http",
     network/HTTP errors propagate to the caller to surface."""
     if not is_fetchable_url(url):
         raise ValueError("Proxy source URL must be http:// or https://")
-    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True,
-                                 headers={"User-Agent": "PhantomSignal-OSINT/1.0"}) as client:
+    from phantomsignal.core.http import counted_client
+    async with counted_client(timeout=timeout, follow_redirects=True,
+                              headers={"User-Agent": "PhantomSignal-OSINT/1.0"}) as client:
         resp = await client.get(url)
         resp.raise_for_status()
         return parse_proxy_lines(resp.text, default_scheme, limit=limit)

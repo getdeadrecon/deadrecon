@@ -2,7 +2,10 @@
 import asyncio
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from phantomsignal.core import tor_service
 from phantomsignal.core.config import config
+from phantomsignal.core.http import stealth_status
+from phantomsignal.core.tor import tor_enabled
 from phantomsignal.core.proxy_sources import (
     PROXY_SOURCES, fetch_proxy_source, parse_proxy_lines, merge_pool,
 )
@@ -120,7 +123,6 @@ def save_scraper_settings():
     config.set("scraper", "respect_robots_txt", value=request.form.get("respect_robots") == "on")
     config.set("scraper", "download_delay", value=float(request.form.get("delay", 1.0)))
     config.set("scraper", "concurrent_requests", value=int(request.form.get("concurrent", 16)))
-    config.set("scraper", "tor_enabled", value=request.form.get("tor_enabled") == "on")
 
     profile = request.form.get("stealth_profile", "off")
     if profile not in ("off", "quiet", "paranoid"):
@@ -142,6 +144,31 @@ def save_scraper_settings():
     config.persist()
     flash("Settings saved.", "success")
     return redirect(url_for("settings.scan_settings"))
+
+
+def _tor_reply() -> dict:
+    posture = stealth_status(config)
+    return {"enabled": tor_enabled(config), "posture": {"level": posture["level"], "label": posture["label"]},
+            **tor_service.service.status()}
+
+
+@settings_bp.route("/tor", methods=["GET"])
+def tor_status():
+    config.refresh_tor_setting()
+    tor_service.resume(config)
+    return jsonify(_tor_reply())
+
+
+@settings_bp.route("/tor", methods=["POST"])
+def tor_toggle():
+    wanted = (request.get_json(silent=True) or {}).get("enabled")
+    if wanted is None:
+        wanted = not tor_enabled(config)
+    if wanted:
+        tor_service.enable(config)
+    else:
+        tor_service.disable(config)
+    return jsonify(_tor_reply())
 
 
 @settings_bp.route("/api/test/<api_name>")

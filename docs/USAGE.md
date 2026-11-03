@@ -76,6 +76,17 @@ put it behind a TLS reverse proxy and set:
 | `PHANTOMSIGNAL_SECURE_COOKIES` | `true` |
 | `PHANTOMSIGNAL_ALLOWED_ORIGINS` | The public URL, for example `https://psig.example.com`. Separate several with commas. |
 
+### What changes when a proxy is configured
+
+With a proxy configured, these keep your IP away from the target and your local DNS resolver:
+
+- DNS lookups use DNS-over-HTTPS through the proxy (`scraper.doh_url` sets the provider).
+- Zone transfers, direct nameserver queries, and raw TLS and JARM probes are skipped, so those results won't appear.
+
+The Go tools are adjusted when proxied. `nuclei` runs HTTP templates only, because its other protocols bypass the proxy, and still asks your local resolver for the target's name; the scan's attribution report says so. `subfinder` skips its `crtsh` source, which connects directly. `tlsx` and `naabu` can't use a proxy, so they're reported as attributable.
+
+Port scans, SMTP probes and WHOIS lookups still connect directly. The scan's attribution report marks them as attributable.
+
 ### First-run checklist
 
 | Step | Action |
@@ -286,18 +297,36 @@ You are redirected to the live results page where findings stream in as they're 
 - Respect robots.txt: **on**
 - Crawl depth: **1** (surface only)
 
-**What the Covert profile and Evasive mode do:**
-- Add random jitter (2–8 seconds) between requests
-- Rotate User-Agent strings to mimic different browsers
-- Reduce concurrent connections to 1
-- Skip aggressive techniques (zone transfers, brute-force subdomain)
-- Optionally route traffic via Tor (Docker `covert` profile only)
+**What the Covert profile does:**
+- Paces requests with the `paranoid` stealth profile: at most 2 at once per host, at least 1.5 seconds apart, plus 0.5–3 seconds of jitter
+- Keeps one browser identity per target
+- Skips modules that would connect directly from your IP, such as port scans, and lists them in the report
 
-**Docker + Tor:**
-```bash
-docker-compose --profile covert up -d
-```
-This spins up a Tor sidecar and routes all PhantomSignal traffic through it automatically.
+Covert doesn't hide your IP by itself. Add Tor or a proxy for that.
+
+**Tor:** click the **🧅 Tor** button at the top of any page. That's all. PhantomSignal starts Tor, shows its progress, and turns the button purple when it's confirmed working. Click it again to turn Tor off. The setting is remembered across restarts.
+
+On the CLI, add `--tor` to a scan, or run `phantomsignal tor on` to keep it on. In Docker, Tor is built into the image, and `docker-compose --profile covert up -d` also turns it on.
+
+PhantomSignal uses Tor in this order:
+1. The service you configured, if you set `PHANTOMSIGNAL_TOR_HOST`, `PHANTOMSIGNAL_TOR_PORT` or `scraper.tor_port`. Nothing else is tried if it's down.
+2. Tor already running on port 9050, or Tor Browser on port 9150.
+3. A `tor` program installed on this machine.
+4. The official Tor Expert Bundle, downloaded once from torproject.org into `~/.phantomsignal/tor` and checked against a pinned SHA-256 hash.
+
+Tor started by PhantomSignal listens only on this machine, and stops when PhantomSignal stops. Automatic start doesn't configure bridges, so where Tor is blocked, run your own Tor with bridges and point `PHANTOMSIGNAL_TOR_HOST` at it.
+
+With Tor on:
+- **Each scan first confirms it's on Tor** with `check.torproject.org`. If Tor is still starting, the scan waits for it. If Tor can't be confirmed, the scan stops with an error before contacting the target. To skip this check, set `scraper.tor_verify` to `false`; a Tor outage then shows up as failed requests rather than a stopped scan.
+- **TLS impersonation and `quiet` pacing turn on automatically**, unless you've chosen `paranoid`.
+- **All HTTP and DNS use Tor**, including keyed APIs, alert webhooks and proxy-list downloads. Different targets use different circuits. If a target blocks a Tor exit, the scan moves to a new circuit.
+- **WHOIS lookups use RDAP over HTTPS**, because WHOIS itself can't go through Tor.
+- **Modules that would bypass Tor are skipped** and listed in the report: `port_scan`, `port_scan_fast`, `service_enum`, `tls_fingerprint` and `vuln_scan`. `vuln_scan` is included because `nuclei` connects directly to some hosts and asks your local DNS resolver for the target's name.
+- **Scans are slower.** Timeouts are longer, and many sites block Tor exits, so some modules can find less than they would directly.
+
+`.onion` targets need Tor. Only `web_crawl`, `web_crawl_fast`, `tech_detect`, `api_hunt` and `js_mine` run against them, because the others would send the address to third parties. A target without a scheme uses `http://`.
+
+Check your setup on the **Identity** page, which shows your exit IP and whether Tor is confirmed.
 
 **Stealth profile + proxy pool (Settings → Scan Settings):**
 - **Stealth profile** — `off` / `quiet` / `paranoid` controls per-host adaptive pacing, sticky browser identity, JA3/JA4 impersonation, and WAF-aware backoff.
@@ -309,7 +338,7 @@ This spins up a Tor sidecar and routes all PhantomSignal traffic through it auto
 
 **Posture at a glance:** the navbar shows a **STEALTH / PARTIAL / DIRECT** chip reflecting your current profile + proxy configuration, and every scan ends with an attribution-surface grade of what actually leaked.
 
-**Tip:** Covert scanning significantly increases scan duration. Plan for 30–90 minutes on a moderately sized target.
+**Tip:** Covert scanning significantly increases scan duration. Plan for 30–90 minutes on a moderately sized target, and longer over Tor.
 
 ---
 
@@ -556,13 +585,6 @@ import asyncio
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 ```
 
-**Scrapy not crawling on Windows**
-
-Scrapy requires the `twisted` reactor. If crawls hang:
-```bash
-pip install twisted[windows_platform]
-```
-
 **Firewall blocking port 5000**
 
 Allow inbound connections to port 5000 in Windows Defender Firewall, or use `localhost` only (default behaviour is already localhost-bound).
@@ -617,11 +639,9 @@ services:
 
 Increase Docker Desktop memory allocation (Settings → Resources → Memory) to at least 2 GB. For very large targets, 4 GB recommended.
 
-**Tor (Covert) container not connecting**
-```bash
-docker-compose --profile covert logs tor
-# Common fix — wait 30s for Tor circuit establishment, then retry the scan
-```
+**The Tor button shows "Tor failed"**
+
+Hover over the button to see why. Tor usually needs under a minute to connect the first time. If your network blocks Tor, run your own Tor with bridges and set `PHANTOMSIGNAL_TOR_HOST`. Nothing is sent while Tor is failed.
 
 **Rebuilding after code changes**
 ```bash

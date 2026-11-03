@@ -36,8 +36,7 @@ import ssl
 from typing import Dict, List, Optional, Set
 from urllib.parse import urljoin
 
-import httpx
-
+from phantomsignal.core.dns_egress import configured_proxies
 from phantomsignal.core.http import stealth_client
 
 logger = logging.getLogger("phantomsignal.scrapers.infra_pivot")
@@ -134,8 +133,12 @@ class InfraPivot:
 
         loop = asyncio.get_event_loop()
         favicon = await self._favicon_hash(host)
-        cert_info = await loop.run_in_executor(None, self._tls_cert, host)
-        jarm = await loop.run_in_executor(None, compute_jarm, host)
+        # These probes use raw sockets and would reveal the operator's IP, so they
+        # only run when no proxy is configured.
+        cert_info, jarm = None, None
+        if not configured_proxies(self.config):
+            cert_info = await loop.run_in_executor(None, self._tls_cert, host)
+            jarm = await loop.run_in_executor(None, compute_jarm, host)
 
         results: List[Dict] = []
 
@@ -246,7 +249,8 @@ class InfraPivot:
         if not self._shodan_key:
             return []
         try:
-            async with httpx.AsyncClient(timeout=15) as client:
+            # verify=True: this request carries the Shodan API key.
+            async with stealth_client(self.config, timeout=15, verify=True) as client:
                 r = await client.get(
                     "https://api.shodan.io/shodan/host/search",
                     params={"key": self._shodan_key, "query": query, "minify": "true"},
@@ -296,8 +300,8 @@ class InfraPivot:
     @staticmethod
     def _registered(host: str) -> str:
         try:
-            import tldextract
-            ext = tldextract.extract(host)
+            from phantomsignal.core.domains import extract as extract_domain
+            ext = extract_domain(host)
             if ext.domain and ext.suffix:
                 return f"{ext.domain}.{ext.suffix}".lower()
         except Exception:

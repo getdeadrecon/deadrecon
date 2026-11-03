@@ -811,9 +811,20 @@ def web(host, port, debug, open_browser):
 @click.option("--opsec", type=click.Choice(["off", "quiet", "paranoid"]), default=None,
               help="Stealth egress profile for target-facing HTTP "
                    "(proxy pool + adaptive pacing + JA3 impersonation)")
+@click.option("--tor", "use_tor", is_flag=True,
+              help="Route this scan through Tor, starting it if needed. The scan stops if Tor isn't "
+                   "working, and modules that can't use Tor are skipped.")
 def scan(target, scan_type, modules, profile, output, fmt, compress, encrypt,
-         password, no_robots, stealth, zombie, decoys, opsec):
+         password, no_robots, stealth, zombie, decoys, opsec, use_tor):
     """Run a scan against a target from the command line."""
+    from phantomsignal.core.targets import InvalidTarget, validate_target
+    try:
+        target = validate_target(target, scan_type)
+    except InvalidTarget as exc:
+        raise click.ClickException(str(exc))
+    if use_tor:
+        from phantomsignal.core.config import config as active_config
+        active_config.set("scraper", "tor_enabled", value=True)
     print_banner()
     console.print(DISCLAIMER, style="yellow")
 
@@ -903,7 +914,12 @@ def scan(target, scan_type, modules, profile, output, fmt, compress, encrypt,
             f"[dim]— {attribution.get('proxied_pct', 0)}% proxied · "
             f"{attribution.get('direct', 0)} direct · "
             f"{attribution.get('impersonated', 0)} JA3-impersonated · "
-            f"{attribution.get('waf_blocks', 0)} WAF challenge(s)[/dim]"
+            f"{attribution.get('waf_blocks', 0)} WAF challenge(s)"
+            f"{' · counts include one entry per external tool run' if attribution.get('tool_runs') else ''}[/dim]"
+            + (f"\n  [yellow]⚠ {', '.join(attribution['modules_by_opsec']['attributable'])} connected directly; "
+               "counts only cover HTTP[/yellow]" if (attribution.get("modules_by_opsec") or {}).get("attributable") else "")
+            + "".join(f"\n  [dim]⊘ {m} skipped: {r}[/dim]"
+                      for m, r in (attribution.get("skipped_modules") or {}).items())
         )
 
     if output:
@@ -1130,6 +1146,19 @@ def init():
     console.print("  Config: ~/.phantomsignal/config.yaml")
     console.print("  Database: phantomsignal.db")
     console.print("\n[cyan]Next:[/cyan] Add API keys with: [bold]phantomsignal web[/bold] → Settings → Ghost Keys")
+
+
+@main.command("tor")
+@click.argument("action", type=click.Choice(["on", "off", "status"]))
+def tor_command(action):
+    """Turn Tor routing on or off for later scans, or show whether it's on."""
+    from phantomsignal.core.config import config as active_config
+    from phantomsignal.core.tor import tor_enabled
+    if action != "status":
+        active_config.set("scraper", "tor_enabled", value=action == "on")
+        active_config.persist()
+    state = "on" if tor_enabled(active_config) else "off"
+    console.print(f"Tor routing is {state}. PhantomSignal starts Tor itself when a scan needs it.")
 
 
 if __name__ == "__main__":

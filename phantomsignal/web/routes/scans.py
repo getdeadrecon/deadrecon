@@ -7,6 +7,7 @@ from flask import (
     render_template, request, url_for
 )
 
+from phantomsignal.core.targets import InvalidTarget, validate_target
 from phantomsignal.core.database import get_db
 from phantomsignal.core.models import Scan, ScanResult, ScanType
 
@@ -34,9 +35,10 @@ def new_scan():
 def launch_scan():
     from phantomsignal.web.app import run_scan_async
 
-    target = request.form.get("target", "").strip()
-    if not target:
-        flash("Target required.", "error")
+    try:
+        target = validate_target(request.form.get("target", ""), request.form.get("scan_type", "web_recon"))
+    except InvalidTarget as exc:
+        flash(str(exc), "error")
         return redirect(url_for("scans.new_scan"))
 
     name = request.form.get("name", f"Scan — {target[:30]}")

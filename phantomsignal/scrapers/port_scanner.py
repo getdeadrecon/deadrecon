@@ -14,8 +14,12 @@ import re
 import shutil
 import socket
 import time
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # nosec B405 - parsing goes through defusedxml
+
+import defusedxml.ElementTree as SafeET
 from typing import Dict, List, Optional
+
+from phantomsignal.core.tor import tor_enabled
 
 logger = logging.getLogger("phantomsignal.port_scanner")
 
@@ -399,6 +403,8 @@ class PortScanner:
         zombie: Optional[str] = None,
     ) -> List[Dict]:
         """Ghost probe a target. Tries nmap first, falls back to async TCP."""
+        if tor_enabled(self.config):  # port scans can't use Tor
+            return []
         host = self._resolve_host(target)
         if not host:
             logger.error(f"Cannot resolve host: {target}")
@@ -612,8 +618,8 @@ class PortScanner:
     def _parse_nmap_xml(self, xml_str: str) -> Optional[Dict]:
         """Parse nmap XML output → {ports: [...], os: {...}, scan_type: str}."""
         try:
-            root = ET.fromstring(xml_str)
-        except ET.ParseError:
+            root = SafeET.fromstring(xml_str)
+        except (ET.ParseError, ValueError):  # defusedxml's refusals are ValueErrors
             return None
 
         # The actual scan technique nmap ran ("syn"/"connect"/"idle"/…). Lets the

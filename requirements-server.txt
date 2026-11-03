@@ -1,0 +1,2 @@
+# Production server for the Docker image.
+gunicorn>=23.0.0

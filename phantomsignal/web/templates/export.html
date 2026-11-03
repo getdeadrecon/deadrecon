@@ -90,7 +90,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.querySelectorAll('.format-radio').forEach(r => {
   r.addEventListener('change', function() {
     document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
