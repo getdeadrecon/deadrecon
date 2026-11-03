@@ -2,19 +2,45 @@
 
 > **The OPSEC-native OSINT framework** — _"Map the surface. Own the signal."_
 >
-> Recon that doesn't burn your infrastructure — a stealth egress layer under every
-> module, and an honest per-scan report of exactly what you leaked.
+> Recon that doesn't burn your infrastructure — a shared stealth egress layer, one-click
+> Tor, and an honest per-scan report of exactly what you leaked.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-4d9fd6?style=flat-square&logo=python)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-7fb8dd?style=flat-square)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-7fb8dd?style=flat-square)](https://github.com/getphantomsignal/phantomsignal/blob/main/LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Docker-c9a24a?style=flat-square)]()
 [![GitHub Stars](https://img.shields.io/github/stars/getphantomsignal/phantomsignal?style=flat-square&color=4d9fd6)](https://github.com/getphantomsignal/phantomsignal/stargazers)
 [![Open Issues](https://img.shields.io/github/issues/getphantomsignal/phantomsignal?style=flat-square&color=c9a24a)](https://github.com/getphantomsignal/phantomsignal/issues)
 [![CI](https://img.shields.io/github/actions/workflow/status/getphantomsignal/phantomsignal/ci.yml?branch=main&style=flat-square&label=CI&color=4d9fd6)](https://github.com/getphantomsignal/phantomsignal/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/phantomsignal?style=flat-square&color=c9a24a&logo=pypi&logoColor=white)](https://pypi.org/project/phantomsignal/)
 [![Project Site](https://img.shields.io/badge/site-phantomsignal.sh-7fb8dd?style=flat-square&logo=github)](https://phantomsignal.sh)
-[![Changelog](https://img.shields.io/badge/changelog-view-4d9fd6?style=flat-square)](CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-view-4d9fd6?style=flat-square)](https://github.com/getphantomsignal/phantomsignal/blob/main/CHANGELOG.md)
 
+
+---
+
+## ⚡ What's New in v1.29 — One-click Tor + honest OPSEC grades
+
+**If you used Tor before 1.29.0, those scans were not on Tor.** The old setting and the
+`--profile covert` container never routed scan traffic, so they connected directly.
+
+- **One-click Tor** — click 🧅 and PhantomSignal starts Tor for you, with nothing to
+  install or configure. Add `--tor` on the CLI. Tor is built into the Docker image.
+- **Fails closed** — each scan confirms it's on Tor before touching the target and stops
+  if it can't. Modules that would bypass Tor are skipped and listed in the report.
+- **Grades checked against packet captures** — all module HTTP is counted, DNS goes
+  through the proxy, and a module that sends a direct request is reported as attributable.
+- **`nuclei` is reported as attributable even with a proxy** — some of its traffic still
+  connects directly, so don't rely on a proxy to hide `nuclei` scans.
+- **Security hardening** — SSRF and DNS rebinding protection, a nonce-based CSP, safe XML
+  parsing, and a non-root Docker image with dependencies pinned by hash.
+- **Console login (since 1.28.0)** — the web console needs an operator account, and REST
+  calls need `Authorization: Bearer <token>`. The first run prints a setup token.
+
+**Upgrading from Docker?** The container no longer runs as root, so there's a one-time
+`chown`. See the [changelog](https://github.com/getphantomsignal/phantomsignal/blob/main/CHANGELOG.md).
+
+**Limits:** the Windows and Intel Mac Tor bundles haven't been run, and automatic Tor
+start doesn't set up bridges, so networks that block Tor need a self-run Tor service.
 
 ---
 
@@ -40,7 +66,7 @@ posture is visible in the navbar and survives a restart.
 - **Settings persist** — stealth profile, proxy pool, rotation, and the rest now
   survive a restart.
 
-See the [CHANGELOG](CHANGELOG.md#1270--2026-07-19) for the full list.
+See the [CHANGELOG](https://github.com/getphantomsignal/phantomsignal/blob/main/CHANGELOG.md) for the full list.
 
 ---
 
@@ -48,8 +74,8 @@ See the [CHANGELOG](CHANGELOG.md#1270--2026-07-19) for the full list.
 
 **PhantomSignal now closes the ASM loop and runs fast Go-native engines — under
 stealth governance.** It maps the surface *and* flags what's exploitable, and
-orchestrates the best external tools when installed without ever breaking the
-OPSEC guarantees.
+orchestrates the best external tools when installed, and reports it honestly when
+one can't be masked.
 
 ### 🎯 Vulnerability scanning (nuclei)
 The new `vuln_scan` module wraps **nuclei**, emitting `vulnerability` findings
@@ -98,7 +124,11 @@ proxied traffic, caps it, and no scan can read as masked or quiet without a prox
 on nearly every request, so a port scan or a Go tool in the run rules it out. The point of an OPSEC-native tool is to tell you the
 truth about your footprint — not to always read green.
 
-### 🧅 Stealth layer under every module
+Under Tor, Partial doesn't mean traffic went direct. Tor scans skip modules that would
+bypass it, and a scan grades Partial when some requests didn't wear a browser TLS
+fingerprint. The report says when that's the reason.
+
+### 🧅 Shared stealth layer
 The shared stealth client (proxy pool + per-host adaptive pacing + sticky browser
 identity + optional JA3/JA4 impersonation) is now the spine. Target-facing
 document downloads route through it too — no more scanner User-Agent hitting the
@@ -115,7 +145,7 @@ registering, and declare their OPSEC posture up front.
 
 A single command runs the full pipeline — DNS and WHOIS resolution, port and
 service scanning, technology fingerprinting, threat-intelligence correlation
-across 45+ sources, and a web-surface crawl — then rolls every finding into a
+across 50+ sources, and a web-surface crawl — then rolls every finding into a
 single Risk Score and writes a shareable HTML report.
 
 ```text
@@ -179,7 +209,7 @@ PhantomSignal is a **community-powered, open-source OSINT intelligence framework
 - **SPF/DMARC analysis** — identify email spoofing vulnerabilities
 - **Reverse DNS** and co-hosted domain discovery
 
-### 🔬 Intelligence APIs (54+ Integrations)
+### 🔬 Intelligence APIs (50+ Integrations)
 
 | Category | APIs |
 |----------|------|
@@ -197,7 +227,10 @@ PhantomSignal is a **community-powered, open-source OSINT intelligence framework
 > keys**: XposedOrNot (breaches), the GitHub commit-email harvester, GitLab,
 > Wikidata, WebFinger, offline phone metadata, openFEC, and OpenCorporates —
 > plus the existing GitHub/Reddit/Mastodon/Keybase/Gravatar/HackerNews sources.
-> Every network source routes through the stealth egress layer.
+>
+> **What gets proxied:** a set of keyless identity sources use your proxy. Other API
+> sources, including keyed providers, connect directly unless Tor is on, and the `intel`
+> module is reported as attributable. Under Tor, all of them use Tor.
 
 ### 👤 Profiler (People Intelligence)
 LexisNexis-style identity aggregation from public records:
@@ -271,12 +304,16 @@ cd phantomsignal
 pip install -e .
 phantomsignal init
 phantomsignal web --open-browser
+# The first run prints a setup token in this terminal; use it to create your account
 ```
 
 ### Option 3: CLI Scan
 ```bash
 # Quick scan
 phantomsignal scan example.com --profile quick
+
+# Over Tor: starts Tor for you, and stops if it can't confirm it
+phantomsignal scan example.com --tor
 
 # Full spectrum with export
 phantomsignal scan 192.168.1.1 --type ip_recon --format html --output ./reports
@@ -301,11 +338,11 @@ export ABUSEIPDB_API_KEY="your-abuseipdb-key"
 export ALIENVAULT_API_KEY="your-otx-key"
 export GITHUB_TOKEN="your-github-token"
 export SECURITYTRAILS_API_KEY="your-st-key"
-# See config/phantomsignal.yaml for full list
 ```
 
 ### Config File
-Copy `config/phantomsignal.yaml` to `~/.phantomsignal/config.yaml` and customize.
+Settings are saved to `~/.phantomsignal/config.yaml` (owner-only). Most can be changed
+from the web console.
 
 ### Egress / stealth (Settings → Scan Settings)
 Set your stealth profile, single proxy, and rotating proxy pool from the web UI.
@@ -354,7 +391,7 @@ phantomsignal/
 ├── core/               — Engine, config, database, models
 ├── scrapers/           — Web crawler, tech detector, port scanner, API hunter, DNS recon
 ├── intel/
-│   ├── apis/           — 54+ API integrations (plugin architecture; incl. keyless identity sources)
+│   ├── apis/           — 50+ API integrations (plugin architecture; incl. keyless identity sources)
 │   └── people/         — People intelligence aggregation + Profiler→scan persistence
 ├── exporters/          — JSON/CSV/PDF/HTML/XML/XLSX/STIX + crypto wrapper
 └── web/
@@ -401,15 +438,15 @@ PhantomSignal thrives on community contributions. Ways to help:
 4. **Documentation** — Improve the wiki
 5. **Translations** — Internationalize the UI
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Please also review our [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECURITY.md).
+See [CONTRIBUTING.md](https://github.com/getphantomsignal/phantomsignal/blob/main/CONTRIBUTING.md) for guidelines. Please also review our [Code of Conduct](https://github.com/getphantomsignal/phantomsignal/blob/main/CODE_OF_CONDUCT.md) and [Security Policy](https://github.com/getphantomsignal/phantomsignal/blob/main/SECURITY.md).
 
 ---
 
 ## 📖 Documentation
 
-- **[Usage Guide](docs/USAGE.md)** — full walkthroughs, usage scenarios, CLI reference, and per-platform troubleshooting (Linux / macOS / Windows / Docker)
-- **[Locate Guide](docs/LOCATE.md)** — person geographic-footprint investigations: cases, signal capture (incl. EXIF from a photo URL), confidence model, pattern-of-life, handoff export, and chain of custody
-- **[Releasing](docs/RELEASING.md)** — how a release is cut (version bump → tag → GitHub Release) and the one-time PyPI trusted-publisher setup
+- **[Usage Guide](https://github.com/getphantomsignal/phantomsignal/blob/main/docs/USAGE.md)** — full walkthroughs, usage scenarios, CLI reference, and per-platform troubleshooting (Linux / macOS / Windows / Docker)
+- **[Locate Guide](https://github.com/getphantomsignal/phantomsignal/blob/main/docs/LOCATE.md)** — person geographic-footprint investigations: cases, signal capture (incl. EXIF from a photo URL), confidence model, pattern-of-life, handoff export, and chain of custody
+- **[Releasing](https://github.com/getphantomsignal/phantomsignal/blob/main/docs/RELEASING.md)** — how a release is cut (version bump → tag → GitHub Release) and the PyPI token setup
 
 ---
 
@@ -454,16 +491,16 @@ PhantomSignal is a dual-use tool. Operators are responsible for:
 
 | Document | Description |
 |----------|-------------|
-| [Code of Conduct](CODE_OF_CONDUCT.md) | Community standards and expectations |
-| [Contributing Guidelines](CONTRIBUTING.md) | How to contribute to PhantomSignal |
-| [Security Policy](SECURITY.md) | Reporting vulnerabilities responsibly |
-| [License](LICENSE) | MIT License terms |
+| [Code of Conduct](https://github.com/getphantomsignal/phantomsignal/blob/main/CODE_OF_CONDUCT.md) | Community standards and expectations |
+| [Contributing Guidelines](https://github.com/getphantomsignal/phantomsignal/blob/main/CONTRIBUTING.md) | How to contribute to PhantomSignal |
+| [Security Policy](https://github.com/getphantomsignal/phantomsignal/blob/main/SECURITY.md) | Reporting vulnerabilities responsibly |
+| [License](https://github.com/getphantomsignal/phantomsignal/blob/main/LICENSE) | MIT License terms |
 
 ---
 
 ## 📜 License
 
-MIT License — see [LICENSE](LICENSE)
+MIT License — see [LICENSE](https://github.com/getphantomsignal/phantomsignal/blob/main/LICENSE)
 
 ---
 

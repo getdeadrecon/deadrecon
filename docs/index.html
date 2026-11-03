@@ -37,13 +37,13 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="hero-text">
-        <div class="hero-eyebrow">// PHANTOM SIGNAL v1.27.0 · OPSEC-NATIVE</div>
+        <div class="hero-eyebrow">// PHANTOM SIGNAL v1.29.1 · OPSEC-NATIVE</div>
         <div class="hero-title-row">
           <span class="hero-glyph" aria-hidden="true">∿</span>
           <h1 class="hero-title">PHANTOM<span class="accent">SIGNAL</span></h1>
         </div>
         <p class="hero-tagline">"Map the surface. Own the signal."</p>
-        <p class="hero-sub">The <strong>OPSEC-native</strong> OSINT framework — a stealth egress layer under<br>every module, and an honest per-scan report of exactly what you leaked.</p>
+        <p class="hero-sub">The <strong>OPSEC-native</strong> OSINT framework — a shared stealth egress layer, one-click Tor, and an honest per-scan report of exactly what you leaked.</p>
         <div class="hero-actions">
           <div class="install-block">
             <span class="install-prompt">$</span>
@@ -117,27 +117,37 @@
     <div class="section-inner">
       <div class="section-label">🆕 WHAT'S NEW</div>
       <h2 class="section-title">The OPSEC-Native Era</h2>
-      <p class="section-sub">PhantomSignal now reports its own attribution surface, closes the vuln loop, orchestrates best-of-breed engines, and runs a deep identity Profiler — all under one stealth egress layer. No other open-source OSINT framework tells you what a scan leaked about <em>you</em>.</p>
+      <p class="section-sub">PhantomSignal 1.29 makes Tor work from one click and checks its OPSEC grades against packet captures. If you used Tor before 1.29.0, those scans were not on Tor. No other open-source OSINT framework tells you what a scan leaked about <em>you</em>.</p>
       <div class="whatsnew-grid">
+        <div class="whatsnew-card">
+          <div class="whatsnew-icon">🧅</div>
+          <h3 class="whatsnew-title">One-Click Tor</h3>
+          <p class="whatsnew-desc">Click 🧅 and PhantomSignal starts Tor for you, with nothing to install or configure. <strong>It fails closed:</strong> each scan confirms it's on Tor before touching the target and stops if it can't. Modules that would bypass Tor are skipped and listed in the report, and <code>.onion</code> addresses are never sent to a resolver.</p>
+        </div>
+        <div class="whatsnew-card">
+          <div class="whatsnew-icon">🛡️</div>
+          <h3 class="whatsnew-title">Security Hardening</h3>
+          <p class="whatsnew-desc">The web console now requires a login. Blocks SSRF and DNS rebinding, adds a nonce-based CSP, parses hostile XML safely, and runs Docker as non-root with dependencies pinned by hash.</p>
+        </div>
         <div class="whatsnew-card">
           <div class="whatsnew-icon">🛰️</div>
           <h3 class="whatsnew-title">Attribution Surface</h3>
-          <p class="whatsnew-desc">Every scan ends with an honest OPSEC grade — <strong>masked</strong>, <strong>partial</strong>, or <strong>exposed</strong> — computed from real egress telemetry: % proxied vs. direct, JA3/JA4 fingerprints presented, WAF challenges, and a per-module breakdown of what's masked vs. traceable to you. The grade is deliberately unflattering.</p>
+          <p class="whatsnew-desc">Every scan ends with an honest OPSEC grade — <strong>masked</strong>, <strong>partial</strong>, <strong>exposed</strong> or <strong>quiet</strong> — computed from real egress telemetry and checked against packet captures: % proxied vs. direct, JA3/JA4 fingerprints presented, WAF challenges, and a per-module breakdown of what's masked vs. traceable to you. The grade is deliberately unflattering.</p>
         </div>
         <div class="whatsnew-card">
-          <div class="whatsnew-icon">🧅</div>
+          <div class="whatsnew-icon">📡</div>
           <h3 class="whatsnew-title">Stealth Egress Layer</h3>
-          <p class="whatsnew-desc">A shared client under every module: rotating proxy pool, per-host adaptive pacing, sticky browser identity, and optional JA3/JA4 impersonation. <strong>Seed the pool in one click</strong> from curated free feeds or an uploaded list, watch your posture in the navbar chip, and it all <strong>persists across restarts</strong>.</p>
+          <p class="whatsnew-desc">A shared client for web recon and proxied modules: rotating proxy pool, per-host adaptive pacing, sticky browser identity, and optional JA3/JA4 impersonation. <strong>Seed the pool in one click</strong> from curated free feeds or an uploaded list, watch your posture in the navbar chip, and it all <strong>persists across restarts</strong>.</p>
         </div>
         <div class="whatsnew-card">
           <div class="whatsnew-icon">🎯</div>
           <h3 class="whatsnew-title">Vulnerability Scanning</h3>
-          <p class="whatsnew-desc">The <code>vuln_scan</code> module wraps <strong>nuclei</strong>, emitting normalised-severity <code>vulnerability</code> findings into the Findings &amp; Exposure view and exporting them as <strong>STIX 2.1 Vulnerability SDOs</strong>. Active and loud, so it's strictly opt-in — never part of the default sweep.</p>
+          <p class="whatsnew-desc">The <code>vuln_scan</code> module wraps <strong>nuclei</strong>, emitting normalised-severity <code>vulnerability</code> findings into the Findings &amp; Exposure view and exporting them as <strong>STIX 2.1 Vulnerability SDOs</strong>. Active and loud, so it's strictly opt-in, and always reported as attributable: don't rely on a proxy to hide it.</p>
         </div>
         <div class="whatsnew-card">
           <div class="whatsnew-icon">⚡</div>
           <h3 class="whatsnew-title">Best-of-Breed Engines</h3>
-          <p class="whatsnew-desc">Optional Go-native tools join the pipeline when installed — <strong>subfinder, naabu, katana, tlsx</strong> — each inheriting the shared proxy egress and tagged honestly in the attribution report. A binary-free install keeps working: every adapter falls back to its pure-Python module.</p>
+          <p class="whatsnew-desc">Optional Go-native tools join the pipeline when installed — <strong>subfinder, naabu, katana, tlsx</strong> — each tagged honestly in the attribution report. subfinder and katana use your proxy; naabu and tlsx can't, so they're reported as attributable. A binary-free install keeps working: every adapter falls back to its pure-Python module.</p>
         </div>
         <div class="whatsnew-card">
           <div class="whatsnew-icon">👤</div>
@@ -176,7 +186,7 @@
         <div class="feature-card">
           <div class="feature-icon" style="color:var(--cyan)">🌐</div>
           <h3 class="feature-title">DNS Intelligence</h3>
-          <p class="feature-desc">Full DNS enumeration — A, MX, NS, TXT, SOA, CAA. Zone transfer attempts. Subdomain brute-force plus certificate transparency via crt.sh. SPF/DMARC spoofing analysis.</p>
+          <p class="feature-desc">Full DNS enumeration — A, MX, NS, TXT, SOA, CAA. Zone transfer attempts on direct scans. Subdomain brute-force plus certificate transparency via crt.sh. SPF/DMARC spoofing analysis.</p>
           <div class="feature-tags">
             <span class="tag">crt.sh</span><span class="tag">Zone Transfer</span><span class="tag">SPF/DMARC</span>
           </div>
@@ -194,9 +204,9 @@
         <div class="feature-card">
           <div class="feature-icon" style="color:var(--pink)">📡</div>
           <h3 class="feature-title">Intelligence APIs</h3>
-          <p class="feature-desc">54+ integrations: Shodan, VirusTotal, AbuseIPDB, GreyNoise, AlienVault OTX, Intelligence X, and dozens of social/people sources — many <strong>keyless</strong>. Plugin architecture for custom sources; every network source routes through the stealth layer.</p>
+          <p class="feature-desc">50+ integrations: Shodan, VirusTotal, AbuseIPDB, GreyNoise, AlienVault OTX, Intelligence X, and dozens of social/people sources — many <strong>keyless</strong>. Plugin architecture for custom sources. Keyed providers connect directly unless Tor is on, and the report says so.</p>
           <div class="feature-tags">
-            <span class="tag">Shodan</span><span class="tag">VirusTotal</span><span class="tag">+52 more</span>
+            <span class="tag">Shodan</span><span class="tag">VirusTotal</span><span class="tag">+50 more</span>
           </div>
         </div>
 
@@ -226,7 +236,7 @@
     <div class="section-inner ghost-inner">
       <div class="ghost-text">
         <div class="section-label">◈ OPSEC &amp; COVERT RECON</div>
-        <h2 class="section-title">Low-and-Slow. Provably Masked.</h2>
+        <h2 class="section-title">Low-and-Slow. Honestly Graded.</h2>
         <p class="section-sub">Three stealth profiles (<code>off</code> / <code>quiet</code> / <code>paranoid</code>) drive per-host adaptive pacing, sticky browser identity, and JA3/JA4 impersonation over a rotating proxy pool — seed it in one click from curated free feeds or an uploaded list. One-click Tor. And every run reports exactly what it leaked.</p>
         <a href="#quickstart" class="btn btn-primary" style="margin-top:1.5rem;">RUN A COVERT SCAN</a>
       </div>
@@ -315,6 +325,7 @@
 <span class="c-dim"># Launch web UI</span>
 <span class="c-green">phantomsignal</span> web --open-browser
 <span class="c-dim"># → http://127.0.0.1:5000</span>
+<span class="c-dim"># The first run prints a setup token; use it to create your account</span>
 
 <span class="c-dim"># Or scan straight from the CLI</span>
 <span class="c-green">phantomsignal</span> scan example.com</pre>
@@ -328,7 +339,8 @@
         <pre class="code-block"><span class="c-green">git</span> clone https://github.com/getphantomsignal/phantomsignal
 <span class="c-green">cd</span> phantomsignal
 <span class="c-green">docker-compose</span> up -d
-<span class="c-dim"># Open http://localhost:5000</span></pre>
+<span class="c-green">docker</span> logs phantomsignal   <span class="c-dim"># copy the first-run setup token</span>
+<span class="c-dim"># Open http://localhost:5000 and create your account</span></pre>
       </div>
 
       <div class="qs-panel" id="tab-git">
@@ -342,7 +354,7 @@
 <span class="c-green">source</span> .venv/bin/activate   <span class="c-dim"># Windows: .venv\Scripts\activate</span>
 <span class="c-green">pip</span> install -e .
 <span class="c-green">phantomsignal</span> web --open-browser
-<span class="c-dim"># Open http://127.0.0.1:5000</span></pre>
+<span class="c-dim"># Open http://127.0.0.1:5000 and use the setup token it prints</span></pre>
       </div>
 
       <div class="qs-panel" id="tab-cli">
@@ -357,6 +369,8 @@
 <span class="c-green">phantomsignal</span> scan example.com \
   --profile standard --opsec quiet \
   --format html --output ./reports
+<span class="c-dim"># Over Tor: starts it for you, and stops if it can't confirm it</span>
+<span class="c-green">phantomsignal</span> scan example.com --tor
 
 <span class="c-dim"># People intelligence</span>
 <span class="c-green">phantomsignal</span> profile \
@@ -364,7 +378,7 @@
   --first-name John --last-name Doe
 
 <span class="c-dim"># Extend with API keys for Shodan, VT, AbuseIPDB...</span>
-<span class="c-green">phantomsignal</span> config --list-apis</pre>
+<span class="c-green">phantomsignal</span> status</pre>
       </div>
 
       <p class="qs-note">⚠ For authorized use only. See the <a href="https://github.com/getphantomsignal/phantomsignal#️-legal--ethics" target="_blank">Legal &amp; Ethics</a> section before running any scan.</p>
@@ -375,8 +389,8 @@
   <section class="section section-apis">
     <div class="section-inner">
       <div class="section-label">🔌 INTELLIGENCE GRID</div>
-      <h2 class="section-title">54+ Intelligence Sources</h2>
-      <p class="section-sub">A whole tier works with <strong>zero API keys</strong> — add your own in Integrations to go deeper. Every network source routes through the stealth egress layer.</p>
+      <h2 class="section-title">50+ Intelligence Sources</h2>
+      <p class="section-sub">A whole tier works with <strong>zero API keys</strong> — add your own in Integrations to go deeper. Under Tor, every source uses Tor.</p>
       <div class="api-chips">
         <span class="api-chip green">Shodan</span>
         <span class="api-chip cyan">VirusTotal</span>

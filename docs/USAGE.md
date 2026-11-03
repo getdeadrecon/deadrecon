@@ -256,7 +256,7 @@ You are redirected to the live results page where findings stream in as they're 
 
 **Every run is saved as a scan.** A Profiler search is persisted as a `people_intel` scan (with a linked shadow profile), so it appears under **Scans** with history, a categorised **People & Identity** summary, and export. Use the **View in Scans** button on the results page to jump there. From the CLI, `phantomsignal profile …` saves the same way and prints the scan id.
 
-**OPSEC:** every network source routes through the shared stealth egress layer, so with a proxy pool configured these lookups are proxied and counted in the scan's attribution surface. The offline phone source adds nothing to your footprint.
+**OPSEC:** the keyless identity sources use your proxy pool when one is configured, and their lookups are counted in the scan's attribution surface. Other API sources, including keyed providers, connect directly unless Tor is on, and the report marks them as attributable. The offline phone source adds nothing to your footprint.
 
 **Privacy note:** The Profiler only queries publicly available data sources and licensed APIs. Configure only the APIs you have a legitimate subscription to. GDPR and CCPA restrictions apply — see [Legal & Ethics](../README.md#️-legal--ethics).
 
@@ -327,6 +327,8 @@ With Tor on:
 `.onion` targets need Tor. Only `web_crawl`, `web_crawl_fast`, `tech_detect`, `api_hunt` and `js_mine` run against them, because the others would send the address to third parties. A target without a scheme uses `http://`.
 
 Check your setup on the **Identity** page, which shows your exit IP and whether Tor is confirmed.
+
+**What the grade means under Tor:** a Tor scan can still grade **Partial**, because modules that don't use a browser TLS fingerprint rule out **Masked**. That doesn't mean traffic went direct. In packet captures of real Tor scans, nothing left outside the Tor connection, whether the grade was Partial or Masked. The report says when that's the reason.
 
 **Stealth profile + proxy pool (Settings → Scan Settings):**
 - **Stealth profile** — `off` / `quiet` / `paranoid` controls per-host adaptive pacing, sticky browser identity, JA3/JA4 impersonation, and WAF-aware backoff.
@@ -451,7 +453,7 @@ phantomsignal scan 192.168.1.1 --type ip_recon --profile deep --format json
 phantomsignal profile --email target@example.com --first-name John --last-name Doe
 
 # List all available APIs and their status
-phantomsignal apis
+phantomsignal status
 
 # Check version
 phantomsignal --version
@@ -468,7 +470,6 @@ phantomsignal --version
 | `--format json\|html\|pdf\|csv\|stix` | Output format |
 | `--output <path>` | Output directory (default: `./reports`) |
 | `--modules dns,port,tech` | Comma-separated module list |
-| `--no-browser` | Skip web browser launch on completion |
 
 ---
 

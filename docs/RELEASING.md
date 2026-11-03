@@ -18,7 +18,8 @@ Releases are driven by a git tag. Pushing a tag matching `v*.*.*` triggers
 > **Note:** the workflow at the *tag's* commit is what runs, so a change to
 > `publish.yml` only affects **future** tags. To ship a release whose tag
 > predates a publish-workflow fix, build + upload locally instead:
-> `python -m build && TWINE_USERNAME=__token__ TWINE_PASSWORD=<token> twine upload dist/*`.
+> `python -m build && twine upload -u __token__ dist/*`, and paste the token at the
+> hidden prompt so it stays out of your shell history.
 
 ### Cutting a release
 
@@ -26,6 +27,9 @@ Releases are driven by a git tag. Pushing a tag matching `v*.*.*` triggers
 # 1. Bump the version in BOTH places (they must match the tag)
 #    - phantomsignal/__init__.py  → __version__ = "X.Y.Z"
 #    - setup.py                   → version="X.Y.Z"
+#    Also update the version in docs/index.html and the What's New section in README.md,
+#    and the Tor BUNDLE_VERSION and hashes in phantomsignal/core/tor_service.py if a
+#    newer signed bundle is out.
 # 2. Move CHANGELOG [Unreleased] → [X.Y.Z] — <date>, add a fresh [Unreleased]
 # 3. Commit, merge to main, then tag main:
 git tag -a vX.Y.Z <main-commit> -m "PhantomSignal vX.Y.Z — <headline>"
@@ -45,8 +49,9 @@ The publish job authenticates with a project-scoped PyPI API token stored as the
    **Account settings → API tokens → Add API token**.
 2. Store it as a GitHub Actions secret:
    ```bash
-   printf '%s' 'pypi-…' | gh secret set PYPI_API_TOKEN --repo getphantomsignal/phantomsignal
+   gh secret set PYPI_API_TOKEN --repo getphantomsignal/phantomsignal
    ```
+   Paste the token at the hidden prompt, so it stays out of your shell history.
 3. `publish.yml` passes it as `password: ${{ secrets.PYPI_API_TOKEN }}` (with
    `attestations: false`, since attestations need OIDC).
 
@@ -56,9 +61,10 @@ Rotate the token from the PyPI token page and re-run step 2 to update the secret
 
 ## Alternative: PyPI trusted publisher (OIDC)
 
-Until this is done the **Publish to PyPI** step fails on every tag (the Build
-step still succeeds). Trusted publishing lets GitHub Actions authenticate to
-PyPI via OIDC, so there is no API token to store or rotate.
+This isn't set up today. Trusted publishing lets GitHub Actions authenticate to
+PyPI via OIDC, so there is no API token to store or rotate. Switching also means
+changing `publish.yml`: give the publish job `environment: pypi` and
+`permissions: id-token: write`, and remove its `password` and `attestations: false`.
 
 The trusted-publisher config on PyPI **must exactly match** this repo's
 workflow:
@@ -122,13 +128,14 @@ A green **Publish to PyPI** job and the new version live at
 
 - **Version must match the tag** — the Build step enforces it; bump
   `__init__.py` *and* `setup.py` before tagging.
-- **`v1.27.0` and earlier tags** built fine but never reached PyPI because the
-  trusted publisher wasn't configured — after the setup above, use the re-run
-  step to push the latest version, or just ship it in the next release.
+- **The PyPI page comes from the package.** It shows `README.md` as uploaded, and a
+  published version's page can't be edited, so changing it takes a new release. Use
+  absolute links in the README, because relative ones break on PyPI.
+- **PyPI versions can't be re-uploaded**, even after deleting a file, so a broken
+  release needs a new version number.
+- **`v1.28.0` was tagged but never reached PyPI**, because the token was invalid.
 - The workflow doesn't open a GitHub Release; create it with
   `gh release create` (see above).
-- Trusted publishing needs `permissions: id-token: write` on the publish job —
-  already set in `publish.yml`.
 
 ---
 
