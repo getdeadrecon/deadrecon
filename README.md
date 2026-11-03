@@ -167,6 +167,9 @@ $ phantomsignal scan example.com --profile standard --opsec quiet --format html
 ✓  Report written → ./reports/example.com.html
 ```
 
+This output is illustrative. By default the CLI runs `dns_recon`, `port_scan`,
+`tech_detect`, `api_hunt` and `intel`; add others with `--modules`.
+
 Stages run concurrently where possible and degrade gracefully — a module
 without a configured API key returns empty rather than failing the scan.
 
@@ -315,7 +318,7 @@ phantomsignal scan example.com --profile quick
 # Over Tor: starts Tor for you, and stops if it can't confirm it
 phantomsignal scan example.com --tor
 
-# Full spectrum with export
+# IP recon with an HTML report
 phantomsignal scan 192.168.1.1 --type ip_recon --format html --output ./reports
 
 # People intelligence

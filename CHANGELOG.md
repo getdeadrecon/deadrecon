@@ -7,6 +7,27 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.29.2] - 2026-11-03
+
+### Fixed
+- **Port scans from the web console work.** The form sent a profile name where the scanner
+  expected a list of ports, so every console scan using `port_scan` reported no open ports. The
+  profile now takes effect, and `port_scan_fast` handles it too. These scans now send
+  real probes from your IP, and the report marks them as attributable.
+- **`--modules` rejects unknown names.** They were skipped silently, so the documented
+  `--modules dns,port,tech` ran nothing and still reported a completed scan. Comma-separated
+  names now work, as does repeating the flag.
+- **`--format xlsx` works on the CLI.** The README and console offered it, but the CLI refused it.
+- **`phantomsignal init` points at Integrations** for API keys, instead of a page that doesn't exist.
+- **The console's scan profile cards say what the profiles do.** They promised modules, port
+  ranges and durations that profiles don't control. The common port option said 67 ports, not 99.
+
+### Documentation
+- **The usage guide lists every command and scan flag.** It had wrong defaults, a missing
+  scan type, and claimed the scan type was auto-detected.
+- **Scan profiles are described as they work.** Deep runs the same modules and ports as Standard.
+- **Corrected the database path, log location and Docker volume name** in troubleshooting.
+
 ## [1.29.1] - 2026-11-03
 
 ### Changed

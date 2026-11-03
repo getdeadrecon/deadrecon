@@ -784,19 +784,32 @@ def web(host, port, debug, open_browser):
     socketio.run(app, host=_host, port=_port, debug=_debug, use_reloader=False, allow_unsafe_werkzeug=True)
 
 
+def _parse_modules(modules) -> list:
+    """Module names from repeated or comma-separated --modules values. Unknown names
+    are an error, because the engine skips them and the scan would look clean."""
+    from phantomsignal.scrapers.registry import module_names
+    names = [name.strip() for value in modules for name in value.split(",") if name.strip()]
+    unknown = sorted(set(names) - set(module_names()))
+    if unknown:
+        raise click.BadParameter(
+            f"unknown module(s): {', '.join(unknown)}. Valid modules: {', '.join(sorted(module_names()))}",
+            param_hint="--modules")
+    return names
+
+
 @main.command()
 @click.argument("target")
 @click.option("--type", "-t", "scan_type",
               type=click.Choice(["web_recon", "ip_recon", "domain_recon", "people_intel", "full_spectrum"]),
               default="web_recon", help="Scan type")
 @click.option("--modules", "-m", multiple=True,
-              help="Modules to run (dns_recon, subdomain_enum, subdomain_enum_fast, takeover, port_scan, port_scan_fast, tech_detect, api_hunt, js_mine, archive_mine, infra_pivot, origin_pivot, tls_fingerprint, service_enum, doc_metadata, username_enum, profile_pivot, darkweb, email_oracle, web_crawl, web_crawl_fast, vuln_scan, intel)")
+              help="Modules to run. Repeat the flag or separate names with commas (dns_recon, subdomain_enum, subdomain_enum_fast, takeover, port_scan, port_scan_fast, tech_detect, api_hunt, js_mine, archive_mine, infra_pivot, origin_pivot, tls_fingerprint, service_enum, doc_metadata, username_enum, profile_pivot, darkweb, email_oracle, web_crawl, web_crawl_fast, vuln_scan, intel)")
 @click.option("--profile", "-p",
               type=click.Choice(["quick", "standard", "deep", "covert"]),
               default="standard")
 @click.option("--output", "-o", default=None, help="Output directory (defaults to ~/.phantomsignal/exports)")
 @click.option("--format", "-f", "fmt",
-              type=click.Choice(["json", "csv", "html", "xml", "pdf", "markdown", "stix"]),
+              type=click.Choice(["json", "csv", "html", "xml", "xlsx", "pdf", "markdown", "stix"]),
               default="json", help="Output format")
 @click.option("--compress", is_flag=True)
 @click.option("--encrypt", is_flag=True)
@@ -818,6 +831,7 @@ def scan(target, scan_type, modules, profile, output, fmt, compress, encrypt,
          password, no_robots, stealth, zombie, decoys, opsec, use_tor):
     """Run a scan against a target from the command line."""
     from phantomsignal.core.targets import InvalidTarget, validate_target
+    modules = _parse_modules(modules)
     try:
         target = validate_target(target, scan_type)
     except InvalidTarget as exc:
@@ -1052,7 +1066,7 @@ def status():
 @main.command()
 @click.argument("scan_id")
 @click.option("--format", "-f", "fmt", default="json",
-              type=click.Choice(["json", "csv", "html", "xml", "pdf", "markdown", "stix"]))
+              type=click.Choice(["json", "csv", "html", "xml", "xlsx", "pdf", "markdown", "stix"]))
 @click.option("--output", "-o", default=None, help="Output directory (defaults to ~/.phantomsignal/exports)")
 @click.option("--compress", is_flag=True)
 @click.option("--encrypt", is_flag=True)
@@ -1148,7 +1162,7 @@ def init():
     console.print("[bold green]✓ Grid initialized.[/bold green]")
     console.print("  Config: ~/.phantomsignal/config.yaml")
     console.print("  Database: phantomsignal.db")
-    console.print("\n[cyan]Next:[/cyan] Add API keys with: [bold]phantomsignal web[/bold] → Settings → Ghost Keys")
+    console.print("\n[cyan]Next:[/cyan] Add API keys with: [bold]phantomsignal web[/bold] → Integrations")
 
 
 @main.command("tor")

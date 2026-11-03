@@ -132,7 +132,7 @@ The **LIVE FEED** terminal on the dashboard streams real-time events from any ac
 
 ### Quick Scan (dashboard)
 
-The fastest way to start — enter a target in the **QUICK SCAN** box on the dashboard. This runs all five default modules (`dns_recon`, `port_scan`, `tech_detect`, `api_hunt`, `intel`) with the quick profile. Results appear under **Scans** within seconds.
+The fastest way to start — enter a target in the **QUICK SCAN** box on the dashboard. This runs all five default modules (`dns_recon`, `port_scan`, `tech_detect`, `api_hunt`, `intel`) with the quick profile. Results appear under **Scans** as modules finish.
 
 ### Full Scan (New Scan page)
 
@@ -140,12 +140,14 @@ The fastest way to start — enter a target in the **QUICK SCAN** box on the das
 2. Enter your target (domain, IP, URL, email, or username)
 3. Choose a **Scan Profile**:
 
-| Profile | Duration | Use Case |
-|---------|----------|----------|
-| **Quick** | ~30 sec | Fast triage, live asset check |
-| **Standard** | 2–5 min | Balanced — most common choice |
-| **Deep** | 10–30 min | Full crawl, all ports, all APIs |
-| **Covert** | Variable | Low-and-slow, minimal footprint |
+| Profile | What it changes |
+|---------|-----------------|
+| **Quick** | On the CLI, crawl depth 2 instead of 3. In the console, nothing beyond the label |
+| **Standard** | The default |
+| **Deep** | Currently the same as Standard |
+| **Covert** | Uses `paranoid` pacing and skips modules that connect directly from your IP |
+
+The profile doesn't choose modules or ports. Set those with **Modules** and **Advanced Options**, or `--modules` on the CLI. How long a scan takes depends on those choices and on the target.
 
 4. Toggle individual **Modules** on/off as needed
 5. Adjust **Advanced Options** (crawl depth, port profile, robots.txt respect)
@@ -189,9 +191,9 @@ You are redirected to the live results page where findings stream in as they're 
 
 **Recommended settings:**
 - Target: `192.168.1.100` (or public IP)
-- Profile: **Standard** or **Deep** (for full port scan)
+- Profile: **Standard**
 - Modules: Port Scanner ✓, DNS Recon ✓, Intel APIs ✓
-- Port Profile: **Extended (1000 ports)** or **Full (65535)** for thorough coverage
+- Port Profile: **Top 1000** or **Full range (65535)** for thorough coverage. Port scans over the full range can hit the 5-minute module limit
 
 **What PhantomSignal will find:**
 - All open TCP ports with service/version from nmap (`-sV`) and banner grabbing — falls back to pure-Python async prober when nmap unavailable
@@ -213,7 +215,7 @@ You are redirected to the live results page where findings stream in as they're 
 
 **Recommended settings:**
 - Target: `example.com`
-- Profile: **Standard** or **Deep**
+- Profile: **Standard**
 - Modules: DNS Recon ✓, Tech Detector ✓, Intel APIs ✓, Web Crawler ✓
 - Crawl depth: 3
 
@@ -443,16 +445,26 @@ phantomsignal scan example.com --profile quick
 # IP recon — nmap version+OS detection, 99-port default, GeoIP
 phantomsignal scan 192.168.1.1 --type ip_recon
 
-# Full spectrum with HTML report
-phantomsignal scan example.com --profile standard --format html --output ./reports
+# HTML report in a folder you choose
+phantomsignal scan example.com --format html --output ./reports
 
-# Deep dive — all ports, all modules
-phantomsignal scan 192.168.1.1 --type ip_recon --profile deep --format json
+# Choose modules: repeat the flag or separate names with commas
+phantomsignal scan example.com -m dns_recon -m tech_detect
+phantomsignal scan example.com -m dns_recon,tech_detect,web_crawl
+
+# Over Tor: starts Tor for you, and stops if it can't confirm it
+phantomsignal scan example.com --tor
+
+# Compare the two most recent completed scans of a target
+phantomsignal diff example.com
+
+# Export a saved scan again
+phantomsignal export <scan-id> --format xlsx
 
 # People intelligence
 phantomsignal profile --email target@example.com --first-name John --last-name Doe
 
-# List all available APIs and their status
+# Show API sources, whether each is configured, and recent scans
 phantomsignal status
 
 # Check version
@@ -461,15 +473,38 @@ phantomsignal --version
 
 **CLI output (v1.3.0+):** After the scan completes, results are rendered as named Rich panels — one per active module — rather than a flat table. Each panel extracts the key fields from result data: the port panel shows PORT/SERVICE/PROTO/VERSION/BANNER/RISK with dangerous ports highlighted; the DNS panel shows resolved IPs, MX/NS/TXT records, subdomains, and SPF/DMARC status; the tech panel shows detected stack, security header grade, and TLS info; anomalies appear in a separate red-bordered callout. The footer shows Risk Score, Threat Level, and a hint to configure API keys for deeper coverage.
 
-### Common flags
+### Commands
+
+`psig` is a short alias for `phantomsignal`.
+
+| Command | What it does |
+|---------|--------------|
+| `init` | Create the default config and database |
+| `web` | Start the web console (`--host`, `--port`, `--open-browser`, `--debug`) |
+| `scan <target>` | Run a scan |
+| `profile` | Build a people profile (`--email`, `--first-name`, `--last-name`, `--phone`, `--username`, `--output`) |
+| `export <scan-id>` | Export a saved scan (`--format`, `--output`, `--compress`, `--encrypt`, `--password`) |
+| `diff <target>` | Compare the two most recent completed scans of a target |
+| `status` | Show API sources and recent scans |
+| `tor on\|off\|status` | Turn Tor on or off for later scans, or show whether it's on |
+| `set-password` | Create the operator account or reset its password (`--username`) |
+| `api-token` | Create a REST API token, which revokes the previous one |
+
+### Scan flags
 
 | Flag | Description |
 |------|-------------|
-| `--profile quick\|standard\|deep\|covert` | Scan profile |
-| `--type web_recon\|ip_recon\|domain_recon\|full_spectrum` | Scan type (auto-detected if omitted) |
-| `--format json\|html\|pdf\|csv\|stix` | Output format |
-| `--output <path>` | Output directory (default: `./reports`) |
-| `--modules dns,port,tech` | Comma-separated module list |
+| `--type web_recon\|ip_recon\|domain_recon\|people_intel\|full_spectrum` | Scan type (default: `web_recon`) |
+| `--profile quick\|standard\|deep\|covert` | Scan profile (default: `standard`) |
+| `--modules <name>` | Modules to run. Repeat the flag or separate names with commas. Unknown names are an error. See `phantomsignal scan --help` for the list |
+| `--format json\|csv\|html\|xml\|xlsx\|pdf\|markdown\|stix` | Report format (default: `json`) |
+| `--output <path>` | Output directory (default: `~/.phantomsignal/exports`) |
+| `--compress` | Compress the report into a ZIP file |
+| `--encrypt`, `--password <password>` | Encrypt the report |
+| `--tor` | Use Tor for this scan, and stop if it can't be confirmed |
+| `--opsec off\|quiet\|paranoid` | Stealth profile for target-facing HTTP |
+| `--no-robots` | Ignore robots.txt |
+| `--stealth decoy\|idle`, `--decoys <spec>`, `--zombie <host>` | Decoy or idle port scan (needs nmap and root) |
 
 ---
 
@@ -493,8 +528,8 @@ pip install -e .
 ```bash
 # Kill any stale PhantomSignal process
 pkill -f "python run.py"
-# If the DB is still locked:
-fuser phantomsignal/data/phantomsignal.db
+# If the DB is still locked (it's in the folder you started PhantomSignal from):
+fuser phantomsignal.db
 ```
 
 **SocketIO connection shows "CONNECTING..." permanently**
@@ -618,10 +653,10 @@ volumes:
 **Database migration errors on upgrade**
 ```bash
 docker-compose down
-docker volume rm phantomsignal_data
+docker volume rm phantomsignal_phantomsignal-data
 docker-compose up -d
 ```
-> ⚠ This clears all scan history. Back up `phantomsignal/data/phantomsignal.db` first.
+> ⚠ This clears all scan history. Back up `/app/data/phantomsignal.db` from the container first.
 
 **Scans complete instantly with 0 results (DNS not resolving in container)**
 ```bash
@@ -657,4 +692,4 @@ docker-compose up -d
 
 - **GitHub Issues:** https://github.com/getphantomsignal/phantomsignal/issues
 - **About page:** Click **ABOUT** in the footer for version info and capability overview
-- **Logs:** Check `/tmp/phantomsignal.log` (manual) or `docker-compose logs` (Docker) for detailed error output
+- **Logs:** Check the terminal running PhantomSignal (manual) or `docker-compose logs` (Docker) for detailed error output

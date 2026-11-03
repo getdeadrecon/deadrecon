@@ -99,7 +99,12 @@ class NaabuTool(ExternalTool):
     def command(self, target: str, opts: Dict) -> List[str]:
         cmd = ["naabu", "-host", host_only(target), "-json", "-silent", "-duc"]
         ports = opts.get("ports")
-        if ports:
+        # The web form sends a profile name, which naabu's -p would reject.
+        if ports == "top1000":
+            cmd += ["-top-ports", "1000"]
+        elif ports == "full":
+            cmd += ["-p", "-"]
+        elif ports and ports != "common":
             cmd += ["-p", str(ports)]
         else:
             top = self.config.get("port_scan", "top_ports", default=None)
