@@ -9,6 +9,9 @@ Two rules apply to direct (unproxied) HTTP:
 * A public site can't redirect to a private address. Operators can still scan
   private targets directly, and redirects between private hosts still work.
 
+Requests can't tell where a URL came from, so a module that follows links found on a
+page calls ``link_allowed`` first, which applies the redirect rules to them.
+
 Proxied requests are exempt. They leave from the proxy's network, and resolving
 their hosts locally would leak targets to the local DNS resolver.
 
@@ -153,6 +156,16 @@ async def check_redirect(origin_url: str, location: str) -> None:
         raise BlockedDestination(
             f"Blocked redirect from {urlsplit(origin_url).hostname} "
             f"to private address {urlsplit(target).hostname}")
+
+
+async def link_allowed(origin_url: str, link_url: str) -> bool:
+    """Whether a direct request may follow a link that ``origin_url`` published. A
+    link is held to the redirect rules, since a page can steer a scan with either."""
+    try:
+        await check_redirect(origin_url, link_url)
+    except (BlockedDestination, ValueError):
+        return False
+    return True
 
 
 async def _on_request(request: httpx.Request) -> None:
