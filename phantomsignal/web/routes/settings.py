@@ -1,5 +1,6 @@
 """PhantomSignal Settings Routes — API key and scan-settings management."""
 import asyncio
+import logging
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from phantomsignal.core import tor_service
@@ -12,6 +13,7 @@ from phantomsignal.core.proxy_sources import (
 from phantomsignal.intel.orchestrator import IntelOrchestrator
 
 settings_bp = Blueprint("settings", __name__)
+logger = logging.getLogger("phantomsignal.web.settings")
 
 # Bound how big the pool can grow and how much one fetch/upload can add, so a
 # multi-thousand-entry feed can't swamp the pool or the settings textarea.
@@ -194,4 +196,6 @@ def test_api(api_name):
     except APIAuthError as e:
         return jsonify({"status": "invalid_key", "message": f"Key rejected by API (HTTP {e.status_code})"})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
+        # Only the type is logged: the message could quote a URL holding the API key.
+        logger.error("API key test failed for %s: %s", api_name, type(e).__name__)
+        return jsonify({"status": "error", "message": "The test request failed. See the server log."})

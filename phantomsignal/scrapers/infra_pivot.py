@@ -196,6 +196,7 @@ class InfraPivot:
     # ── TLS certificate (stdlib ssl) ──────────────────────────────────────────
     def _tls_cert(self, host: str, port: int = 443) -> Optional[Dict]:
         ctx = ssl.create_default_context()
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
         try:

@@ -1,15 +1,17 @@
 """PhantomSignal Export Routes — report generation."""
+import logging
 import os
 
 from flask import (
     Blueprint, after_this_request, current_app, flash, jsonify, redirect, render_template, request,
     send_file, url_for,
 )
-from phantomsignal.exporters.manager import ExportManager
+from phantomsignal.exporters.manager import ExportManager, ExportRequestError
 from phantomsignal.core.database import get_db
 from phantomsignal.core.models import Scan
 
 export_bp = Blueprint("export", __name__)
+logger = logging.getLogger("phantomsignal.web.export")
 
 
 @export_bp.route("/<scan_id>")
@@ -76,5 +78,8 @@ def api_export(scan_id):
             encryption_password=data.get("password"),
         )
         return jsonify(result)
-    except Exception as e:
+    except ExportRequestError as e:
         return jsonify({"error": str(e)}), 400
+    except Exception:
+        logger.exception("Export of scan failed")
+        return jsonify({"error": "Export failed. See the server log."}), 500

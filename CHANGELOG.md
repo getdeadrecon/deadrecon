@@ -9,6 +9,23 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+- **Telegram bot tokens stay out of results, logs and error values.** Telegram puts the token in
+  its API and file URLs, and a failed request logged the full URL. Results held it too, in
+  `photo_url`. Provider request failures now report only the host and the status or error type.
+  `photo_url` is replaced by `photo_file_id`, so Telegram avatars no longer appear in people
+  results. Results saved by earlier versions can still hold the token: if you have used a
+  Telegram key, check saved scans, exports and logs, and rotate the token if it appears.
+- **JS mining handles hostile pages.** Parsing a crafted page could stall a scan for minutes, and
+  a malformed script address ended the module. Parsing now takes linear time and pages are capped
+  at 3 MB. Script close tags with spaces or attributes are recognized, so those scripts are mined.
+- **Public pages can't send JS mining to private addresses.** A public target's script links to
+  private addresses are skipped on direct scans. Private targets can still load private scripts.
+- **Console errors no longer repeat raw exception text.** The egress check, API key test and export
+  API return a fixed message, and details go to the server log. Export API failures that aren't
+  the caller's fault now return HTTP 500 rather than 400.
+- **TLS certificate probes state their TLS 1.2 minimum explicitly.** Behavior doesn't change.
+
 ### Fixed
 - **GitHub now recognizes the MIT license.** `LICENSE` holds only the standard MIT text. The usage
   disclaimer moved to the README's Legal & Ethics section, and the Claude credit moved to its
