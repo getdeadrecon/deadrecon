@@ -9,12 +9,14 @@ client-side browser fingerprint (UA, WebGL, canvas, WebRTC local-IP leak).
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from flask import Blueprint, jsonify, render_template, request
 
 from phantomsignal.core.config import config
 
 identity_bp = Blueprint("identity", __name__)
+logger = logging.getLogger("phantomsignal.web.identity")
 
 # Header names worth surfacing as "what your browser told this server".
 _INTERESTING_HEADERS = [
@@ -128,4 +130,6 @@ def egress():
         loop.close()
         return jsonify({"status": "ok", "data": data})
     except Exception as e:  # noqa: BLE001 - surface any failure to the UI
-        return jsonify({"status": "error", "message": str(e)}), 200
+        # Only the type is logged: the message could quote a proxy URL and its password.
+        logger.error("Egress check failed: %s", type(e).__name__)
+        return jsonify({"status": "error", "message": "The egress check failed. See the server log."}), 200

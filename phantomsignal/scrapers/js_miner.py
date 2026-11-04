@@ -29,7 +29,7 @@ from urllib.parse import urljoin, urlparse
 
 import httpx
 
-from phantomsignal.core.http import stealth_client
+from phantomsignal.core.http import page_link_allowed, stealth_client
 
 logger = logging.getLogger("phantomsignal.scrapers.js_miner")
 
@@ -76,9 +76,12 @@ _NOISE_EXT = (".png", ".jpg", ".jpeg", ".gif", ".svg", ".css", ".woff", ".woff2"
 # XML/schema namespace URLs are not real endpoints — they litter SVG/XHTML.
 _NOISE_HOSTS = ("www.w3.org", "w3.org", "schema.org", "purl.org", "ns.adobe.com",
                 "xmlns.com", "www.google.com/2005/gml")
-_SCRIPT_SRC = re.compile(r"<script[^>]+src\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
-_INLINE_SCRIPT = re.compile(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>",
-                            re.IGNORECASE | re.DOTALL)
+# Pages are attacker-controlled, so a tag match stops at the next "<". That keeps a page
+# full of unterminated tags linear, at the cost of missing a "<" inside an attribute.
+_SCRIPT_SRC = re.compile(r"<script[\s/][^<>]*?src\s*=\s*['\"]([^'\"<>]+)['\"]", re.IGNORECASE)
+_SCRIPT_OPEN = re.compile(r"<script(?:[\s/]([^<>]*))?>", re.IGNORECASE)
+_SCRIPT_CLOSE = re.compile(r"</script(?:[\s/][^<>]*)?>", re.IGNORECASE)
+_SRC_ATTR = re.compile(r"\bsrc\s*=", re.IGNORECASE)
 
 
 # ── pure helpers (unit-tested) ──────────────────────────────────────────────
@@ -96,8 +99,11 @@ def extract_script_srcs(html: str, base_url: str) -> List[str]:
     out: List[str] = []
     seen: Set[str] = set()
     for src in _SCRIPT_SRC.findall(html or ""):
-        url = urljoin(base_url, src.strip())
-        path = urlparse(url).path.lower()
+        try:
+            url = urljoin(base_url, src.strip())
+            path = urlparse(url).path.lower()
+        except ValueError:
+            continue  # a malformed src on a hostile page shouldn't end the module
         if path.endswith(_NOISE_EXT):
             continue
         if url not in seen:
@@ -107,7 +113,18 @@ def extract_script_srcs(html: str, base_url: str) -> List[str]:
 
 
 def extract_inline_scripts(html: str) -> List[str]:
-    return [s for s in _INLINE_SCRIPT.findall(html or "") if s.strip()]
+    html = html or ""
+    scripts: List[str] = []
+    position = 0
+    while True:
+        opening = _SCRIPT_OPEN.search(html, position)
+        closing = _SCRIPT_CLOSE.search(html, opening.end()) if opening else None
+        if not closing:
+            return scripts
+        body = html[opening.end():closing.start()]
+        if body.strip() and not _SRC_ATTR.search(opening.group(1) or ""):
+            scripts.append(body)
+        position = closing.end()
 
 
 def extract_endpoints(js_text: str, scope_host: Optional[str] = None) -> Set[str]:
@@ -178,11 +195,12 @@ class JSMiner:
         async with stealth_client(
             self.config, timeout=12, follow_redirects=True,
         ) as client:
-            html = await self._fetch(client, base)
+            html = (await self._fetch(client, base))[:MAX_JS_BYTES]
             if not html:
                 return []
 
-            script_urls = extract_script_srcs(html, base)[:MAX_SCRIPTS]
+            script_urls = await self._allowed_scripts(
+                base, extract_script_srcs(html, base)[:MAX_SCRIPTS])
             bundles = await asyncio.gather(
                 *(self._fetch(client, u) for u in script_urls),
                 return_exceptions=True,
@@ -204,9 +222,17 @@ class JSMiner:
 
         return self._build_results(base, endpoints, secrets, len(sources))
 
+    async def _allowed_scripts(self, base: str, urls: List[str]) -> List[str]:
+        """Drop scripts a public page points at private addresses."""
+        allowed = await asyncio.gather(*(page_link_allowed(self.config, base, url) for url in urls))
+        kept = [url for url, ok in zip(urls, allowed) if ok]
+        if len(kept) != len(urls):
+            logger.info("Skipped %d script(s) on disallowed addresses", len(urls) - len(kept))
+        return kept
+
     async def _fetch(self, client: httpx.AsyncClient, url: str) -> str:
         try:
-            r = await client.get(url)
+            r = await client.get(url, max_body_bytes=MAX_JS_BYTES)
             if r.status_code == 200:
                 return r.text or ""
         except Exception as e:

@@ -2283,19 +2283,9 @@ class TelegramChannelAPI(BaseIntelAPI):
             if count_data.get("ok"):
                 member_count = count_data.get("result")
 
-        photo_url = None
-        photo = chat.get("photo")
-        if photo:
-            file_id = photo.get("big_file_id") or photo.get("small_file_id")
-            if file_id:
-                file_data = await self._post(
-                    f"{self.BASE_URL}/bot{token}/getFile",
-                    json={"file_id": file_id},
-                )
-                if file_data.get("ok"):
-                    file_path = file_data.get("result", {}).get("file_path")
-                    if file_path:
-                        photo_url = f"https://api.telegram.org/file/bot{token}/{file_path}"
+        # Telegram's download URL for a file contains the bot token, so it can't go in
+        # results, which are stored and exported. Keep the file ID instead.
+        photo = chat.get("photo") or {}
 
         return [self._wrap_result(
             "telegram_channel",
@@ -2307,7 +2297,7 @@ class TelegramChannelAPI(BaseIntelAPI):
                 "description": chat.get("description") or chat.get("bio"),
                 "member_count": member_count,
                 "invite_link": chat.get("invite_link"),
-                "photo_url": photo_url,
+                "photo_file_id": photo.get("big_file_id") or photo.get("small_file_id"),
                 "linked_chat_id": chat.get("linked_chat_id"),
                 "is_verified": chat.get("is_verified"),
                 "is_scam": chat.get("is_scam"),

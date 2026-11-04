@@ -9,6 +9,9 @@ Two rules apply to direct (unproxied) HTTP:
 * A public site can't redirect to a private address. Operators can still scan
   private targets directly, and redirects between private hosts still work.
 
+Requests can't tell where a URL came from, so a module that follows links found on a
+page calls ``link_allowed`` first, which applies the redirect rules to them.
+
 Proxied requests are exempt. They leave from the proxy's network, and resolving
 their hosts locally would leak targets to the local DNS resolver.
 
@@ -50,6 +53,7 @@ _METADATA_NETS = [
     ipaddress.ip_network("fd00:ec2::254/128"),  # AWS over IPv6
     ipaddress.ip_network("100.100.100.200/32"),  # Alibaba Cloud
 ]
+_NAT64_NETS = [ipaddress.ip_network("64:ff9b::/96"), ipaddress.ip_network("64:ff9b:1::/48")]
 _RESOLVE_TIMEOUT = 3.0
 _ENV_PROXY_VARS = ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy")
 _PUBLIC_MEMORY_SECONDS = 300.0
@@ -93,10 +97,19 @@ def _was_recently_public(host: str) -> bool:
     return seen is not None and time.monotonic() - seen < _PUBLIC_MEMORY_SECONDS
 
 
+def _embedded_ipv4(ip: ipaddress.IPv6Address) -> Optional[ipaddress.IPv4Address]:
+    """The IPv4 address an IPv6 address carries, for forms that can route to it."""
+    if ip.ipv4_mapped or ip.sixtofour:
+        return ip.ipv4_mapped or ip.sixtofour
+    if int(ip) < 2 ** 32 or any(ip in net for net in _NAT64_NETS):  # IPv4-compatible or NAT64
+        return ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF)
+    return None
+
+
 def classify_ip(value: str) -> str:
     ip = ipaddress.ip_address(value.split("%", 1)[0])
-    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
-        ip = ip.ipv4_mapped
+    if isinstance(ip, ipaddress.IPv6Address):
+        ip = _embedded_ipv4(ip) or ip
     if any(ip.version == net.version and ip in net for net in _METADATA_NETS):
         return METADATA
     return PUBLIC if ip.is_global else PRIVATE
@@ -153,6 +166,16 @@ async def check_redirect(origin_url: str, location: str) -> None:
         raise BlockedDestination(
             f"Blocked redirect from {urlsplit(origin_url).hostname} "
             f"to private address {urlsplit(target).hostname}")
+
+
+async def link_allowed(origin_url: str, link_url: str) -> bool:
+    """Whether a direct request may follow a link that ``origin_url`` published. A
+    link is held to the redirect rules, since a page can steer a scan with either."""
+    try:
+        await check_redirect(origin_url, link_url)
+    except (BlockedDestination, ValueError):
+        return False
+    return True
 
 
 async def _on_request(request: httpx.Request) -> None:

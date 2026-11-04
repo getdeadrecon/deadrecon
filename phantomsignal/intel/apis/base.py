@@ -23,6 +23,15 @@ from phantomsignal.core.http import counted_client
 
 logger = logging.getLogger("phantomsignal.intel.api")
 
+
+def _failure_summary(exc: Exception) -> str:
+    """Describe a failed request without its message, which can quote the full URL.
+    Provider URLs can hold credentials, such as a Telegram bot token in the path."""
+    if isinstance(exc, httpx.HTTPStatusError):
+        return f"HTTP {exc.response.status_code}"
+    return type(exc).__name__
+
+
 _REGISTRY: Dict[str, Type["BaseIntelAPI"]] = {}
 
 
@@ -178,13 +187,14 @@ class BaseIntelAPI(abc.ABC):
             return response.json()
         except httpx.HTTPStatusError as e:
             status = e.response.status_code
-            self.logger.warning(f"HTTP {status} from {url}")
+            self.logger.warning(f"HTTP {status} from {self.NAME}")
             if status in (401, 403):
                 raise APIAuthError(self.NAME, status)
             return {"error": f"HTTP {status}", "url": url}
         except Exception as e:
-            self.logger.error(f"Request failed: {url}: {e}")
-            return {"error": str(e)}
+            failure = _failure_summary(e)
+            self.logger.error(f"GET to {self.NAME} failed: {failure}")
+            return {"error": failure}
 
     async def _post(self, url: str, data: Dict = None, json: Dict = None, headers: Dict = None) -> Dict:
         await self._rate_limit()
@@ -194,8 +204,9 @@ class BaseIntelAPI(abc.ABC):
             response.raise_for_status()
             return response.json()
         except Exception as e:
-            self.logger.error(f"POST failed: {url}: {e}")
-            return {"error": str(e)}
+            failure = _failure_summary(e)
+            self.logger.error(f"POST to {self.NAME} failed: {failure}")
+            return {"error": failure}
 
     def _wrap_result(
         self,
