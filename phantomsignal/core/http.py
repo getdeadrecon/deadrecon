@@ -44,7 +44,7 @@ import httpx
 
 from phantomsignal.core.tor import floor_timeout, tor_circuits, tor_enabled, tor_proxy_url  # noqa: F401
 from phantomsignal.core.netguard import (
-    check_redirect, check_request_url, curl_pin, environment_proxy_active, guarded_client,
+    check_redirect, check_request_url, curl_pin, environment_proxy_active, guarded_client, link_allowed,
 )
 
 logger = logging.getLogger("phantomsignal.http")
@@ -533,6 +533,46 @@ class ProxyPool:
         ]
 
 
+_CURL_ABORT_WRITE = 0xFFFFFFFF  # libcurl's CURL_WRITEFUNC_ERROR
+
+
+class _CappedCurlBody:
+    """A curl write callback that keeps a body up to a limit, then aborts the transfer.
+    Streaming can't do this: closing a curl_cffi stream waits for the transfer to end."""
+
+    def __init__(self, limit: int) -> None:
+        self._limit = limit
+        self._body = bytearray()
+
+    @property
+    def full(self) -> bool:
+        return len(self._body) >= self._limit
+
+    def __call__(self, chunk: bytes) -> int:
+        self._body += chunk
+        return _CURL_ABORT_WRITE if self.full else len(chunk)
+
+    def read(self) -> bytes:
+        return bytes(self._body[:self._limit])
+
+
+async def _capped_request(client: httpx.AsyncClient, method: str, url: str, headers: Dict,
+                          limit: int, **kw) -> httpx.Response:
+    """Like ``client.request``, but stop reading at ``limit`` decoded bytes."""
+    response = await client.send(client.build_request(method, url, headers=headers, **kw), stream=True)
+    body = bytearray()
+    try:
+        async with contextlib.aclosing(response.aiter_bytes()) as chunks:
+            async for chunk in chunks:
+                body += chunk
+                if len(body) >= limit:
+                    break
+    finally:
+        await response.aclose()
+    response._content = bytes(body[:limit])  # httpx has no public way to set a partial body
+    return response
+
+
 class StealthClient:
     """Drop-in async HTTP client with evasion baked in.
 
@@ -671,7 +711,7 @@ class StealthClient:
             return None
         return {k: v for k, v in headers.items() if k.lower() != "user-agent"}
 
-    async def _impersonated_request(self, method, url, headers, imp_target, proxy, **kw):
+    async def _impersonated_request(self, method, url, headers, imp_target, proxy, max_body_bytes=None, **kw):
         """Send through curl_cffi. libcurl follows redirects internally, where the
         network guard can't see them, so direct requests follow them here."""
         guarded = proxy is None and not environment_proxy_active()
@@ -681,14 +721,24 @@ class StealthClient:
         follow_here = guarded and self._follow
         for _ in range(_MAX_IMPERSONATED_REDIRECTS):
             session, disposable = self._pinned_session(await curl_pin(url) if guarded else None)
+            body = _CappedCurlBody(max_body_bytes) if max_body_bytes is not None else None
+            if body is not None:
+                kw["content_callback"] = body
             try:
                 resp = await session.request(
                     method, url, headers=headers, impersonate=imp_target, proxy=proxy,
                     allow_redirects=self._follow and not follow_here,
                     verify=self._verify, timeout=self._timeout, **kw)
+            except _CurlError as exc:
+                # Hitting the cap aborts the transfer, which curl reports as an error.
+                if body is None or not body.full or getattr(exc, "response", None) is None:
+                    raise
+                resp = exc.response
             finally:
                 if disposable:
                     await session.close()
+            if body is not None:
+                resp.content = body.read()
             location = resp.headers.get("location")
             if not (follow_here and location and resp.status_code in _REDIRECT_CODES):
                 return resp
@@ -704,7 +754,10 @@ class StealthClient:
             url = target
         return resp
 
-    async def request(self, method: str, url: str, *, headers: Optional[Dict] = None, **kw) -> httpx.Response:
+    async def request(self, method: str, url: str, *, headers: Optional[Dict] = None,
+                      max_body_bytes: Optional[int] = None, **kw) -> httpx.Response:
+        """Send with retries and egress rotation. ``max_body_bytes`` stops the download
+        at that size and returns the truncated body, so a target can't exhaust memory."""
         host = urlparse(url).netloc
         retries = self._profile.max_retries
         last_exc: Optional[Exception] = None
@@ -721,10 +774,15 @@ class StealthClient:
             try:
                 if self._impersonate:
                     resp = await self._impersonated_request(
-                        method, url, self._caller_headers(headers), imp_target, proxy, **kw)
+                        method, url, self._caller_headers(headers), imp_target, proxy,
+                        max_body_bytes=max_body_bytes, **kw)
                 else:
                     merged = self._headers_for(host, headers)
-                    resp = await self._client_for(proxy).request(method, url, headers=merged, **kw)
+                    if max_body_bytes is None:
+                        resp = await self._client_for(proxy).request(method, url, headers=merged, **kw)
+                    else:
+                        resp = await _capped_request(
+                            self._client_for(proxy), method, url, merged, max_body_bytes, **kw)
             except _TRANSPORT_ERRORS as exc:
                 last_exc = exc
                 if led is not None:
@@ -919,6 +977,16 @@ def resolve_egress(config, proxy=..., pool=...) -> Tuple[list, str]:
     else:
         egress = [None]
     return egress, rotation
+
+
+async def page_link_allowed(config, origin_url: str, link_url: str) -> bool:
+    """Whether a scan may follow a link found on ``origin_url``. Fully proxied scans are
+    exempt: they don't leave from this network, and checking would resolve the link's
+    host locally."""
+    egress, _ = resolve_egress(config)
+    if None not in egress or environment_proxy_active():
+        return True
+    return await link_allowed(origin_url, link_url)
 
 
 def stealth_status(config) -> Dict:

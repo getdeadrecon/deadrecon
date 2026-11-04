@@ -1,15 +1,17 @@
 """PhantomSignal Export Routes — report generation."""
+import logging
 import os
 
 from flask import (
     Blueprint, after_this_request, current_app, flash, jsonify, redirect, render_template, request,
     send_file, url_for,
 )
-from phantomsignal.exporters.manager import ExportManager
+from phantomsignal.exporters.manager import ExportManager, ScanNotFound, UnsupportedFormat
 from phantomsignal.core.database import get_db
 from phantomsignal.core.models import Scan
 
 export_bp = Blueprint("export", __name__)
+logger = logging.getLogger("phantomsignal.web.export")
 
 
 @export_bp.route("/<scan_id>")
@@ -58,8 +60,15 @@ def generate_export(scan_id):
             as_attachment=True,
             download_name=result["file_name"],
         )
-    except Exception as e:
-        flash(f"Export failed: {e}", "error")
+    except ScanNotFound:
+        flash("Scan not found.", "error")
+        return redirect(url_for("export.export_options", scan_id=scan_id))
+    except UnsupportedFormat:
+        flash("That export format isn't available.", "error")
+        return redirect(url_for("export.export_options", scan_id=scan_id))
+    except Exception:
+        logger.exception("Export of scan failed")
+        flash("Export failed. See the server log.", "error")
         return redirect(url_for("export.export_options", scan_id=scan_id))
 
 
@@ -76,5 +85,11 @@ def api_export(scan_id):
             encryption_password=data.get("password"),
         )
         return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    except ScanNotFound:
+        return jsonify({"error": "Scan not found."}), 404
+    except UnsupportedFormat:
+        available = ", ".join(ExportManager.SUPPORTED_FORMATS)
+        return jsonify({"error": f"Unsupported format. Available: {available}."}), 400
+    except Exception:
+        logger.exception("Export of scan failed")
+        return jsonify({"error": "Export failed. See the server log."}), 500
