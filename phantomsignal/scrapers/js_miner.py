@@ -29,8 +29,7 @@ from urllib.parse import urljoin, urlparse
 
 import httpx
 
-from phantomsignal.core.http import resolve_egress, stealth_client
-from phantomsignal.core.netguard import environment_proxy_active, link_allowed
+from phantomsignal.core.http import page_link_allowed, stealth_client
 
 logger = logging.getLogger("phantomsignal.scrapers.js_miner")
 
@@ -224,13 +223,8 @@ class JSMiner:
         return self._build_results(base, endpoints, secrets, len(sources))
 
     async def _allowed_scripts(self, base: str, urls: List[str]) -> List[str]:
-        """Drop scripts a public page points at private addresses. Fully proxied scans
-        are exempt: they don't leave from this network, and checking would resolve the
-        target's hosts locally."""
-        egress, _ = resolve_egress(self.config)
-        if None not in egress or environment_proxy_active():
-            return urls
-        allowed = await asyncio.gather(*(link_allowed(base, url) for url in urls))
+        """Drop scripts a public page points at private addresses."""
+        allowed = await asyncio.gather(*(page_link_allowed(self.config, base, url) for url in urls))
         kept = [url for url, ok in zip(urls, allowed) if ok]
         if len(kept) != len(urls):
             logger.info("Skipped %d script(s) on disallowed addresses", len(urls) - len(kept))
@@ -238,7 +232,7 @@ class JSMiner:
 
     async def _fetch(self, client: httpx.AsyncClient, url: str) -> str:
         try:
-            r = await client.get(url)
+            r = await client.get(url, max_body_bytes=MAX_JS_BYTES)
             if r.status_code == 200:
                 return r.text or ""
         except Exception as e:

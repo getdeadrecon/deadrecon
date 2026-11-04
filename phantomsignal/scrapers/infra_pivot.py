@@ -37,12 +37,14 @@ from typing import Dict, List, Optional, Set
 from urllib.parse import urljoin
 
 from phantomsignal.core.dns_egress import configured_proxies
-from phantomsignal.core.http import stealth_client
+from phantomsignal.core.http import page_link_allowed, stealth_client
 
 logger = logging.getLogger("phantomsignal.scrapers.infra_pivot")
 
+_MAX_FETCH_BYTES = 3_000_000
+# Pages are attacker-controlled: stopping at the next "<" keeps matching linear.
 _LINK_ICON = re.compile(
-    r"<link[^>]+rel\s*=\s*['\"][^'\"]*icon[^'\"]*['\"][^>]*>", re.IGNORECASE)
+    r"<link[\s/][^<>]*?rel\s*=\s*['\"][^'\"<>]*icon[^'\"<>]*['\"][^<>]*>", re.IGNORECASE)
 _HREF = re.compile(r"href\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
 _HOST_RE = re.compile(r"^(?:(?!-)[a-z0-9_-]{1,63}(?<!-)\.)+[a-z]{2,63}$")
 
@@ -185,8 +187,12 @@ class InfraPivot:
             async with stealth_client(
                 self.config, timeout=10, follow_redirects=True,
             ) as client:
-                page = await client.get(base)
-                r = await client.get(find_favicon_url(page.text, base))
+                page = await client.get(base, max_body_bytes=_MAX_FETCH_BYTES)
+                favicon_url = find_favicon_url(page.text, base)
+                if not await page_link_allowed(self.config, base, favicon_url):
+                    logger.info("Skipped a favicon on a disallowed address for %s", host)
+                    return None
+                r = await client.get(favicon_url, max_body_bytes=_MAX_FETCH_BYTES)
                 if r.status_code == 200 and r.content:
                     return shodan_favicon_hash(r.content)
         except Exception as e:
