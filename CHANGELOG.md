@@ -21,9 +21,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   at 3 MB. Script close tags with spaces or attributes are recognized, so those scripts are mined.
 - **Public pages can't send JS mining to private addresses.** A public target's script links to
   private addresses are skipped on direct scans. Private targets can still load private scripts.
-- **Console errors no longer repeat raw exception text.** The egress check, API key test and export
-  API return a fixed message, and details go to the server log. Export API failures that aren't
-  the caller's fault now return HTTP 500 rather than 400, and an unknown scan returns 404.
+- **Infrastructure pivots apply the same rules to favicons.** A public target's favicon link to a
+  private address is skipped on direct scans, and page parsing there takes linear time.
+- **JS mining and favicon downloads stop at 3 MB.** Oversized and compressed responses are cut off
+  during the download, with or without TLS impersonation.
+- **The network guard recognizes IPv4 addresses inside IPv6 ones.** IPv4-compatible, 6to4 and NAT64
+  forms are classified by the address they carry.
+- **Console errors no longer repeat raw exception text.** The egress check, API key test, export
+  routes and proxy list import show a fixed message, and details go to the server log. Export API
+  failures that aren't the caller's fault now return HTTP 500 rather than 400, and an unknown scan
+  returns 404.
 - **TLS certificate probes state their TLS 1.2 minimum explicitly.** Behavior doesn't change.
 
 ### Fixed

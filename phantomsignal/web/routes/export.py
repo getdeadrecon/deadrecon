@@ -60,8 +60,15 @@ def generate_export(scan_id):
             as_attachment=True,
             download_name=result["file_name"],
         )
-    except Exception as e:
-        flash(f"Export failed: {e}", "error")
+    except ScanNotFound:
+        flash("Scan not found.", "error")
+        return redirect(url_for("export.export_options", scan_id=scan_id))
+    except UnsupportedFormat:
+        flash("That export format isn't available.", "error")
+        return redirect(url_for("export.export_options", scan_id=scan_id))
+    except Exception:
+        logger.exception("Export of scan failed")
+        flash("Export failed. See the server log.", "error")
         return redirect(url_for("export.export_options", scan_id=scan_id))
 
 

@@ -2,10 +2,12 @@
 import asyncio
 import logging
 
+import httpx
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from phantomsignal.core import tor_service
 from phantomsignal.core.config import config
 from phantomsignal.core.http import stealth_status
+from phantomsignal.core.netguard import BlockedDestination
 from phantomsignal.core.tor import tor_enabled
 from phantomsignal.core.proxy_sources import (
     PROXY_SOURCES, fetch_proxy_source, parse_proxy_lines, merge_pool,
@@ -77,11 +79,18 @@ def fetch_proxies():
         proxies = loop.run_until_complete(
             fetch_proxy_source(url, default_scheme=scheme, limit=_ADD_LIMIT))
         loop.close()
-    except ValueError as e:
-        flash(str(e), "error")
+    except ValueError:
+        flash("Proxy source URL must be http:// or https://.", "error")
+        return redirect(url_for("settings.scan_settings"))
+    except BlockedDestination:
+        flash("Could not fetch proxy list: that address isn't allowed.", "error")
+        return redirect(url_for("settings.scan_settings"))
+    except httpx.HTTPStatusError as e:
+        flash(f"Could not fetch proxy list: HTTP {e.response.status_code}.", "error")
         return redirect(url_for("settings.scan_settings"))
     except Exception as e:
-        flash(f"Could not fetch proxy list: {e}", "error")
+        logger.warning("Proxy list fetch failed: %s", type(e).__name__)
+        flash("Could not fetch proxy list. See the server log.", "error")
         return redirect(url_for("settings.scan_settings"))
 
     _apply_pool(proxies, label)
@@ -99,7 +108,8 @@ def upload_proxies():
     try:
         text = f.read().decode("utf-8", errors="ignore")
     except Exception as e:
-        flash(f"Could not read file: {e}", "error")
+        logger.warning("Proxy file upload failed: %s", type(e).__name__)
+        flash("Could not read that file.", "error")
         return redirect(url_for("settings.scan_settings"))
 
     proxies = parse_proxy_lines(text, default_scheme=scheme, limit=_ADD_LIMIT)
