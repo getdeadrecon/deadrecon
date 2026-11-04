@@ -9,6 +9,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.29.3] - 2026-11-03
+
 ### Security
 - **Telegram bot tokens stay out of results, logs and error values.** Telegram puts the token in
   its API and file URLs, and a failed request logged the full URL. Results held it too, in
