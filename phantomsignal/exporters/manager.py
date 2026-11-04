@@ -38,8 +38,12 @@ def _reserve_private_file(path: Path) -> None:
     os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600))
 
 
-class ExportRequestError(ValueError):
-    """The request can't be exported. The message is safe to show to the user."""
+class ScanNotFound(ValueError):
+    """The requested scan doesn't exist."""
+
+
+class UnsupportedFormat(ValueError):
+    """The requested export format isn't available."""
 
 
 class ExportManager:
@@ -80,14 +84,14 @@ class ExportManager:
         with get_db() as db:
             scan = db.query(Scan).filter(Scan.id == scan_id).first()
             if not scan:
-                raise ExportRequestError(f"Scan {scan_id} not found in the grid.")
+                raise ScanNotFound(f"Scan {scan_id} not found in the grid.")
             results = db.query(ScanResult).filter(ScanResult.scan_id == scan_id).all()
 
             scan_dict = scan.to_dict()
             results_list = [r.to_dict() for r in results]
 
         if fmt not in self.SUPPORTED_FORMATS:
-            raise ExportRequestError(f"Unsupported format: {fmt}. Available: {list(self.SUPPORTED_FORMATS.keys())}")
+            raise UnsupportedFormat(f"Unsupported format: {fmt}. Available: {list(self.SUPPORTED_FORMATS.keys())}")
 
         ext = self.SUPPORTED_FORMATS[fmt]
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")

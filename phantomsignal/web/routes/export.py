@@ -6,7 +6,7 @@ from flask import (
     Blueprint, after_this_request, current_app, flash, jsonify, redirect, render_template, request,
     send_file, url_for,
 )
-from phantomsignal.exporters.manager import ExportManager, ExportRequestError
+from phantomsignal.exporters.manager import ExportManager, ScanNotFound, UnsupportedFormat
 from phantomsignal.core.database import get_db
 from phantomsignal.core.models import Scan
 
@@ -78,8 +78,11 @@ def api_export(scan_id):
             encryption_password=data.get("password"),
         )
         return jsonify(result)
-    except ExportRequestError as e:
-        return jsonify({"error": str(e)}), 400
+    except ScanNotFound:
+        return jsonify({"error": "Scan not found."}), 404
+    except UnsupportedFormat:
+        available = ", ".join(ExportManager.SUPPORTED_FORMATS)
+        return jsonify({"error": f"Unsupported format. Available: {available}."}), 400
     except Exception:
         logger.exception("Export of scan failed")
         return jsonify({"error": "Export failed. See the server log."}), 500

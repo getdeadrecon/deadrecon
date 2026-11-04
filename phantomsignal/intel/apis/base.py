@@ -16,7 +16,6 @@ import time
 from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Type
-from urllib.parse import urlsplit
 
 import httpx
 
@@ -25,20 +24,13 @@ from phantomsignal.core.http import counted_client
 logger = logging.getLogger("phantomsignal.intel.api")
 
 
-def _log_host(url: str) -> str:
-    """The host alone. Provider URLs can hold credentials, such as a Telegram bot
-    token in the path, so full URLs never go in logs or error values."""
-    try:
-        return urlsplit(url).hostname or "unknown host"
-    except ValueError:
-        return "unknown host"
-
-
 def _failure_summary(exc: Exception) -> str:
-    """Describe a failed request without its message, which can quote the full URL."""
+    """Describe a failed request without its message, which can quote the full URL.
+    Provider URLs can hold credentials, such as a Telegram bot token in the path."""
     if isinstance(exc, httpx.HTTPStatusError):
         return f"HTTP {exc.response.status_code}"
     return type(exc).__name__
+
 
 _REGISTRY: Dict[str, Type["BaseIntelAPI"]] = {}
 
@@ -195,13 +187,13 @@ class BaseIntelAPI(abc.ABC):
             return response.json()
         except httpx.HTTPStatusError as e:
             status = e.response.status_code
-            self.logger.warning(f"HTTP {status} from {_log_host(url)}")
+            self.logger.warning(f"HTTP {status} from {self.NAME}")
             if status in (401, 403):
                 raise APIAuthError(self.NAME, status)
             return {"error": f"HTTP {status}", "url": url}
         except Exception as e:
             failure = _failure_summary(e)
-            self.logger.error(f"Request to {_log_host(url)} failed: {failure}")
+            self.logger.error(f"GET to {self.NAME} failed: {failure}")
             return {"error": failure}
 
     async def _post(self, url: str, data: Dict = None, json: Dict = None, headers: Dict = None) -> Dict:
@@ -213,7 +205,7 @@ class BaseIntelAPI(abc.ABC):
             return response.json()
         except Exception as e:
             failure = _failure_summary(e)
-            self.logger.error(f"POST to {_log_host(url)} failed: {failure}")
+            self.logger.error(f"POST to {self.NAME} failed: {failure}")
             return {"error": failure}
 
     def _wrap_result(
