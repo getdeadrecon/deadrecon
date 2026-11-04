@@ -16,12 +16,29 @@ import time
 from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Type
+from urllib.parse import urlsplit
 
 import httpx
 
 from phantomsignal.core.http import counted_client
 
 logger = logging.getLogger("phantomsignal.intel.api")
+
+
+def _log_host(url: str) -> str:
+    """The host alone. Provider URLs can hold credentials, such as a Telegram bot
+    token in the path, so full URLs never go in logs or error values."""
+    try:
+        return urlsplit(url).hostname or "unknown host"
+    except ValueError:
+        return "unknown host"
+
+
+def _failure_summary(exc: Exception) -> str:
+    """Describe a failed request without its message, which can quote the full URL."""
+    if isinstance(exc, httpx.HTTPStatusError):
+        return f"HTTP {exc.response.status_code}"
+    return type(exc).__name__
 
 _REGISTRY: Dict[str, Type["BaseIntelAPI"]] = {}
 
@@ -178,13 +195,14 @@ class BaseIntelAPI(abc.ABC):
             return response.json()
         except httpx.HTTPStatusError as e:
             status = e.response.status_code
-            self.logger.warning(f"HTTP {status} from {url}")
+            self.logger.warning(f"HTTP {status} from {_log_host(url)}")
             if status in (401, 403):
                 raise APIAuthError(self.NAME, status)
             return {"error": f"HTTP {status}", "url": url}
         except Exception as e:
-            self.logger.error(f"Request failed: {url}: {e}")
-            return {"error": str(e)}
+            failure = _failure_summary(e)
+            self.logger.error(f"Request to {_log_host(url)} failed: {failure}")
+            return {"error": failure}
 
     async def _post(self, url: str, data: Dict = None, json: Dict = None, headers: Dict = None) -> Dict:
         await self._rate_limit()
@@ -194,8 +212,9 @@ class BaseIntelAPI(abc.ABC):
             response.raise_for_status()
             return response.json()
         except Exception as e:
-            self.logger.error(f"POST failed: {url}: {e}")
-            return {"error": str(e)}
+            failure = _failure_summary(e)
+            self.logger.error(f"POST to {_log_host(url)} failed: {failure}")
+            return {"error": failure}
 
     def _wrap_result(
         self,
