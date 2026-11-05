@@ -532,6 +532,10 @@ MIT License — see [LICENSE](https://github.com/getdeadrecon/deadrecon/blob/mai
 
 Copyright (c) 2026 the-clipper. AI architecture and implementation by Claude (Anthropic).
 
+## 🎨 Logo Credit
+
+Card XIII tips its censored skull to [*The Sun*](https://16colo.rs/pack/mist1024/LITTLEBITSPACE-THE_SUN.PNG) by [littlebitspace](https://16colo.rs/artist/littlebitspace). We studied the dithering, coveted the rays, and drew our own bones. The good pixels are their influence. The bad ones are all ours.
+
 ---
 
 *Built with questionable amounts of caffeine. "Map the surface. Own the signal."*

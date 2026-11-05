@@ -12,6 +12,9 @@ Outputs:
   docs/assets/deadrecon-avatar.png              square avatar, 528 px
   deadrecon/web/static/img/                     the same card, mark and favicon SVGs
 
+Inspired by "The Sun" by littlebitspace (https://16colo.rs/artist/littlebitspace). The technique
+is borrowed, but the skull and composition are drawn here. Please don't trace their work.
+
 Usage: python scripts/render_logo.py   (requires Pillow for the PNGs)
 """
 import math
