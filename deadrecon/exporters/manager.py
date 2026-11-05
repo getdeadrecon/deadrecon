@@ -279,9 +279,9 @@ class ExportManager:
         title_style = ParagraphStyle(
             "DeadReconTitle",
             parent=styles["Title"],
-            textColor=colors.HexColor("#FF3B1F"),
-            backColor=colors.HexColor("#000000"),
+            textColor=colors.HexColor("#C8200A"),
             fontSize=24,
+            leading=30,
         )
         story.append(Paragraph("DeadRecon OSINT Report", title_style))
         story.append(Spacer(1, 0.5 * cm))
@@ -292,9 +292,9 @@ class ExportManager:
             ["Target", scan.get("target", "")],
             ["Scan Type", scan.get("scan_type", "")],
             ["Status", scan.get("status", "")],
-            ["Shadow Score", str(scan.get("shadow_score", ""))],
-            ["Threat Level", scan.get("threat_level", "")],
-            ["Duration", f"{scan.get('duration_seconds', 0):.1f}s"],
+            ["Shadow Score", str(scan.get("shadow_score") or 0)],
+            ["Threat Level", scan.get("threat_level") or "UNKNOWN"],
+            ["Duration", f"{scan.get('duration_seconds') or 0:.1f}s"],
             ["Results", str(payload["result_count"])],
             ["Exported", payload["export_timestamp"]],
         ]
@@ -302,11 +302,11 @@ class ExportManager:
         table = Table(meta_data, colWidths=[5 * cm, 12 * cm])
         table.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#000000")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#FF3B1F")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#FFFFFF")),
             ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#2A3235")),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#101416"), colors.HexColor("#000000")]),
-            ("TEXTCOLOR", (0, 1), (-1, -1), colors.HexColor("#ECECEC")),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#D3D2CD")),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#FFFFFF"), colors.HexColor("#F2F1EE")]),
+            ("TEXTCOLOR", (0, 1), (-1, -1), colors.HexColor("#1C1C1C")),
         ]))
         story.append(table)
         story.append(Spacer(1, cm))
@@ -345,24 +345,24 @@ class ExportManager:
 <style>
 :root {{ --neon-green: #ff3b1f; --neon-cyan: #f7de52; --neon-purple: #5ec3d8; --dark: #000000; --card: #101416; }}
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-body {{ background: var(--dark); color: #ececec; font-family: 'Courier New', monospace; padding: 2rem; }}
-h1 {{ color: var(--neon-green); font-size: 2rem; text-shadow: 0 0 20px var(--neon-green); margin-bottom: 1rem; }}
+body {{ background: var(--dark); color: #ececec; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace; padding: 2rem; }}
+h1 {{ color: var(--neon-green); font-size: 2rem; margin-bottom: 1rem; }}
 h2 {{ color: var(--neon-cyan); margin: 1.5rem 0 0.5rem; }}
 .meta {{ background: var(--card); border: 1px solid #2a3235; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; }}
 .meta table {{ width: 100%; border-collapse: collapse; }}
 .meta td {{ padding: 0.3rem 0.5rem; border-bottom: 1px solid #2a3235; }}
-.meta td:first-child {{ color: var(--neon-green); width: 40%; }}
+.meta td:first-child {{ color: #b0b7ba; width: 40%; }}
 .result {{ background: var(--card); border: 1px solid #2a3235; padding: 1rem; margin: 0.5rem 0; border-radius: 4px; }}
-.result.anomaly {{ border-color: #ff5c7a; box-shadow: 0 0 10px rgba(255,92,122,0.3); }}
+.result.anomaly {{ border-color: #ff5c7a; }}
 .result-header {{ display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; align-items: center; }}
 .module {{ color: var(--neon-green); font-weight: bold; }}
 .type {{ color: var(--neon-cyan); }}
 .source {{ color: #5ec3d8; }}
-.confidence {{ color: #ff6b00; font-size: 0.8rem; }}
-.anomaly-badge {{ background: #ff5c7a; color: white; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.8rem; }}
-pre.data {{ font-size: 0.75rem; overflow-x: auto; padding: 0.5rem; background: #05050a; border-radius: 3px; color: #a0a0b0; max-height: 300px; overflow-y: auto; }}
-.shadow-score {{ font-size: 3rem; color: var(--neon-green); text-shadow: 0 0 30px var(--neon-green); }}
-footer {{ margin-top: 3rem; border-top: 1px solid #2a3235; padding-top: 1rem; color: #404050; text-align: center; }}
+.confidence {{ color: #ffab2e; font-size: 0.8rem; }}
+.anomaly-badge {{ background: #ff5c7a; color: #000; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.8rem; }}
+pre.data {{ font-size: 0.75rem; overflow-x: auto; padding: 0.5rem; background: #050607; border-radius: 3px; color: #b0b7ba; max-height: 300px; overflow-y: auto; }}
+.shadow-score {{ font-size: 3rem; color: var(--neon-green); }}
+footer {{ margin-top: 3rem; border-top: 1px solid #2a3235; padding-top: 1rem; color: #98a1a5; text-align: center; }}
 </style>
 </head>
 <body>
@@ -371,10 +371,10 @@ footer {{ margin-top: 3rem; border-top: 1px solid #2a3235; padding-top: 1rem; co
   <table>
     <tr><td>Target</td><td>{_esc(scan.get('target'))}</td></tr>
     <tr><td>Scan Type</td><td>{_esc(scan.get('scan_type'))}</td></tr>
-    <tr><td>Shadow Score</td><td><span class="shadow-score">{scan.get('shadow_score', 0):.0f}</span>/100</td></tr>
-    <tr><td>Threat Level</td><td>{_esc(str(scan.get('threat_level', 'UNKNOWN')).upper())}</td></tr>
+    <tr><td>Shadow Score</td><td><span class="shadow-score">{scan.get('shadow_score') or 0:.0f}</span>/100</td></tr>
+    <tr><td>Threat Level</td><td>{_esc(str(scan.get('threat_level') or 'UNKNOWN').upper())}</td></tr>
     <tr><td>Results</td><td>{payload['result_count']}</td></tr>
-    <tr><td>Duration</td><td>{scan.get('duration_seconds', 0):.1f}s</td></tr>
+    <tr><td>Duration</td><td>{scan.get('duration_seconds') or 0:.1f}s</td></tr>
     <tr><td>Generated</td><td>{payload['export_timestamp']}</td></tr>
   </table>
 </div>
@@ -460,8 +460,8 @@ footer {{ margin-top: 3rem; border-top: 1px solid #2a3235; padding-top: 1rem; co
         md = f"""# DeadRecon OSINT Report
 
 > **Target:** `{scan.get('target')}`
-> **Shadow Score:** {scan.get('shadow_score', 0):.0f}/100
-> **Threat Level:** {scan.get('threat_level', 'UNKNOWN').upper()}
+> **Shadow Score:** {scan.get('shadow_score') or 0:.0f}/100
+> **Threat Level:** {(scan.get('threat_level') or 'UNKNOWN').upper()}
 > **Results:** {payload['result_count']}
 > **Generated:** {payload['export_timestamp']}
 
@@ -474,7 +474,7 @@ footer {{ margin-top: 3rem; border-top: 1px solid #2a3235; padding-top: 1rem; co
 | Scan ID | `{scan.get('id')}` |
 | Type | {scan.get('scan_type')} |
 | Status | {scan.get('status')} |
-| Duration | {scan.get('duration_seconds', 0):.1f}s |
+| Duration | {scan.get('duration_seconds') or 0:.1f}s |
 | Profile | {scan.get('profile')} |
 
 ---

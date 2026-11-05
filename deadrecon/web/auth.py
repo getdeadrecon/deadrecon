@@ -244,10 +244,10 @@ def _content_security_policy() -> str:
     """Limits where the console can load from and send data to."""
     return "; ".join([
         "default-src 'self'",
-        f"script-src 'self' 'nonce-{csp_nonce()}' https://cdnjs.cloudflare.com https://unpkg.com",
-        "style-src 'self' 'unsafe-inline' https://unpkg.com",
+        f"script-src 'self' 'nonce-{csp_nonce()}'",
+        "style-src 'self' 'unsafe-inline'",
         "font-src 'self'",
-        " ".join(["img-src 'self' data: https://unpkg.com", *_tile_sources()]),
+        " ".join(["img-src 'self' data:", *_tile_sources()]),
         "connect-src 'self'",
         "object-src 'none'",
         "base-uri 'none'",

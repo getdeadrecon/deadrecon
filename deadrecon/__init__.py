@@ -17,7 +17,7 @@ r"""
          >> "Map the surface. Own the signal."        <<
 """
 
-__version__ = "1.30.0"
+__version__ = "1.31.0"
 __codename__ = "DEAD RECON"
 __author__ = "the-clipper"
 __credits__ = [

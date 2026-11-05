@@ -1539,3 +1539,15 @@ textarea:focus-visible,
 .tor-chip[data-state="starting"] { border-color: var(--warning); color: var(--warning); }
 .tor-chip[data-state="ready"] { border-color: var(--success); background: color-mix(in srgb, var(--success) 16%, transparent); color: var(--success); }
 .tor-chip[data-state="failed"] { border-color: var(--danger); color: var(--danger); }
+
+/* ── Maps ───────────────────────────────────────────────────────
+   Without a basemap, which is the default, Leaflet's own light gray fills the map. */
+html .leaflet-container { background: var(--surface-sunken); font-family: var(--font-ui); }
+html .leaflet-bar { border-color: var(--border-control); box-shadow: none; }
+html .leaflet-bar a { background: var(--surface-2); color: var(--ink); border-bottom-color: var(--border); }
+html .leaflet-bar a:hover, html .leaflet-bar a:focus { background: var(--surface-3); color: var(--ink-strong); }
+html .leaflet-bar a.leaflet-disabled { background: var(--surface-1); color: var(--ink-muted); }
+html .leaflet-container .leaflet-control-attribution { background: rgba(var(--surface1-rgb), 0.85); color: var(--ink-dim); }
+html .leaflet-control-attribution a { color: var(--accent-2); }
+html .leaflet-popup-content-wrapper, html .leaflet-popup-tip { background: var(--surface-2); color: var(--ink); box-shadow: none; border: 1px solid var(--border); }
+html .leaflet-container a.leaflet-popup-close-button { color: var(--ink-dim); }
