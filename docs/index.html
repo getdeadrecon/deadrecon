@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#070d1a">
+  <meta name="theme-color" content="#000000">
   <meta name="description" content="DeadRecon — the OPSEC-native OSINT framework. A stealth egress layer under every module and an honest per-scan report of exactly what you leaked. For security researchers, penetration testers, and digital investigators.">
   <meta property="og:title" content="DeadRecon — The OPSEC-Native OSINT Framework">
+  <meta property="og:image" content="https://deadrecon.sh/assets/deadrecon-card.png">
+  <meta property="og:url" content="https://deadrecon.sh/">
+  <meta name="twitter:card" content="summary_large_image">
   <meta property="og:description" content="Recon that doesn't burn your infrastructure. Stealth egress under every module + an honest attribution-surface report. Map the surface. Own the signal.">
   <title>DeadRecon — The OPSEC-Native OSINT Framework</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="assets/deadrecon-favicon.svg">
   <link rel="stylesheet" href="site.css">
 </head>
 <body>
@@ -18,7 +19,7 @@
   <!-- NAV -->
   <nav class="site-nav">
     <a href="#" class="nav-brand">
-      <span class="nav-glyph" aria-hidden="true">∿</span>
+      <img class="nav-mark" src="assets/deadrecon-mark.svg" width="40" height="34" alt="">
       <span>DEAD<span class="accent">RECON</span></span>
     </a>
     <div class="nav-links">
@@ -39,7 +40,6 @@
       <div class="hero-text">
         <div class="hero-eyebrow">// DEAD RECON v1.30.0 · OPSEC-NATIVE</div>
         <div class="hero-title-row">
-          <span class="hero-glyph" aria-hidden="true">∿</span>
           <h1 class="hero-title">DEAD<span class="accent">RECON</span></h1>
         </div>
         <p class="hero-tagline">"Map the surface. Own the signal."</p>
@@ -58,13 +58,16 @@
           </div>
         </div>
         <div class="hero-badges">
-          <img src="https://img.shields.io/badge/python-3.10+-4d9fd6?style=flat-square&logo=python" alt="Python">
-          <img src="https://img.shields.io/badge/license-MIT-7fb8dd?style=flat-square" alt="MIT License">
-          <img src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Docker-c9a24a?style=flat-square" alt="Platform">
-          <a href="https://github.com/getdeadrecon/deadrecon" target="_blank" rel="noopener"><img src="https://img.shields.io/github/stars/getdeadrecon/deadrecon?style=flat-square&color=4d9fd6" alt="Stars"></a>
-          <a href="https://github.com/getdeadrecon/deadrecon" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/github-deadrecon-7fb8dd?style=flat-square&logo=github" alt="GitHub Repo"></a>
-          <a href="https://pypi.org/project/deadrecon/" target="_blank" rel="noopener"><img src="https://img.shields.io/pypi/v/deadrecon?style=flat-square&logo=pypi&color=4d9fd6" alt="PyPI"></a>
+          <img src="https://img.shields.io/badge/python-3.10+-ff3b1f?style=flat-square&logo=python" alt="Python">
+          <img src="https://img.shields.io/badge/license-MIT-f7de52?style=flat-square" alt="MIT License">
+          <img src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Docker-111111?style=flat-square" alt="Platform">
+          <a href="https://github.com/getdeadrecon/deadrecon" target="_blank" rel="noopener"><img src="https://img.shields.io/github/stars/getdeadrecon/deadrecon?style=flat-square&color=ff3b1f" alt="Stars"></a>
+          <a href="https://github.com/getdeadrecon/deadrecon" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/github-deadrecon-111111?style=flat-square&logo=github" alt="GitHub Repo"></a>
+          <a href="https://pypi.org/project/deadrecon/" target="_blank" rel="noopener"><img src="https://img.shields.io/pypi/v/deadrecon?style=flat-square&logo=pypi&color=ff3b1f" alt="PyPI"></a>
         </div>
+      </div>
+      <div class="hero-card">
+        <img src="assets/deadrecon-card.svg" width="368" height="448" alt="DeadRecon logo: tarot card XIII, a skull with a red censor bar across its eyes and red rays behind it">
       </div>
     </div>
     <div class="hero-scroll">▼ SCROLL</div>
@@ -272,22 +275,22 @@
       <h2 class="section-title">Exposure. Quantified.</h2>
       <p class="section-sub">Every scan produces a Risk Score (0–100) — a weighted composite of open ports, vulnerability findings, missing security controls, and threat intelligence flags.</p>
       <div class="score-grid">
-        <div class="score-band" style="--band-color:#5cb874">
+        <div class="score-band" style="--band-color:#3ddc84">
           <div class="score-range">0–25</div>
           <div class="score-label">CLEAN</div>
           <div class="score-desc">Minimal exposure. Good security posture.</div>
         </div>
-        <div class="score-band" style="--band-color:#e0a63a">
+        <div class="score-band" style="--band-color:#ffab2e">
           <div class="score-range">26–50</div>
           <div class="score-label">ELEVATED</div>
           <div class="score-desc">Some findings worth reviewing and tracking.</div>
         </div>
-        <div class="score-band" style="--band-color:#d97b3a">
+        <div class="score-band" style="--band-color:#ff8a3d">
           <div class="score-range">51–75</div>
           <div class="score-label">HIGH</div>
           <div class="score-desc">Significant issues. Remediation recommended.</div>
         </div>
-        <div class="score-band" style="--band-color:#e26d6d">
+        <div class="score-band" style="--band-color:#ff5c7a">
           <div class="score-range">76–100</div>
           <div class="score-label">CRITICAL</div>
           <div class="score-desc">Urgent issues. Active risk. Act immediately.</div>
@@ -503,7 +506,7 @@
     function copyInstall() {
       navigator.clipboard.writeText(document.getElementById('install-cmd').textContent);
       const btn = document.querySelector('.copy-btn');
-      btn.style.color = '#4d9fd6';
+      btn.style.color = 'var(--green)';
       setTimeout(() => btn.style.color = '', 1500);
     }
 

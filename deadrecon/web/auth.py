@@ -245,8 +245,8 @@ def _content_security_policy() -> str:
     return "; ".join([
         "default-src 'self'",
         f"script-src 'self' 'nonce-{csp_nonce()}' https://cdnjs.cloudflare.com https://unpkg.com",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
-        "font-src 'self' https://fonts.gstatic.com",
+        "style-src 'self' 'unsafe-inline' https://unpkg.com",
+        "font-src 'self'",
         " ".join(["img-src 'self' data: https://unpkg.com", *_tile_sources()]),
         "connect-src 'self'",
         "object-src 'none'",

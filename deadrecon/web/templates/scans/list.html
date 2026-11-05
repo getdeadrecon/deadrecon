@@ -71,7 +71,7 @@
   </table>
   {% else %}
   <div class="empty-state large">
-    <div class="empty-ghost" aria-hidden="true">∿</div>
+    <img class="empty-mark" src="{{ url_for('static', filename='img/deadrecon-mark.svg') }}" width="80" height="68" alt="">
     <h3>No scans yet</h3>
     <p>Run your first scan to get started.</p>
     <a href="{{ url_for('scans.new_scan') }}" class="btn btn-primary btn-glow">Start Your First Scan</a>
