@@ -356,7 +356,7 @@ body.sum-compact .cat-grid { grid-template-columns:repeat(auto-fill, minmax(240p
 {% endfor %}
 {% else %}
 <div class="empty-state">
-  <img class="empty-mark" src="{{ url_for('static', filename='img/deadrecon-mark.svg') }}" width="48" height="48" alt="">
+  <img class="empty-mark" src="{{ url_for('static', filename='img/deadrecon-mark.svg') }}" width="80" height="68" alt="">
   <p class="text-dim">{% if is_live %}Scan in progress — results incoming...{% else %}No results yet.{% endif %}</p>
 </div>
 {% endif %}

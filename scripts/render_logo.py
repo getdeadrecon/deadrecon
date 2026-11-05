@@ -2,15 +2,15 @@
 """
 Render the DeadRecon logo: card XIII, a pixel skull with its identity censored.
 
-The art is drawn on a pixel grid, so it stays sharp at whole-number scales. The small mark
-has its own 16 px grid rather than being shrunk from the card.
+The art is drawn on a pixel grid, so it stays sharp at whole-number scales. The favicon
+has its own 16 px grid, because the full skull's detail is lost at that size.
 
 Outputs:
   docs/assets/deadrecon-card.svg|png            full card (landing page, README, social image)
-  docs/assets/deadrecon-mark.svg                small skull (favicon, nav)
-  docs/assets/deadrecon-avatar.png              square avatar, 512 px
-  deadrecon/web/static/img/deadrecon-card.svg   full card (console)
-  deadrecon/web/static/img/deadrecon-mark.svg   small skull (console)
+  docs/assets/deadrecon-mark.svg                the card's skull at nav size
+  docs/assets/deadrecon-favicon.svg             simplified skull for 16 px
+  docs/assets/deadrecon-avatar.png              square avatar, 528 px
+  deadrecon/web/static/img/                     the same card, mark and favicon SVGs
 
 Usage: python scripts/render_logo.py   (requires Pillow for the PNGs)
 """
@@ -55,10 +55,10 @@ class Grid:
                     self.set(dx + x, dy + y, other.cells[y][x])
 
 
-def skull(w, h, detail=True):
+def skull(w, h, detail=True, pitch=None, nose=.42):
     """A symmetric skull with a short jaw, small sockets and shading on its far side."""
     g = Grid(w, h, None)
-    pitch = max(3, round(w / 11))
+    pitch = pitch or max(3, round(w / 11))
     for y in range(h):
         for x in range(w):
             u, v = (x + .5 - w / 2) / (w / 2), (y + .5 - h / 2) / (h / 2)
@@ -71,7 +71,7 @@ def skull(w, h, detail=True):
             g.cells[y][x] = BONE
             if ((a - .42) / .25) ** 2 + ((v - .03) / .17) ** 2 <= 1:
                 g.cells[y][x] = HOLE
-            if .24 <= v <= .46 and a <= (v - .21) * .42:
+            if .24 <= v <= .46 and a <= (v - .21) * nose:
                 g.cells[y][x] = HOLE
             offset = abs(x - (w - 1) / 2)
             if jaw and v >= .56 and int(offset - .5) % pitch == 0 and offset < w * .3:
@@ -204,13 +204,22 @@ rrrrrrrrrrrrrrrr
 """
 
 
-def mark():
+def favicon():
     rows = MARK_16.strip().split("\n")
     g = Grid(16, 16)
     for y, row in enumerate(rows):
         for x, c in enumerate(row):
             if c != ".":
                 g.set(x, y + 1, BAR if c == "r" else BONE)
+    return g
+
+
+def mark():
+    """The card's skull at nav size: same proportions, same bar across the eyes."""
+    g = Grid(40, 34)
+    head = skull(32, 36, pitch=4, nose=.62)
+    g.blit(head, 4, 2)
+    g.rect(0, 2 + 15, 39, 2 + 20, BAR)
     return g
 
 
@@ -251,8 +260,11 @@ def main():
     for folder in (assets, static):
         (folder / "deadrecon-card.svg").write_text(svg(the_card, BLACK))
         (folder / "deadrecon-mark.svg").write_text(svg(skull_mark))
+        (folder / "deadrecon-favicon.svg").write_text(svg(favicon()))
     png(the_card, assets / "deadrecon-card.png", 8)
-    png(skull_mark, assets / "deadrecon-avatar.png", 32)
+    avatar = Grid(44, 44)
+    avatar.blit(skull_mark, 2, 5)
+    png(avatar, assets / "deadrecon-avatar.png", 12)
 
 
 if __name__ == "__main__":
