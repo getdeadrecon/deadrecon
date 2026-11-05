@@ -9,9 +9,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.31.1] - 2026-11-05
+
 ### Changed
 - **Scan reports show `stealth` in place of `stealth-guaranteed`.** The word overpromised. The value in
   JSON exports is unchanged.
+- **Softer claims:** the README and PyPI page no longer promise "exactly what you leaked" or say no other
+  open-source tool reports on you.
 - **Credited the logo's inspiration:** *The Sun* by littlebitspace, on the About page, README and site.
 
 ## [1.31.0] - 2026-11-04
