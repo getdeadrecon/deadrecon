@@ -29,7 +29,8 @@ Same tool, new name. **Nothing you've saved is lost.**
 - **Old settings still work:** `PHANTOMSIGNAL_*` variables and the `phantomsignal` and `psig` commands.
 - **Scans no longer name the tool** to targets or third parties. That includes SMTP greetings and
   User-Agents, and it was checked against packet captures.
-- **Upgrading with pip:** `pip install deadrecon`, then uninstall `phantomsignal`.
+- **Upgrading with pip:** run `pip uninstall phantomsignal` first, then `pip install deadrecon`. In the
+  other order, the uninstall removes the old commands.
 - **Upgrading with Docker:** run `docker-compose down` *before* you pull, or the old container keeps
   port 5000. Your data volumes keep their names, so your data stays.
 
