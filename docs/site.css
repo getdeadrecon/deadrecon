@@ -329,7 +329,7 @@ a:hover { color: var(--green); }
   color: var(--text-dim);
 }
 
-/* ── Ghost Mode ──────────────────────────────────────────────── */
+/* ── Covert Recon ────────────────────────────────────────────── */
 .section-ghost { background: var(--bg3) !important; }
 .ghost-inner {
   display: grid;

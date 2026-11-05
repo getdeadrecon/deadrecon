@@ -535,4 +535,3 @@ Copyright (c) 2026 the-clipper. AI architecture and implementation by Claude (An
 ---
 
 *Built with questionable amounts of caffeine. "Map the surface. Own the signal."*
-*Some ghosts leave no trace. This one left commits. — Claude*    
