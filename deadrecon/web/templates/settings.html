@@ -110,7 +110,7 @@ function testAPI(apiName, btn) {
 
       if (data.status === 'ok') {
         btn.textContent = '✓ OK';
-        btn.style.color = '#00ff41';
+        btn.style.color = 'var(--success)';
         showToast(`${apiName} — verified (${data.result_count} results)`, 'success');
       } else if (data.status === 'invalid_key') {
         btn.textContent = '⚠ INVALID';
@@ -122,11 +122,11 @@ function testAPI(apiName, btn) {
         showToast(`${apiName} — key rejected by API. Grab a fresh key.`, 'error');
       } else {
         btn.textContent = '✗ FAIL';
-        btn.style.color = '#ff2d55';
+        btn.style.color = 'var(--danger)';
         showToast(`${apiName} — ${data.message}`, 'error');
       }
     })
-    .catch(() => { btn.textContent = '✗ ERR'; btn.style.color = '#ff2d55'; })
+    .catch(() => { btn.textContent = '✗ ERR'; btn.style.color = 'var(--danger)'; })
     .finally(() => { setTimeout(() => { btn.textContent = 'TEST'; btn.disabled = false; btn.style.color = ''; }, 3000); });
 }
 </script>

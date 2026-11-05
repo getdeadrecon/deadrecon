@@ -159,28 +159,6 @@ function timeAgo(dateStr) {
   return `${Math.floor(h/24)}d ago`;
 }
 
-// ── Theme (Dark default; Light opt-in) ────────────────────────
-// 'dark' carries no data-theme attribute (base :root); 'light' sets it.
-const THEME_META = {
-  light: { label: 'Light' },
-  dark:  { label: 'Dark' },
-};
-
-function currentTheme() {
-  return localStorage.getItem('deadrecon-theme') || localStorage.getItem('phantomsignal-theme') || 'dark';
-}
-
-function applyTheme(name) {
-  if (!THEME_META[name]) name = 'dark';
-  if (name === 'dark') document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme', name);
-  localStorage.setItem('deadrecon-theme', name);
-
-  document.querySelectorAll('.theme-seg-btn').forEach((btn) => {
-    btn.setAttribute('aria-checked', btn.dataset.themeVal === name ? 'true' : 'false');
-  });
-}
-
 // ── Boot Sequence ─────────────────────────────────────────────
 // Initialise the socket immediately — scripts on the results page need it
 // before DOMContentLoaded fires (socket.io is already loaded by this point).
@@ -188,12 +166,6 @@ initSocket();
 
 document.addEventListener('DOMContentLoaded', () => {
   // initSocket() already called above; this is a no-op guard
-
-  // Apply saved theme and wire the segmented control
-  applyTheme(currentTheme());
-  document.querySelectorAll('.theme-seg-btn').forEach((btn) => {
-    btn.addEventListener('click', () => applyTheme(btn.dataset.themeVal));
-  });
 
   // Auto-dismiss flashes after 6s
   document.querySelectorAll('.flash').forEach(el => {

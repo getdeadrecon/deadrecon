@@ -27,15 +27,15 @@
 /* ── Severity + dork styling (shared look with the tabbed results view) ── */
 .sev-badge { display:inline-block; padding:0.08rem 0.45rem; border-radius:3px; font-size:0.62rem;
   font-weight:700; letter-spacing:0.05em; text-transform:uppercase; }
-.sev-critical { background:rgba(244,63,94,0.18); color:#f43f5e; border:1px solid rgba(244,63,94,0.5); }
-.sev-high     { background:rgba(251,146,60,0.18); color:#fb923c; border:1px solid rgba(251,146,60,0.5); }
-.sev-medium   { background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.45); }
-.sev-low, .sev-info { background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); }
+.sev-critical { background:color-mix(in srgb, var(--danger) 16%, transparent); color:var(--danger); border:1px solid color-mix(in srgb, var(--danger) 50%, transparent); }
+.sev-high     { background:color-mix(in srgb, var(--sev-high) 16%, transparent); color:var(--sev-high); border:1px solid color-mix(in srgb, var(--sev-high) 50%, transparent); }
+.sev-medium   { background:color-mix(in srgb, var(--warning) 16%, transparent); color:var(--warning); border:1px solid color-mix(in srgb, var(--warning) 50%, transparent); }
+.sev-low, .sev-info { background:color-mix(in srgb, var(--info) 16%, transparent); color:var(--info); border:1px solid color-mix(in srgb, var(--info) 50%, transparent); }
 .dork-list { display:flex; flex-direction:column; gap:0.3rem; }
 .dork-row { display:flex; align-items:center; justify-content:space-between; gap:0.5rem;
-  background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+  background:color-mix(in srgb, var(--ink) 3%, transparent); border:1px solid var(--border);
   border-radius:4px; padding:0.3rem 0.5rem; }
-.dork-q { font-family:var(--font-mono,monospace); font-size:0.72rem; color:var(--text,#aeb8c7); word-break:break-all; }
+.dork-q { font-family:var(--font-mono,monospace); font-size:0.72rem; color:var(--text); word-break:break-all; }
 .dork-run { font-size:0.62rem; font-weight:700; letter-spacing:0.05em; color:var(--neon-green);
   text-decoration:none; white-space:nowrap; flex-shrink:0; }
 
@@ -78,10 +78,10 @@
 .sev-pip { font-size:0.6rem; font-weight:700; letter-spacing:0.02em;
   padding:0.05rem 0.3rem; border-radius:2px; font-family:var(--font-mono); }
 .sp-critical { background:rgba(244,63,94,0.18);  color:#f43f5e; border:1px solid rgba(244,63,94,0.5); }
-.sp-high     { background:rgba(251,146,60,0.18); color:#fb923c; border:1px solid rgba(251,146,60,0.5); }
-.sp-medium   { background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.45); }
-.sp-low      { background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); }
-.sp-info     { background:rgba(148,163,184,0.14); color:#94a3b8; border:1px solid rgba(148,163,184,0.4); }
+.sp-high     { background:color-mix(in srgb, var(--sev-high) 16%, transparent); color:var(--sev-high); border:1px solid color-mix(in srgb, var(--sev-high) 50%, transparent); }
+.sp-medium   { background:color-mix(in srgb, var(--warning) 16%, transparent); color:var(--warning); border:1px solid color-mix(in srgb, var(--warning) 50%, transparent); }
+.sp-low      { background:color-mix(in srgb, var(--info) 16%, transparent); color:var(--info); border:1px solid color-mix(in srgb, var(--info) 50%, transparent); }
+.sp-info     { background:color-mix(in srgb, var(--ink-dim) 16%, transparent); color:var(--ink-dim); border:1px solid color-mix(in srgb, var(--ink-dim) 50%, transparent); }
 
 .sev-bar { display:inline-flex; gap:0.5rem; align-items:center; margin-left:auto; flex-wrap:wrap; }
 .sev-seg { display:inline-flex; align-items:center; gap:0.35rem; font-size:0.68rem;
@@ -356,7 +356,7 @@ body.sum-compact .cat-grid { grid-template-columns:repeat(auto-fill, minmax(240p
 {% endfor %}
 {% else %}
 <div class="empty-state">
-  <div class="empty-ghost" aria-hidden="true">∿</div>
+  <img class="empty-mark" src="{{ url_for('static', filename='img/deadrecon-mark.svg') }}" width="48" height="48" alt="">
   <p class="text-dim">{% if is_live %}Scan in progress — results incoming...{% else %}No results yet.{% endif %}</p>
 </div>
 {% endif %}

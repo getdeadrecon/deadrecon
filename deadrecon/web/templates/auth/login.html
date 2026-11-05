@@ -2,6 +2,7 @@
 {% block title %}Sign in — DeadRecon{% endblock %}
 {% block content %}
 <div style="max-width:24rem;margin:4rem auto;padding:0 1rem;">
+  <img class="auth-card" src="{{ url_for('static', filename='img/deadrecon-card.svg') }}" width="184" height="224" alt="DeadRecon logo: card XIII, a skull with a red censor bar across its eyes">
   <h1 style="margin-bottom:1.5rem;">Sign in</h1>
   <form action="{{ url_for('auth.login') }}" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

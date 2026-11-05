@@ -6,53 +6,60 @@
      single source of truth; components consume roles, never raw hues.
    - Tints are expressed as rgba(var(--<role>-rgb), a) so one component
      rule recolours automatically from the tokens below.
-   - Two themes: "dark" (default) — a deep-slate federal console with
-     blue/gold accents and restrained glow; and "light" (opt-in) — clean,
-     print-friendly white surfaces with federal-blue accents and no glow.
+   - One theme: pure black with signal red, yellow highlights and condensed
+     poster headlines.
+   - Fonts are served from this package, so the console contacts no font host.
    - All text/UI tokens are verified to meet WCAG 2.1 AA contrast.
    Legacy --neon, --dark-bg and --text alias names are kept so the
    existing component styles keep working while resolving to roles.
    ============================================================ */
 
+@font-face { font-family: 'Anton'; src: url('../fonts/anton-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Roboto'; src: url('../fonts/roboto-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Roboto'; src: url('../fonts/roboto-latin-500-normal.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Roboto'; src: url('../fonts/roboto-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+
 :root {
   /* ── Layout & type ── */
   --nav-height:    3.5rem;
   --sidebar-width: 260px;
-  --font-mono: 'Courier New', 'Lucida Console', monospace;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
   --font-ui:   'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Anton', 'Arial Narrow', Impact, sans-serif;  /* headlines only */
 
-  /* ── ROLE TOKENS — DARK (default): deep-slate federal console ── */
-  --surface-0:      #10151c;   /* app background             */
-  --surface-1:      #161d27;   /* nav, footer, raised chrome */
-  --surface-2:      #1b2430;   /* cards, panels              */
-  --surface-3:      #26313f;   /* hover / nested elevation   */
-  --surface-sunken: #0b0f14;   /* code blocks, wells         */
-  --border:         #2f3b4a;   /* decorative dividers        */
-  --border-control: #707f95;   /* form controls (>=3:1)      */
+  /* ── ROLE TOKENS — DARK (default): blackout ── */
+  --surface-0:      #000000;   /* app background             */
+  --surface-1:      #0a0c0d;   /* nav, footer, raised chrome */
+  --surface-2:      #101416;   /* cards, panels              */
+  --surface-3:      #1a2124;   /* hover / nested elevation   */
+  --surface-sunken: #050607;   /* code blocks, wells         */
+  --border:         #2a3235;   /* decorative dividers        */
+  --border-control: #7f8b90;   /* form controls (>=3:1)      */
 
-  --ink:            #d6dbe2;    /* body text     (13.2:1) */
-  --ink-strong:     #f3f6fa;    /* headings      (16.9:1) */
-  --ink-dim:        #9aa4b2;    /* secondary     (7.3:1)  */
-  --ink-muted:      #909dad;    /* de-emphasised (4.8:1)  */
+  --ink:            #ececec;   /* body text     */
+  --ink-strong:     #ffffff;   /* headings      */
+  --ink-dim:        #b0b7ba;   /* secondary     */
+  --ink-muted:      #98a1a5;   /* de-emphasised */
 
-  --accent:         #4d9fd6;    /* primary interactive (federal blue) */
-  --accent-2:       #7fb8dd;    /* secondary accent / links (steel blue) */
-  --accent-alt:     #c9a24a;    /* tertiary accent (federal gold) */
-  --success:        #5cb874;
-  --warning:        #e0a63a;
-  --danger:         #e26d6d;
-  --info:           #4d9fd6;
+  --accent:         #ff3b1f;   /* brand and primary interactive */
+  --accent-2:       #f7de52;   /* links and highlights */
+  --accent-alt:     #5ec3d8;   /* tertiary accent */
+  --success:        #3ddc84;
+  --warning:        #ffab2e;
+  --sev-high:       #ff8a3d;
+  --danger:         #ff5c7a;
+  --info:           #5ec3d8;
 
-  --surface0-rgb: 16,21,28;
-  --surface1-rgb: 22,29,39;
-  --ink-dim-rgb:  154,164,178;
-  --accent-rgb:    77,159,214;
-  --accent2-rgb:   127,184,221;
-  --accentalt-rgb: 201,162,74;
-  --success-rgb:   92,184,116;
-  --warning-rgb:   224,166,58;
-  --danger-rgb:    226,109,109;
-  --info-rgb:      77,159,214;
+  --surface0-rgb: 0,0,0;
+  --surface1-rgb: 10,12,13;
+  --ink-dim-rgb:  176,183,186;
+  --accent-rgb:    255,59,31;
+  --accent2-rgb:   247,222,82;
+  --accentalt-rgb: 94,195,216;
+  --success-rgb:   61,220,132;
+  --warning-rgb:   255,171,46;
+  --danger-rgb:    255,92,122;
+  --info-rgb:      94,195,216;
 
   /* Restrained bloom — professional, minimal glow */
   --glow-accent:    0 0 6px rgba(var(--accent-rgb),0.20);
@@ -85,30 +92,6 @@
   --glow-cyan:   var(--glow-accent2);
   --glow-purple: var(--glow-accentalt);
   --glow-red:    var(--glow-danger);
-}
-
-/* ── LIGHT — clean daytime / print-friendly theme (opt-in) ──
-   White surfaces, dark slate ink, federal-blue hero, flat (no glow).
-   All text/UI tokens verified to WCAG AA on white (the hardest case). */
-:root[data-theme="light"] {
-  --surface-0: #eef1f6; --surface-1: #ffffff; --surface-2: #ffffff;
-  --surface-3: #e6ebf3; --surface-sunken: #e2e7f0;
-  --border: #d3dae6; --border-control: #6b7787;
-
-  --ink: #2a3444; --ink-strong: #0f1826; --ink-dim: #586274; --ink-muted: #606979;
-
-  --accent: #1667b8; --accent-2: #0e7490; --accent-alt: #8a6a12;
-  --success: #1a7f37; --warning: #b45309; --danger: #c8232c; --info: #1667b8;
-
-  --surface0-rgb: 238,241,246; --surface1-rgb: 255,255,255; --ink-dim-rgb: 88,98,116;
-  --accent-rgb: 22,103,184; --accent2-rgb: 14,116,144; --accentalt-rgb: 138,106,18;
-  --success-rgb: 26,127,55; --warning-rgb: 180,83,9; --danger-rgb: 200,35,44; --info-rgb: 22,103,184;
-
-  /* Flat — light UIs read cleaner without glow bloom */
-  --glow-accent: none; --glow-accent2: none; --glow-accentalt: none;
-  --glow-danger: none; --glow-success: none;
-  --vignette-a: 0.035;
-  color-scheme: light;
 }
 
 /* ── Reset & Base ───────────────────────────────────────────── */
@@ -170,8 +153,11 @@ a:hover { color: var(--neon-green); }
 .brand-link:hover { color: var(--text-bright); }
 
 .phantom-icon { font-size: 1.3rem; }
-.brand-name { letter-spacing: 0.1em; }
-.brand-accent { color: var(--neon-green); text-shadow: var(--glow-green); }
+.brand-mark { display: block; flex-shrink: 0; image-rendering: pixelated; }
+.auth-card { display: block; margin: 0 auto 1.5rem; image-rendering: pixelated; }
+.empty-mark { display: block; margin: 0 auto 0.75rem; image-rendering: pixelated; opacity: 0.7; }
+.brand-name { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; letter-spacing: 0.03em; }
+.brand-accent { color: var(--neon-green); }
 .brand-tag { color: var(--text-dim); font-size: 0.7rem; font-weight: 400; }
 
 .nav-links {
@@ -328,6 +314,10 @@ a:hover { color: var(--neon-green); }
   letter-spacing: 0.1em;
   color: var(--text-bright);
   margin-bottom: 0.25rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .page-subtitle { color: var(--text-dim); font-size: 0.85rem; }
@@ -337,7 +327,7 @@ a:hover { color: var(--neon-green); }
 /* ── Glitch Text Effect ─────────────────────────────────────── */
 .glitch-text {
   position: relative;
-  color: var(--neon-green);
+  color: var(--text-bright);
   text-shadow: var(--glow-green);
 }
 .glitch-text::before,
@@ -390,14 +380,14 @@ a:hover { color: var(--neon-green); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-primary {
-  background: rgba(var(--accent-rgb),0.1);
-  border-color: var(--neon-green);
-  color: var(--neon-green);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface-0);
 }
 .btn-primary:hover {
-  background: rgba(var(--accent-rgb),0.2);
-  box-shadow: var(--glow-green);
-  color: var(--neon-green);
+  background: var(--ink-strong);
+  border-color: var(--ink-strong);
+  color: var(--surface-0);
 }
 
 .btn-secondary {
@@ -529,7 +519,7 @@ a.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0
 }
 
 .stat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
-.stat-value { font-size: 2rem; font-weight: 700; margin-bottom: 0.2rem; }
+.stat-value { font-family: var(--font-display); font-size: 2.2rem; font-weight: 400; margin-bottom: 0.2rem; }
 .stat-label { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--text-dim); margin-bottom: 0.75rem; }
 
 .stat-bar { height: 2px; background: var(--border); border-radius: 1px; overflow: hidden; }
@@ -579,7 +569,7 @@ a.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0
 
 .data-table td {
   padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid rgba(26,26,46,0.5);
+  border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
@@ -851,7 +841,7 @@ select.input-field option,
   transition: box-shadow 0.3s;
 }
 .target-input:focus { box-shadow: 0 0 25px rgba(var(--accent-rgb),0.2); }
-.target-input::placeholder { color: rgba(var(--accent-rgb),0.3); }
+.target-input::placeholder { color: var(--text-muted); }
 
 .target-type-badge {
   position: absolute;
@@ -1018,7 +1008,7 @@ select.input-field option,
   flex-wrap: wrap;
   user-select: none;
 }
-.result-header:hover { background: rgba(255,255,255,0.02); }
+.result-header:hover { background: color-mix(in srgb, var(--ink) 3%, transparent); }
 
 .result-meta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .result-module { color: var(--neon-green); font-size: 0.75rem; font-weight: 600; }
@@ -1132,7 +1122,6 @@ select.input-field option,
   text-align: center;
 }
 .empty-state.large { padding: 5rem; }
-.empty-ghost { font-size: 3rem; opacity: 0.4; }
 .empty-state h3 { color: var(--text); font-size: 1.1rem; }
 .empty-state p { color: var(--text-dim); font-size: 0.85rem; }
 
@@ -1145,27 +1134,6 @@ select.input-field option,
 .action-link:hover { color: var(--neon-green); }
 .action-link-btn { background: none; border: none; padding: 0; cursor: pointer; font-family: var(--font-ui); letter-spacing: inherit; }
 
-/* ── Theme Segmented Switch (Light / Dark) ──────────────────── */
-.theme-seg {
-  display: inline-flex; align-items: center; gap: 2px;
-  padding: 2px; flex-shrink: 0;
-  border: 1px solid var(--border-control);
-  border-radius: 999px;
-  background: var(--surface-3);
-}
-.theme-seg-btn {
-  background: none; border: none; cursor: pointer;
-  width: 26px; height: 22px; border-radius: 999px;
-  display: inline-flex; align-items: center; justify-content: center;
-  color: var(--ink-muted); font-size: 0.8rem; line-height: 1;
-  transition: color 0.2s, background 0.2s, box-shadow 0.2s;
-}
-.theme-seg-btn:hover { color: var(--ink); }
-.theme-seg-btn[aria-checked="true"] {
-  color: var(--accent);
-  background: rgba(var(--accent-rgb),0.14);
-  box-shadow: var(--glow-accent);
-}
 .action-group { display: flex; gap: 0.75rem; }
 
 /* ── Intel Layout ───────────────────────────────────────────── */
@@ -1240,7 +1208,7 @@ select.input-field option,
 .key-status  { font-size: 0.65rem; }
 .key-set     { color: var(--neon-green); }
 .key-missing { color: var(--text-dim); }
-.key-invalid { color: #ffaa00; }
+.key-invalid { color: var(--warning); }
 .key-input  { font-size: 0.8rem; }
 .btn-test {
   background: none;
@@ -1419,22 +1387,6 @@ select.input-field option,
 .format-name { font-size: 0.75rem; font-weight: 600; color: var(--text-bright); }
 .format-desc { font-size: 0.65rem; color: var(--text-dim); }
 
-/* ── Brand / heading glyph marks (font-based, replaces ASCII art) ─ */
-.brand-glyph {
-  font-size: 1.25rem;
-  line-height: 1;
-  color: var(--accent);
-  text-shadow: var(--glow-accent);
-  flex-shrink: 0;
-}
-.page-glyph {
-  font-size: 1.9rem;
-  line-height: 1;
-  color: var(--accent);
-  text-shadow: var(--glow-accent);
-  flex-shrink: 0;
-}
-
 /* ============================================================
    GLITCH HEADINGS — neutralised
    The .glitch-text class survives on page headings as a plain title;
@@ -1459,7 +1411,6 @@ textarea:focus-visible,
 [tabindex]:focus-visible,
 .btn:focus-visible,
 .nav-link:focus-visible,
-.theme-seg-btn:focus-visible,
 .tab-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -1542,7 +1493,6 @@ textarea:focus-visible,
   .nav-link span:not(.nav-icon) { display: none; }
   .nav-icon { display: inline; }
   .nav-link { padding: 0.4rem 0.6rem; }
-  .brand-glyph { font-size: 1.1rem; }
 
   /* Stats: single column */
   .stats-grid { grid-template-columns: 1fr; }
@@ -1572,8 +1522,6 @@ textarea:focus-visible,
 .nav-links { min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .nav-links::-webkit-scrollbar { display: none; }
 .nav-link { white-space: nowrap; padding: 0.4rem 0.5rem; }
-.theme-seg { flex-shrink: 0; }
-.nav-brand + .theme-seg { margin-left: auto; }
 .nav-status .btn-sm { white-space: nowrap; }
 @media (max-width: 1600px) {
   .nav-status .version-tag, .nav-status .status-text, .nav-icon { display: none; }
@@ -1588,6 +1536,6 @@ textarea:focus-visible,
 
 /* One-click Tor */
 .tor-chip { background: transparent; color: var(--ink-dim, inherit); cursor: pointer; font-family: inherit; }
-.tor-chip[data-state="starting"] { border-color: #c9a24a; color: #c9a24a; }
-.tor-chip[data-state="ready"] { border-color: #7d4cdb; background: rgba(125, 76, 219, 0.16); color: #b79bf0; }
-.tor-chip[data-state="failed"] { border-color: #e26d6d; color: #e26d6d; }
+.tor-chip[data-state="starting"] { border-color: var(--warning); color: var(--warning); }
+.tor-chip[data-state="ready"] { border-color: var(--success); background: color-mix(in srgb, var(--success) 16%, transparent); color: var(--success); }
+.tor-chip[data-state="failed"] { border-color: var(--danger); color: var(--danger); }

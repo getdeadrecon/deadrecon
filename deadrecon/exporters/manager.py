@@ -279,8 +279,8 @@ class ExportManager:
         title_style = ParagraphStyle(
             "DeadReconTitle",
             parent=styles["Title"],
-            textColor=colors.HexColor("#00FF41"),
-            backColor=colors.HexColor("#0A0A0F"),
+            textColor=colors.HexColor("#FF3B1F"),
+            backColor=colors.HexColor("#000000"),
             fontSize=24,
         )
         story.append(Paragraph("DeadRecon OSINT Report", title_style))
@@ -301,12 +301,12 @@ class ExportManager:
 
         table = Table(meta_data, colWidths=[5 * cm, 12 * cm])
         table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0A0A0F")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#00FF41")),
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#000000")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#FF3B1F")),
             ("FONTNAME", (0, 0), (-1, 0), "Courier-Bold"),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#1A1A2E")),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#0D0D1A"), colors.HexColor("#0A0A0F")]),
-            ("TEXTCOLOR", (0, 1), (-1, -1), colors.HexColor("#C0C0D0")),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#2A3235")),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#101416"), colors.HexColor("#000000")]),
+            ("TEXTCOLOR", (0, 1), (-1, -1), colors.HexColor("#ECECEC")),
         ]))
         story.append(table)
         story.append(Spacer(1, cm))
@@ -343,26 +343,26 @@ class ExportManager:
 <meta charset="UTF-8">
 <title>DeadRecon Report — {_esc(scan.get('target'))}</title>
 <style>
-:root {{ --neon-green: #00ff41; --neon-cyan: #00f3ff; --neon-purple: #b026ff; --dark: #0a0a0f; --card: #0d0d1a; }}
+:root {{ --neon-green: #ff3b1f; --neon-cyan: #f7de52; --neon-purple: #5ec3d8; --dark: #000000; --card: #101416; }}
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-body {{ background: var(--dark); color: #c0c0d0; font-family: 'Courier New', monospace; padding: 2rem; }}
+body {{ background: var(--dark); color: #ececec; font-family: 'Courier New', monospace; padding: 2rem; }}
 h1 {{ color: var(--neon-green); font-size: 2rem; text-shadow: 0 0 20px var(--neon-green); margin-bottom: 1rem; }}
 h2 {{ color: var(--neon-cyan); margin: 1.5rem 0 0.5rem; }}
-.meta {{ background: var(--card); border: 1px solid #1a1a2e; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; }}
+.meta {{ background: var(--card); border: 1px solid #2a3235; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; }}
 .meta table {{ width: 100%; border-collapse: collapse; }}
-.meta td {{ padding: 0.3rem 0.5rem; border-bottom: 1px solid #1a1a2e; }}
+.meta td {{ padding: 0.3rem 0.5rem; border-bottom: 1px solid #2a3235; }}
 .meta td:first-child {{ color: var(--neon-green); width: 40%; }}
-.result {{ background: var(--card); border: 1px solid #1a1a2e; padding: 1rem; margin: 0.5rem 0; border-radius: 4px; }}
-.result.anomaly {{ border-color: #ff2d55; box-shadow: 0 0 10px rgba(255,45,85,0.3); }}
+.result {{ background: var(--card); border: 1px solid #2a3235; padding: 1rem; margin: 0.5rem 0; border-radius: 4px; }}
+.result.anomaly {{ border-color: #ff5c7a; box-shadow: 0 0 10px rgba(255,92,122,0.3); }}
 .result-header {{ display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; align-items: center; }}
 .module {{ color: var(--neon-green); font-weight: bold; }}
 .type {{ color: var(--neon-cyan); }}
-.source {{ color: #9b59b6; }}
+.source {{ color: #5ec3d8; }}
 .confidence {{ color: #ff6b00; font-size: 0.8rem; }}
-.anomaly-badge {{ background: #ff2d55; color: white; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.8rem; }}
+.anomaly-badge {{ background: #ff5c7a; color: white; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.8rem; }}
 pre.data {{ font-size: 0.75rem; overflow-x: auto; padding: 0.5rem; background: #05050a; border-radius: 3px; color: #a0a0b0; max-height: 300px; overflow-y: auto; }}
 .shadow-score {{ font-size: 3rem; color: var(--neon-green); text-shadow: 0 0 30px var(--neon-green); }}
-footer {{ margin-top: 3rem; border-top: 1px solid #1a1a2e; padding-top: 1rem; color: #404050; text-align: center; }}
+footer {{ margin-top: 3rem; border-top: 1px solid #2a3235; padding-top: 1rem; color: #404050; text-align: center; }}
 </style>
 </head>
 <body>

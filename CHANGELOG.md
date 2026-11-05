@@ -9,6 +9,23 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- **New look for the console, landing page and reports:** pure black with signal red, yellow
+  highlights and condensed poster headlines.
+
+### Added
+- **A logo:** card XIII, a pixel skull with a red censor bar across its eyes. It's in the console,
+  landing page and README, and `scripts/render_logo.py` rebuilds it.
+
+### Removed
+- **The ghost mascot art and its render scripts.**
+- **The Light theme and its switch.** The console now has one theme. A basemap set only through
+  `geo.tile_url` is still used.
+
+### Security
+- **The console no longer contacts Google Fonts.** Opening it told Google the operator was using the
+  tool. Fonts now ship with the package, and they're no longer allowed by the content security policy.
+
 ## [1.30.0] - 2026-11-04
 
 ### Changed

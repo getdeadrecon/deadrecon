@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/getdeadrecon/deadrecon/main/docs/assets/deadrecon-card.png" width="276" alt="DeadRecon logo: tarot card XIII, a skull with a red censor bar across its eyes"></p>
+
 # DeadRecon
 
 *Formerly PhantomSignal.*
@@ -7,15 +9,15 @@
 > Recon that doesn't burn your infrastructure — a shared stealth egress layer, one-click
 > Tor, and an honest per-scan report of exactly what you leaked.
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-4d9fd6?style=flat-square&logo=python)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-7fb8dd?style=flat-square)](https://github.com/getdeadrecon/deadrecon/blob/main/LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Docker-c9a24a?style=flat-square)]()
-[![GitHub Stars](https://img.shields.io/github/stars/getdeadrecon/deadrecon?style=flat-square&color=4d9fd6)](https://github.com/getdeadrecon/deadrecon/stargazers)
-[![Open Issues](https://img.shields.io/github/issues/getdeadrecon/deadrecon?style=flat-square&color=c9a24a)](https://github.com/getdeadrecon/deadrecon/issues)
-[![CI](https://img.shields.io/github/actions/workflow/status/getdeadrecon/deadrecon/ci.yml?branch=main&style=flat-square&label=CI&color=4d9fd6)](https://github.com/getdeadrecon/deadrecon/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/deadrecon?style=flat-square&color=c9a24a&logo=pypi&logoColor=white)](https://pypi.org/project/deadrecon/)
-[![Project Site](https://img.shields.io/badge/site-deadrecon.sh-7fb8dd?style=flat-square&logo=github)](https://deadrecon.sh)
-[![Changelog](https://img.shields.io/badge/changelog-view-4d9fd6?style=flat-square)](https://github.com/getdeadrecon/deadrecon/blob/main/CHANGELOG.md)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-ff3b1f?style=flat-square&logo=python)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-f7de52?style=flat-square)](https://github.com/getdeadrecon/deadrecon/blob/main/LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Docker-111111?style=flat-square)]()
+[![GitHub Stars](https://img.shields.io/github/stars/getdeadrecon/deadrecon?style=flat-square&color=ff3b1f)](https://github.com/getdeadrecon/deadrecon/stargazers)
+[![Open Issues](https://img.shields.io/github/issues/getdeadrecon/deadrecon?style=flat-square&color=111111)](https://github.com/getdeadrecon/deadrecon/issues)
+[![CI](https://img.shields.io/github/actions/workflow/status/getdeadrecon/deadrecon/ci.yml?branch=main&style=flat-square&label=CI&color=ff3b1f)](https://github.com/getdeadrecon/deadrecon/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/deadrecon?style=flat-square&color=111111&logo=pypi&logoColor=white)](https://pypi.org/project/deadrecon/)
+[![Project Site](https://img.shields.io/badge/site-deadrecon.sh-f7de52?style=flat-square&logo=github)](https://deadrecon.sh)
+[![Changelog](https://img.shields.io/badge/changelog-view-ff3b1f?style=flat-square)](https://github.com/getdeadrecon/deadrecon/blob/main/CHANGELOG.md)
 
 
 ---
@@ -195,20 +197,6 @@ This output is illustrative. By default the CLI runs `dns_recon`, `port_scan`,
 Stages run concurrently where possible and degrade gracefully — a module
 without a configured API key returns empty rather than failing the scan.
 
-### Web UI — Theme Options
-
-The web console ships with two built-in themes, selectable from the **segmented
-switch** (☀ / ☾) in the top navigation bar. Your preference is saved
-automatically and applied before first paint, so there's no flash on reload.
-Every token in every theme is validated to WCAG AA contrast.
-
-| Theme | Description |
-|-------|-------------|
-| **Dark** *(default)* | Deep-slate federal console — federal-blue hero, gold accents, restrained glow |
-| **Light** | Clean daytime / print-friendly — white surfaces, federal-blue accents, flat (no glow) |
-
----
-
 ## ⚡ What is DeadRecon?
 
 DeadRecon is a **community-powered, open-source OSINT intelligence framework** built for security researchers, penetration testers, investigators, and enthusiasts. It combines web scraping, network reconnaissance, people intelligence aggregation, and threat analysis into a single cohesive platform.
@@ -300,7 +288,6 @@ All formats support **ZIP compression** and **AES-256-GCM encryption**.
 - **Risk Score** — composite risk/exposure scoring
 - **Scheduled Scans** — recurring automated scans
 - **API health monitor** — dashboard showing configured APIs and rate limits
-- **Light / Dark themes** — switch between the default Dark console and a clean Light mode from the ☀ / ☾ segmented control in the nav; preference persisted in localStorage and applied before first paint
 - **Full REST API** — integrate DeadRecon into your own toolchain
 - **CLI interface** — `deadrecon scan`, `deadrecon profile`, `deadrecon export`
 - **Docker** — single-command deployment
@@ -422,7 +409,7 @@ deadrecon/
 └── web/
     ├── routes/         — Flask blueprints (dashboard, scans, intel, settings, export, REST API)
     ├── templates/      — Jinja2 templates
-    └── static/         — CSS (role-token themes), JS (terminal, app)
+    └── static/         — CSS (role tokens), JS (terminal, app)
 ```
 
 ---
@@ -494,26 +481,26 @@ damage caused by this software.
 
 ## 🏷 Topics
 
-[![osint](https://img.shields.io/badge/osint-4d9fd6?style=flat-square)](https://github.com/topics/osint)
-[![security](https://img.shields.io/badge/security-7fb8dd?style=flat-square)](https://github.com/topics/security)
-[![python](https://img.shields.io/badge/python-7fb8dd?style=flat-square)](https://github.com/topics/python)
-[![hacking](https://img.shields.io/badge/hacking-4d9fd6?style=flat-square)](https://github.com/topics/hacking)
-[![cybersecurity](https://img.shields.io/badge/cybersecurity-c9a24a?style=flat-square)](https://github.com/topics/cybersecurity)
-[![reconnaissance](https://img.shields.io/badge/reconnaissance-4d9fd6?style=flat-square)](https://github.com/topics/reconnaissance)
-[![recon](https://img.shields.io/badge/recon-7fb8dd?style=flat-square)](https://github.com/topics/recon)
-[![penetration-testing](https://img.shields.io/badge/penetration--testing-c9a24a?style=flat-square)](https://github.com/topics/penetration-testing)
-[![ethical-hacking](https://img.shields.io/badge/ethical--hacking-4d9fd6?style=flat-square)](https://github.com/topics/ethical-hacking)
-[![bug-bounty](https://img.shields.io/badge/bug--bounty-7fb8dd?style=flat-square)](https://github.com/topics/bug-bounty)
-[![information-gathering](https://img.shields.io/badge/information--gathering-c9a24a?style=flat-square)](https://github.com/topics/information-gathering)
-[![threat-intelligence](https://img.shields.io/badge/threat--intelligence-4d9fd6?style=flat-square)](https://github.com/topics/threat-intelligence)
-[![security-tools](https://img.shields.io/badge/security--tools-7fb8dd?style=flat-square)](https://github.com/topics/security-tools)
-[![network-scanner](https://img.shields.io/badge/network--scanner-c9a24a?style=flat-square)](https://github.com/topics/network-scanner)
-[![dns-recon](https://img.shields.io/badge/dns--recon-4d9fd6?style=flat-square)](https://github.com/topics/dns-recon)
-[![infosec](https://img.shields.io/badge/infosec-7fb8dd?style=flat-square)](https://github.com/topics/infosec)
-[![flask](https://img.shields.io/badge/flask-c9a24a?style=flat-square)](https://github.com/topics/flask)
-[![security-research](https://img.shields.io/badge/security--research-4d9fd6?style=flat-square)](https://github.com/topics/security-research)
-[![footprinting](https://img.shields.io/badge/footprinting-7fb8dd?style=flat-square)](https://github.com/topics/footprinting)
-[![automation](https://img.shields.io/badge/automation-c9a24a?style=flat-square)](https://github.com/topics/automation)
+[![osint](https://img.shields.io/badge/osint-ff3b1f?style=flat-square)](https://github.com/topics/osint)
+[![security](https://img.shields.io/badge/security-f7de52?style=flat-square)](https://github.com/topics/security)
+[![python](https://img.shields.io/badge/python-f7de52?style=flat-square)](https://github.com/topics/python)
+[![hacking](https://img.shields.io/badge/hacking-ff3b1f?style=flat-square)](https://github.com/topics/hacking)
+[![cybersecurity](https://img.shields.io/badge/cybersecurity-111111?style=flat-square)](https://github.com/topics/cybersecurity)
+[![reconnaissance](https://img.shields.io/badge/reconnaissance-ff3b1f?style=flat-square)](https://github.com/topics/reconnaissance)
+[![recon](https://img.shields.io/badge/recon-f7de52?style=flat-square)](https://github.com/topics/recon)
+[![penetration-testing](https://img.shields.io/badge/penetration--testing-111111?style=flat-square)](https://github.com/topics/penetration-testing)
+[![ethical-hacking](https://img.shields.io/badge/ethical--hacking-ff3b1f?style=flat-square)](https://github.com/topics/ethical-hacking)
+[![bug-bounty](https://img.shields.io/badge/bug--bounty-f7de52?style=flat-square)](https://github.com/topics/bug-bounty)
+[![information-gathering](https://img.shields.io/badge/information--gathering-111111?style=flat-square)](https://github.com/topics/information-gathering)
+[![threat-intelligence](https://img.shields.io/badge/threat--intelligence-ff3b1f?style=flat-square)](https://github.com/topics/threat-intelligence)
+[![security-tools](https://img.shields.io/badge/security--tools-f7de52?style=flat-square)](https://github.com/topics/security-tools)
+[![network-scanner](https://img.shields.io/badge/network--scanner-111111?style=flat-square)](https://github.com/topics/network-scanner)
+[![dns-recon](https://img.shields.io/badge/dns--recon-ff3b1f?style=flat-square)](https://github.com/topics/dns-recon)
+[![infosec](https://img.shields.io/badge/infosec-f7de52?style=flat-square)](https://github.com/topics/infosec)
+[![flask](https://img.shields.io/badge/flask-111111?style=flat-square)](https://github.com/topics/flask)
+[![security-research](https://img.shields.io/badge/security--research-ff3b1f?style=flat-square)](https://github.com/topics/security-research)
+[![footprinting](https://img.shields.io/badge/footprinting-f7de52?style=flat-square)](https://github.com/topics/footprinting)
+[![automation](https://img.shields.io/badge/automation-111111?style=flat-square)](https://github.com/topics/automation)
 
 ---
 

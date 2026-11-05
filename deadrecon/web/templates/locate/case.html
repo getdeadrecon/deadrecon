@@ -287,6 +287,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 {% endif %}
 <script nonce="{{ csp_nonce() }}">
+const themeColor = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const CLUSTERS = {{ footprint.clusters | tojson }};
 const SIGNALS = {{ footprint.signals | tojson }};
 const CONFLICTS = {{ footprint.conflicts | tojson }};
@@ -320,14 +321,10 @@ const MAP_CFG = {{ mapcfg | tojson }};
     return;
   }
 
-  const isLight = () => document.documentElement.getAttribute("data-theme") === "light";
   const map = L.map("lc-map");
-  const tileUrl = () => isLight() ? MAP_CFG.tile_url : MAP_CFG.tile_url_dark;
-  if (tileUrl()) {
-    const tiles = L.tileLayer(tileUrl(), { attribution: MAP_CFG.attribution, maxZoom: 19 }).addTo(map);
-    // Swap the basemap live when the site theme toggles (no reload).
-    new MutationObserver(() => tiles.setUrl(tileUrl()))
-      .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  const tileUrl = MAP_CFG.tile_url_dark || MAP_CFG.tile_url;
+  if (tileUrl) {
+    L.tileLayer(tileUrl, { attribution: MAP_CFG.attribution, maxZoom: 19 }).addTo(map);
   } else {
     const note = document.createElement("p");
     note.className = "text-dim";
@@ -352,7 +349,7 @@ const MAP_CFG = {{ mapcfg | tojson }};
 
   pts.forEach(c => {
     const conf = c.combined_confidence || 0;
-    const color = c.eliminated ? "#e26d6d" : (conf >= 0.6 ? "#4d9fd6" : "#e0a63a");
+    const color = c.eliminated ? themeColor("--danger") : (conf >= 0.6 ? themeColor("--accent") : themeColor("--warning"));
     const circle = L.circle([c.lat, c.lon], { radius: (c.radius_km || 25) * 1000,
       color: color, fillColor: color, fillOpacity: 0.07, weight: 1, dashArray: "4 4" }).addTo(map);
     const m = L.circleMarker([c.lat, c.lon], {
@@ -368,7 +365,7 @@ const MAP_CFG = {{ mapcfg | tojson }};
   });
   if (LAST && LAST.lat != null && LAST.lon != null) {
     L.circle([LAST.lat, LAST.lon], { radius: (LAST.radius_km || 5) * 1000,
-      color: "#4d9fd6", fillColor: "#4d9fd6", fillOpacity: 0.08, weight: 1 }).addTo(map);
+      color: themeColor("--accent"), fillColor: themeColor("--accent"), fillOpacity: 0.08, weight: 1 }).addTo(map);
   }
 
   // Movement track: chronological line between timed, located positive fixes;
@@ -389,7 +386,7 @@ const MAP_CFG = {{ mapcfg | tojson }};
       const a = pts2[i - 1], b = pts2[i];
       const bad = infeasible.has([a.id, b.id].sort().join("|"));
       L.polyline([[a.lat, a.lon], [b.lat, b.lon]], {
-        color: bad ? "#e26d6d" : "#7aa7c7", weight: bad ? 3 : 2,
+        color: bad ? themeColor("--danger") : themeColor("--accent-alt"), weight: bad ? 3 : 2,
         opacity: 0.8, dashArray: bad ? null : "6 5",
       }).addTo(trackLayer);
     }

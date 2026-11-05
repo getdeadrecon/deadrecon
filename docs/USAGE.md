@@ -110,13 +110,6 @@ Port scans, SMTP probes and WHOIS lookups still connect directly. The scan's att
 | **Profiler** | Person / email / username lookup |
 | **Integrations** | API key management |
 
-### Theme Switch
-
-Use the **☀ / ☾** segmented control in the top navigation to switch between:
-- **Dark** — deep-slate federal console with federal-blue hero, gold accents, and restrained glow (default)
-- **Light** — clean, print-friendly theme with white surfaces, federal-blue accents, and no glow
-
-Both themes are built on the same semantic role tokens and validated to WCAG AA contrast. Your preference is saved in the browser, persists across sessions, and is applied before first paint so there's no flash on reload.
 
 ### Live Feed
 
@@ -603,15 +596,6 @@ pip install -e .
 python run.py
 ```
 
-**`Hack-Regular.ttf` not found (phantom PNG render)**
-
-The phantom asset render script (`scripts/render_phantom.py`) requires the Hack font. On Windows:
-1. Download Hack from https://sourcefoundry.org/hack/
-2. Install the font system-wide
-3. Update `FONT_PATH` in `scripts/render_phantom.py`:
-```python
-FONT_PATH = "C:/Windows/Fonts/Hack-Regular.ttf"
-```
 
 **`asyncio` errors on Windows (Python 3.10)**
 
