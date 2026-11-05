@@ -22,6 +22,17 @@
 
 ---
 
+## ⚡ What's New in v1.31 — New look, and a quieter console
+
+- **The console contacts no other servers by default.** It used to load from Google Fonts, cdnjs and
+  unpkg, which told them you were using it. Those files now ship with the package. A map tile server
+  you configure is still contacted.
+- **A new look:** black, signal red and a new logo. The Light theme is gone.
+- **Fixes:** exports no longer crash on a scan with no score, maps stay dark without a basemap, and
+  PDF reports print cleanly.
+
+---
+
 ## ⚡ What's New in v1.30 — PhantomSignal is now DeadRecon
 
 Same tool, new name. **Nothing you've saved is lost.**

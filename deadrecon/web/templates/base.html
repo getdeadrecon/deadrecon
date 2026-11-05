@@ -121,7 +121,7 @@
 
   <!-- Core scripts -->
   {% if current_user.is_authenticated %}
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+  <script src="{{ url_for('static', filename='vendor/socket.io/socket.io.min.js') }}"></script>
   {% endif %}
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   {% block scripts %}{% endblock %}

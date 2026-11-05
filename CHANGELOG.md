@@ -9,6 +9,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.31.0] - 2026-11-04
+
 ### Changed
 - **New look for the console, landing page and reports:** pure black with signal red, yellow
   highlights and condensed poster headlines.
@@ -22,9 +24,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - **The Light theme and its switch.** The console now has one theme. A basemap set only through
   `geo.tile_url` is still used.
 
+### Fixed
+- **Exporting a scan with no score no longer crashes.** HTML and Markdown exports failed for a scan
+  with no risk score, threat level or duration, such as one that was aborted or failed.
+- **Maps are dark without a basemap.** Leaflet's light gray no longer fills the map on a black page.
+- **PDF reports print cleanly.** The misaligned title band and black table are gone.
+
 ### Security
-- **The console no longer contacts Google Fonts.** Opening it told Google the operator was using the
-  tool. Fonts now ship with the package, and they're no longer allowed by the content security policy.
+- **The console no longer contacts other servers by default.** Opening it told Google Fonts, cdnjs and,
+  on map pages, unpkg that the operator was using the tool. Fonts, `socket.io` and Leaflet now ship with
+  the package, verified against the hashes the console pinned before, and the content security policy
+  no longer allows those hosts. A map tile server you configure is still contacted.
 
 ## [1.30.0] - 2026-11-04
 
