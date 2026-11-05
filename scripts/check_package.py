@@ -23,7 +23,7 @@ FORBIDDEN = re.compile(
 
 def required_data_files():
     """Every non-Python file in the package source tree."""
-    for path in (ROOT / "phantomsignal").rglob("*"):
+    for path in (ROOT / "deadrecon").rglob("*"):
         if (path.is_file() and path.suffix not in (".py", ".pyc")
                 and path.name not in IGNORED_DATA and "__pycache__" not in path.parts):
             yield path.relative_to(ROOT).as_posix()

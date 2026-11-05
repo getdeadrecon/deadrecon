@@ -1,4 +1,4 @@
-# Releasing PhantomSignal
+# Releasing DeadRecon
 
 How a release is cut, and the one-time PyPI setup that makes the automated
 publish work.
@@ -9,7 +9,7 @@ Releases are driven by a git tag. Pushing a tag matching `v*.*.*` triggers
 [`.github/workflows/publish.yml`](../.github/workflows/publish.yml), which:
 
 1. **Build** — builds the sdist + wheel and **verifies the tag matches the
-   package version** (`phantomsignal.__version__` must equal the tag minus its
+   package version** (`deadrecon.__version__` must equal the tag minus its
    `v`). A mismatch fails the run.
 2. **Publish** — uploads the artifacts to PyPI using an **API token** stored in
    the `PYPI_API_TOKEN` repo secret. (Trusted publishing via OIDC is a supported
@@ -25,14 +25,14 @@ Releases are driven by a git tag. Pushing a tag matching `v*.*.*` triggers
 
 ```bash
 # 1. Bump the version in BOTH places (they must match the tag)
-#    - phantomsignal/__init__.py  → __version__ = "X.Y.Z"
+#    - deadrecon/__init__.py  → __version__ = "X.Y.Z"
 #    - setup.py                   → version="X.Y.Z"
 #    Also update the version in docs/index.html and the What's New section in README.md,
-#    and the Tor BUNDLE_VERSION and hashes in phantomsignal/core/tor_service.py if a
+#    and the Tor BUNDLE_VERSION and hashes in deadrecon/core/tor_service.py if a
 #    newer signed bundle is out.
 # 2. Move CHANGELOG [Unreleased] → [X.Y.Z] — <date>, add a fresh [Unreleased]
 # 3. Commit, merge to main, then tag main:
-git tag -a vX.Y.Z <main-commit> -m "PhantomSignal vX.Y.Z — <headline>"
+git tag -a vX.Y.Z <main-commit> -m "DeadRecon vX.Y.Z — <headline>"
 git push origin vX.Y.Z
 # 4. Publish a GitHub Release (the workflow does NOT create one):
 gh release create vX.Y.Z --title "vX.Y.Z — <headline>" --notes-file notes.md --latest
@@ -45,11 +45,11 @@ gh release create vX.Y.Z --title "vX.Y.Z — <headline>" --notes-file notes.md -
 The publish job authenticates with a project-scoped PyPI API token stored as the
 `PYPI_API_TOKEN` **repo secret**:
 
-1. On PyPI (as a project Owner), create a token scoped to `phantomsignal`:
+1. On PyPI (as a project Owner), create a token scoped to `deadrecon`:
    **Account settings → API tokens → Add API token**.
 2. Store it as a GitHub Actions secret:
    ```bash
-   gh secret set PYPI_API_TOKEN --repo getphantomsignal/phantomsignal
+   gh secret set PYPI_API_TOKEN --repo getdeadrecon/deadrecon
    ```
    Paste the token at the hidden prompt, so it stays out of your shell history.
 3. `publish.yml` passes it as `password: ${{ secrets.PYPI_API_TOKEN }}` (with
@@ -71,30 +71,30 @@ workflow:
 
 | Field | Value |
 |-------|-------|
-| PyPI project name | `phantomsignal` |
-| Owner | `getphantomsignal` |
-| Repository name | `phantomsignal` |
+| PyPI project name | `deadrecon` |
+| Owner | `getdeadrecon` |
+| Repository name | `deadrecon` |
 | Workflow name | `publish.yml` &nbsp;*(filename only, not a path)* |
 | Environment name | `pypi` |
 
 ### Steps
 
 1. **Log in to PyPI** at <https://pypi.org> as an owner/maintainer of the
-   `phantomsignal` project.
+   `deadrecon` project.
 
 2. **Open the project's publishing settings:**
-   <https://pypi.org/manage/project/phantomsignal/settings/publishing/>
+   <https://pypi.org/manage/project/deadrecon/settings/publishing/>
    (Project → *Manage* → *Publishing*).
 
 3. Under **"Add a new trusted publisher" → GitHub**, fill in exactly:
-   - **Owner:** `getphantomsignal`
-   - **Repository name:** `phantomsignal`
+   - **Owner:** `getdeadrecon`
+   - **Repository name:** `deadrecon`
    - **Workflow name:** `publish.yml`
    - **Environment name:** `pypi`
 
    Then **Add**.
 
-   > **New/unclaimed project?** If `phantomsignal` doesn't exist on PyPI yet,
+   > **New/unclaimed project?** If `deadrecon` doesn't exist on PyPI yet,
    > use <https://pypi.org/manage/account/publishing/> to add a
    > **pending** publisher with the same four values — it becomes active and
    > claims the name on the first successful upload.
@@ -120,7 +120,7 @@ git push origin :refs/tags/vX.Y.Z && git push origin vX.Y.Z
 ```
 
 A green **Publish to PyPI** job and the new version live at
-<https://pypi.org/project/phantomsignal/> confirm success.
+<https://pypi.org/project/deadrecon/> confirm success.
 
 ---
 
@@ -150,22 +150,22 @@ workflow's claims. The publish job hasn't been configured on PyPI yet, or one of
 the four values is wrong. The log prints the claims it presented — they must
 match the [setup table](#alternative-pypi-trusted-publisher-oidc) exactly:
 
-- `sub: repo:getphantomsignal/phantomsignal:environment:pypi`
+- `sub: repo:getdeadrecon/deadrecon:environment:pypi`
 - `workflow_ref: …/publish.yml@refs/tags/vX.Y.Z`
 - `environment: pypi`
 
 Double-check owner, repository, workflow **filename** (`publish.yml`, not a
 path), and environment name (`pypi`).
 
-### `403 … OIDC scoped token is not valid for project 'phantomsignal'`
+### `403 … OIDC scoped token is not valid for project 'deadrecon'`
 
 Auth *succeeded* (a publisher matched) but the upload was refused. This is the
 **pending-vs-project** gotcha: the publisher was added as a **pending publisher**
 on the account page (<https://pypi.org/manage/account/publishing/>), which only
-mints a token to **create a new project**. Because `phantomsignal` **already
+mints a token to **create a new project**. Because `deadrecon` **already
 exists** on PyPI, that token isn't valid for it.
 
 **Fix:** add the publisher on the **existing project** instead —
-<https://pypi.org/manage/project/phantomsignal/settings/publishing/> (you must
+<https://pypi.org/manage/project/deadrecon/settings/publishing/> (you must
 be a project *Owner*) — then remove the stray pending publisher. Re-run the
 publish afterwards.

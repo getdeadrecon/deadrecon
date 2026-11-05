@@ -1,4 +1,4 @@
-## PhantomSignal .gitignore
+## DeadRecon .gitignore
 
 # Python
 __pycache__/
@@ -18,7 +18,10 @@ env/
 .env.*
 !.env.example
 
-# PhantomSignal runtime
+# DeadRecon runtime
+deadrecon.db
+deadrecon.db-shm
+deadrecon.db-wal
 phantomsignal.db
 phantomsignal.db-shm
 phantomsignal.db-wal
@@ -36,12 +39,14 @@ exports/
 instance/
 
 # API keys — NEVER commit these
+config/deadrecon.yaml
 config/phantomsignal.yaml
 config/*.yaml
 config/*.json
 config/*.toml
 config/*.yml
 secret_key
+.deadrecon/
 .phantomsignal/
 .pypirc
 .netrc
@@ -98,7 +103,7 @@ id_ed25519*
 tmp/
 temp/
 
-# PhantomSignal scan data / exports
+# DeadRecon scan data / exports
 /scans/
 /reports/
 /screenshots/

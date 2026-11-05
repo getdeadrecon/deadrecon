@@ -32,7 +32,7 @@ any probe expected).
 ## The ten probes
 
 Each probe is a 7-field spec in our code
-(`phantomsignal/scrapers/jarm.py`, `PROBES`):
+(`deadrecon/scrapers/jarm.py`, `PROBES`):
 
 ```
 [ tls_version, cipher_list, cipher_order, grease, alpn, version_support, ext_order ]

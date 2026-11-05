@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Render the PhantomSignal Gravatar avatar.
+Render the DeadRecon Gravatar avatar.
 
-"PS" in doom ASCII art with HUD-style decorations:
+"DR" in doom ASCII art with HUD-style decorations:
   - scanline background
   - corner [+] markers
   - dashed top/bottom rule lines
-  - // PHANTOM SIGNAL // label
+  - // DEAD RECON // label
 
-Output: docs/assets/phantomsignal-gravatar.png
+Output: docs/assets/deadrecon-gravatar.png
 
 Requirements: pip install Pillow pyfiglet
 Usage:        python scripts/render_gravatar.py
@@ -20,14 +20,14 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 FONT_PATH   = "/usr/share/fonts/truetype/hack/Hack-Regular.ttf"
 CANVAS      = 512
-TARGET_FRAC = 0.76      # doom PS fills 76% of canvas width
+TARGET_FRAC = 0.76      # doom DR fills 76% of canvas width
 
 GREEN       = (0, 255, 65, 255)
 GREEN_DIM   = (0, 180, 45, 180)
 DARK_BG     = (10, 10, 15, 255)
 
 ROOT = Path(__file__).parent.parent
-OUT  = ROOT / "docs" / "assets" / "phantomsignal-gravatar.png"
+OUT  = ROOT / "docs" / "assets" / "deadrecon-gravatar.png"
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -119,7 +119,7 @@ def draw_hud(canvas_img: Image.Image) -> Image.Image:
     dc.text((rule_x, rule_bot_y), dash, font=sm_font, fill=GREEN_DIM)
 
     # bottom label
-    label = "// PHANTOM SIGNAL //"
+    label = "// DEAD RECON //"
     lw = int(d2.textlength(label, font=lbl_font))
     dc.text(((C - lw) // 2, C - pad - lbl_font.size), label,
             font=lbl_font, fill=GREEN_DIM)
@@ -134,7 +134,7 @@ def draw_hud(canvas_img: Image.Image) -> Image.Image:
 # ── main render ───────────────────────────────────────────────────────────────
 
 def render() -> None:
-    raw   = pyfiglet.figlet_format("PS", font="doom")
+    raw   = pyfiglet.figlet_format("DR", font="doom")
     lines = [l.rstrip() for l in raw.rstrip().splitlines() if l.strip()]
 
     font_sz = fit_font_size(lines, CANVAS * TARGET_FRAC)
@@ -172,6 +172,6 @@ def render() -> None:
 
 
 if __name__ == "__main__":
-    print("Rendering PhantomSignal Gravatar avatar...")
+    print("Rendering DeadRecon Gravatar avatar...")
     render()
     print("Done.")

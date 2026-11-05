@@ -1,7 +1,7 @@
 # JARM — Active TLS-Stack Fingerprinting, from the inside out
 
-This directory documents PhantomSignal's **from-scratch** JARM implementation
-(`phantomsignal/scrapers/jarm.py`) at the byte level. It exists because JARM is
+This directory documents DeadRecon's **from-scratch** JARM implementation
+(`deadrecon/scrapers/jarm.py`) at the byte level. It exists because JARM is
 one of those algorithms that is easy to get *almost* right and impossible to
 debug by eye — a single wrong cipher-list index yields a fingerprint that looks
 valid, is internally consistent, and silently fails to match every other JARM
@@ -50,12 +50,12 @@ differently and deterministically. The *disagreements* are the fingerprint.
 ## Quick reference
 
 ```python
-from phantomsignal.scrapers.jarm import compute_jarm
+from deadrecon.scrapers.jarm import compute_jarm
 compute_jarm("www.google.com")
 # -> '27d40d40d29d40d1dc42d43d00041d...'  (cipher/version prefix is canonical)
 ```
 
-- **Module:** `phantomsignal/scrapers/jarm.py`
+- **Module:** `deadrecon/scrapers/jarm.py`
 - **Wired into:** the `infra_pivot` module → emits a `jarm_fingerprint` result and
   pivots via Shodan `ssl.jarm:`.
 - **Tests:** `tests/test_jarm.py` (cipher reordering, hash encoding, packet

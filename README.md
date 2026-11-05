@@ -1,4 +1,6 @@
-# PhantomSignal
+# DeadRecon
+
+*Formerly PhantomSignal.*
 
 > **The OPSEC-native OSINT framework** — _"Map the surface. Own the signal."_
 >
@@ -6,15 +8,28 @@
 > Tor, and an honest per-scan report of exactly what you leaked.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-4d9fd6?style=flat-square&logo=python)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-7fb8dd?style=flat-square)](https://github.com/getphantomsignal/phantomsignal/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-7fb8dd?style=flat-square)](https://github.com/getdeadrecon/deadrecon/blob/main/LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Docker-c9a24a?style=flat-square)]()
-[![GitHub Stars](https://img.shields.io/github/stars/getphantomsignal/phantomsignal?style=flat-square&color=4d9fd6)](https://github.com/getphantomsignal/phantomsignal/stargazers)
-[![Open Issues](https://img.shields.io/github/issues/getphantomsignal/phantomsignal?style=flat-square&color=c9a24a)](https://github.com/getphantomsignal/phantomsignal/issues)
-[![CI](https://img.shields.io/github/actions/workflow/status/getphantomsignal/phantomsignal/ci.yml?branch=main&style=flat-square&label=CI&color=4d9fd6)](https://github.com/getphantomsignal/phantomsignal/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/phantomsignal?style=flat-square&color=c9a24a&logo=pypi&logoColor=white)](https://pypi.org/project/phantomsignal/)
-[![Project Site](https://img.shields.io/badge/site-phantomsignal.sh-7fb8dd?style=flat-square&logo=github)](https://phantomsignal.sh)
-[![Changelog](https://img.shields.io/badge/changelog-view-4d9fd6?style=flat-square)](https://github.com/getphantomsignal/phantomsignal/blob/main/CHANGELOG.md)
+[![GitHub Stars](https://img.shields.io/github/stars/getdeadrecon/deadrecon?style=flat-square&color=4d9fd6)](https://github.com/getdeadrecon/deadrecon/stargazers)
+[![Open Issues](https://img.shields.io/github/issues/getdeadrecon/deadrecon?style=flat-square&color=c9a24a)](https://github.com/getdeadrecon/deadrecon/issues)
+[![CI](https://img.shields.io/github/actions/workflow/status/getdeadrecon/deadrecon/ci.yml?branch=main&style=flat-square&label=CI&color=4d9fd6)](https://github.com/getdeadrecon/deadrecon/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/deadrecon?style=flat-square&color=c9a24a&logo=pypi&logoColor=white)](https://pypi.org/project/deadrecon/)
+[![Project Site](https://img.shields.io/badge/site-deadrecon.sh-7fb8dd?style=flat-square&logo=github)](https://deadrecon.sh)
+[![Changelog](https://img.shields.io/badge/changelog-view-4d9fd6?style=flat-square)](https://github.com/getdeadrecon/deadrecon/blob/main/CHANGELOG.md)
 
+
+---
+
+## ⚡ What's New in v1.30 — PhantomSignal is now DeadRecon
+
+Same tool, new name. **Nothing you've saved is lost.**
+
+- **On first run**, `~/.phantomsignal` moves to `~/.deadrecon`, and a `phantomsignal.db` moves
+  to `deadrecon.db`. Your API keys, scans and account come with them. You'll need to log in again.
+- **Old settings still work:** `PHANTOMSIGNAL_*` variables and the `phantomsignal` and `psig` commands.
+- **Upgrading with pip:** `pip install deadrecon`, then uninstall `phantomsignal`.
+- **Upgrading with Docker:** run `docker-compose down` *before* you pull, or the old container keeps
+  port 5000. Your data volumes keep their names, so your data stays.
 
 ---
 
@@ -23,7 +38,7 @@
 **If you used Tor before 1.29.0, those scans were not on Tor.** The old setting and the
 `--profile covert` container never routed scan traffic, so they connected directly.
 
-- **One-click Tor** — click 🧅 and PhantomSignal starts Tor for you, with nothing to
+- **One-click Tor** — click 🧅 and DeadRecon starts Tor for you, with nothing to
   install or configure. Add `--tor` on the CLI. Tor is built into the Docker image.
 - **Fails closed** — each scan confirms it's on Tor before touching the target and stops
   if it can't. Modules that would bypass Tor are skipped and listed in the report.
@@ -41,7 +56,7 @@
   calls need `Authorization: Bearer <token>`. The first run prints a setup token.
 
 **Upgrading from Docker?** The container no longer runs as root, so there's a one-time
-`chown`. See the [changelog](https://github.com/getphantomsignal/phantomsignal/blob/main/CHANGELOG.md).
+`chown`. See the [changelog](https://github.com/getdeadrecon/deadrecon/blob/main/CHANGELOG.md).
 
 **Limits:** the Windows and Intel Mac Tor bundles haven't been run, and automatic Tor
 start doesn't set up bridges, so networks that block Tor need a self-run Tor service.
@@ -70,13 +85,13 @@ posture is visible in the navbar and survives a restart.
 - **Settings persist** — stealth profile, proxy pool, rotation, and the rest now
   survive a restart.
 
-See the [CHANGELOG](https://github.com/getphantomsignal/phantomsignal/blob/main/CHANGELOG.md) for the full list.
+See the [CHANGELOG](https://github.com/getdeadrecon/deadrecon/blob/main/CHANGELOG.md) for the full list.
 
 ---
 
 ## ⚡ What's New in v1.26.0 — Best-of-breed engines + the vuln loop
 
-**PhantomSignal now closes the ASM loop and runs fast Go-native engines — under
+**DeadRecon now closes the ASM loop and runs fast Go-native engines — under
 stealth governance.** It maps the surface *and* flags what's exploitable, and
 orchestrates the best external tools when installed, and reports it honestly when
 one can't be masked.
@@ -106,7 +121,7 @@ labelled "masked."
 
 ## ⚡ Also new — OPSEC Core (v1.25.0)
 
-**PhantomSignal reports its own attribution surface.** No other open-source
+**DeadRecon reports its own attribution surface.** No other open-source
 OSINT framework tells you what a scan leaked about *you*.
 
 ### 🛰 Attribution Surface — "what did this scan leak?"
@@ -153,7 +168,7 @@ across 50+ sources, and a web-surface crawl — then rolls every finding into a
 single Risk Score and writes a shareable HTML report.
 
 ```text
-$ phantomsignal scan example.com --profile standard --opsec quiet --format html
+$ deadrecon scan example.com --profile standard --opsec quiet --format html
 
 ◈  Target   : example.com  (domain)
 ◈  Profile  : standard     (~2–5 min)
@@ -191,11 +206,11 @@ Every token in every theme is validated to WCAG AA contrast.
 
 ---
 
-## ⚡ What is PhantomSignal?
+## ⚡ What is DeadRecon?
 
-PhantomSignal is a **community-powered, open-source OSINT intelligence framework** built for security researchers, penetration testers, investigators, and enthusiasts. It combines web scraping, network reconnaissance, people intelligence aggregation, and threat analysis into a single cohesive platform.
+DeadRecon is a **community-powered, open-source OSINT intelligence framework** built for security researchers, penetration testers, investigators, and enthusiasts. It combines web scraping, network reconnaissance, people intelligence aggregation, and threat analysis into a single cohesive platform.
 
-> **LEGAL DISCLAIMER:** PhantomSignal is for **authorized security research, OSINT investigations, and educational purposes only**. Only scan targets you have explicit permission to test. You are solely responsible for compliance with all applicable laws. The developers assume NO liability for misuse.
+> **LEGAL DISCLAIMER:** DeadRecon is for **authorized security research, OSINT investigations, and educational purposes only**. Only scan targets you have explicit permission to test. You are solely responsible for compliance with all applicable laws. The developers assume NO liability for misuse.
 
 ---
 
@@ -273,18 +288,18 @@ All formats support **ZIP compression** and **AES-256-GCM encryption**.
   burned egresses — **seed it in one click** from curated free feeds, a custom
   list URL, or an uploaded file (Settings → Scan Settings)
 - **Live egress posture chip** in the navbar — STEALTH / PARTIAL / DIRECT at a glance
-- **One-click Tor:** click the 🧅 button and PhantomSignal starts Tor for you, with nothing to install or configure. Each scan confirms it's on Tor before touching the target, targets get separate circuits, `.onion` targets work, and modules that would bypass Tor are skipped and reported
+- **One-click Tor:** click the 🧅 button and DeadRecon starts Tor for you, with nothing to install or configure. Each scan confirms it's on Tor before touching the target, targets get separate circuits, `.onion` targets work, and modules that would bypass Tor are skipped and reported
 - Configurable request jitter and delays, toggled via **Evasive** mode
 - **Egress settings persist** across restarts
 
 ### 🔔 Additional Features
 - **Real-time live feed** — WebSocket-powered terminal during scans
 - **Risk Score** — composite risk/exposure scoring
-- **Scheduled Phantoms** — recurring automated scans
+- **Scheduled Scans** — recurring automated scans
 - **API health monitor** — dashboard showing configured APIs and rate limits
 - **Light / Dark themes** — switch between the default Dark console and a clean Light mode from the ☀ / ☾ segmented control in the nav; preference persisted in localStorage and applied before first paint
-- **Full REST API** — integrate PhantomSignal into your own toolchain
-- **CLI interface** — `phantomsignal scan`, `phantomsignal profile`, `phantomsignal export`
+- **Full REST API** — integrate DeadRecon into your own toolchain
+- **CLI interface** — `deadrecon scan`, `deadrecon profile`, `deadrecon export`
 - **Docker** — single-command deployment
 
 ---
@@ -293,40 +308,40 @@ All formats support **ZIP compression** and **AES-256-GCM encryption**.
 
 ### Option 1: Docker (Recommended)
 ```bash
-git clone https://github.com/getphantomsignal/phantomsignal
-cd phantomsignal
+git clone https://github.com/getdeadrecon/deadrecon
+cd deadrecon
 docker-compose up -d
-docker logs phantomsignal   # copy the first-run setup token
+docker logs deadrecon   # copy the first-run setup token
 # Open http://localhost:5000 and create your operator account
 
 # Optional: include nuclei, katana, subfinder, naabu and tlsx (about 500 MB more)
-PHANTOMSIGNAL_RECON_TOOLS=true docker-compose up -d --build
+DEADRECON_RECON_TOOLS=true docker-compose up -d --build
 ```
 
 ### Option 2: Manual Installation
 ```bash
 # Python 3.10+ required
-git clone https://github.com/getphantomsignal/phantomsignal
-cd phantomsignal
+git clone https://github.com/getdeadrecon/deadrecon
+cd deadrecon
 pip install -e .
-phantomsignal init
-phantomsignal web --open-browser
+deadrecon init
+deadrecon web --open-browser
 # The first run prints a setup token in this terminal; use it to create your account
 ```
 
 ### Option 3: CLI Scan
 ```bash
 # Quick scan
-phantomsignal scan example.com --profile quick
+deadrecon scan example.com --profile quick
 
 # Over Tor: starts Tor for you, and stops if it can't confirm it
-phantomsignal scan example.com --tor
+deadrecon scan example.com --tor
 
 # IP recon with an HTML report
-phantomsignal scan 192.168.1.1 --type ip_recon --format html --output ./reports
+deadrecon scan 192.168.1.1 --type ip_recon --format html --output ./reports
 
 # People intelligence
-phantomsignal profile --email target@company.com --first-name John --last-name Doe
+deadrecon profile --email target@company.com --first-name John --last-name Doe
 ```
 
 ---
@@ -348,13 +363,13 @@ export SECURITYTRAILS_API_KEY="your-st-key"
 ```
 
 ### Config File
-Settings are saved to `~/.phantomsignal/config.yaml` (owner-only). Most can be changed
+Settings are saved to `~/.deadrecon/config.yaml` (owner-only). Most can be changed
 from the web console.
 
 ### Egress / stealth (Settings → Scan Settings)
 Set your stealth profile, single proxy, and rotating proxy pool from the web UI.
 Seed the pool from curated free proxy feeds, a custom list URL, or an uploaded
-file. These egress settings are **saved to `~/.phantomsignal/config.yaml` and
+file. These egress settings are **saved to `~/.deadrecon/config.yaml` and
 persist across restarts** (env-provided API keys are never copied there). Free
 public proxies are unvetted — treat them as blend-in cover for low-sensitivity
 recon, pair with HTTPS, and prefer your own egress for anything sensitive.
@@ -363,11 +378,11 @@ recon, pair with HTTPS, and prefer your own egress for anything sensitive.
 
 ## 🔌 Adding Custom APIs
 
-PhantomSignal uses a plugin architecture. Adding a new intelligence source takes ~20 lines:
+DeadRecon uses a plugin architecture. Adding a new intelligence source takes ~20 lines:
 
 ```python
-# phantomsignal/intel/apis/my_api.py
-from phantomsignal.intel.apis.base import BaseIntelAPI, register_api, APICategory, APITier
+# deadrecon/intel/apis/my_api.py
+from deadrecon.intel.apis.base import BaseIntelAPI, register_api, APICategory, APITier
 
 @register_api
 class MyAPI(BaseIntelAPI):
@@ -387,14 +402,14 @@ class MyAPI(BaseIntelAPI):
         return [self._wrap_result("my_result", data)]
 ```
 
-Then import it in `phantomsignal/intel/orchestrator.py` and it auto-registers.
+Then import it in `deadrecon/intel/orchestrator.py` and it auto-registers.
 
 ---
 
 ## 🏗 Architecture
 
 ```
-phantomsignal/
+deadrecon/
 ├── core/               — Engine, config, database, models
 ├── scrapers/           — Web crawler, tech detector, port scanner, API hunter, DNS recon
 ├── intel/
@@ -412,7 +427,7 @@ phantomsignal/
 ## 🛡 REST API
 
 Every endpoint except the health check needs a token. Create one with
-`phantomsignal api-token` (this revokes the previous token).
+`deadrecon api-token` (this revokes the previous token).
 
 ```bash
 export PSIG_TOKEN=psig_...
@@ -437,29 +452,29 @@ curl http://localhost:5000/api/v1/health
 
 ## 🤝 Contributing
 
-PhantomSignal thrives on community contributions. Ways to help:
+DeadRecon thrives on community contributions. Ways to help:
 
 1. **Add API integrations** — Follow the plugin pattern above
 2. **Improve detection signatures** — Expand `tech_detector.py`
-3. **Bug reports** — [GitHub Issues](https://github.com/getphantomsignal/phantomsignal/issues)
+3. **Bug reports** — [GitHub Issues](https://github.com/getdeadrecon/deadrecon/issues)
 4. **Documentation** — Improve the wiki
 5. **Translations** — Internationalize the UI
 
-See [CONTRIBUTING.md](https://github.com/getphantomsignal/phantomsignal/blob/main/CONTRIBUTING.md) for guidelines. Please also review our [Code of Conduct](https://github.com/getphantomsignal/phantomsignal/blob/main/CODE_OF_CONDUCT.md) and [Security Policy](https://github.com/getphantomsignal/phantomsignal/blob/main/SECURITY.md).
+See [CONTRIBUTING.md](https://github.com/getdeadrecon/deadrecon/blob/main/CONTRIBUTING.md) for guidelines. Please also review our [Code of Conduct](https://github.com/getdeadrecon/deadrecon/blob/main/CODE_OF_CONDUCT.md) and [Security Policy](https://github.com/getdeadrecon/deadrecon/blob/main/SECURITY.md).
 
 ---
 
 ## 📖 Documentation
 
-- **[Usage Guide](https://github.com/getphantomsignal/phantomsignal/blob/main/docs/USAGE.md)** — full walkthroughs, usage scenarios, CLI reference, and per-platform troubleshooting (Linux / macOS / Windows / Docker)
-- **[Locate Guide](https://github.com/getphantomsignal/phantomsignal/blob/main/docs/LOCATE.md)** — person geographic-footprint investigations: cases, signal capture (incl. EXIF from a photo URL), confidence model, pattern-of-life, handoff export, and chain of custody
-- **[Releasing](https://github.com/getphantomsignal/phantomsignal/blob/main/docs/RELEASING.md)** — how a release is cut (version bump → tag → GitHub Release) and the PyPI token setup
+- **[Usage Guide](https://github.com/getdeadrecon/deadrecon/blob/main/docs/USAGE.md)** — full walkthroughs, usage scenarios, CLI reference, and per-platform troubleshooting (Linux / macOS / Windows / Docker)
+- **[Locate Guide](https://github.com/getdeadrecon/deadrecon/blob/main/docs/LOCATE.md)** — person geographic-footprint investigations: cases, signal capture (incl. EXIF from a photo URL), confidence model, pattern-of-life, handoff export, and chain of custody
+- **[Releasing](https://github.com/getdeadrecon/deadrecon/blob/main/docs/RELEASING.md)** — how a release is cut (version bump → tag → GitHub Release) and the PyPI token setup
 
 ---
 
 ## ⚠️ Legal & Ethics
 
-PhantomSignal is a dual-use tool. Operators are responsible for:
+DeadRecon is a dual-use tool. Operators are responsible for:
 - Obtaining explicit authorization before scanning any system
 - Complying with applicable laws (CFAA, GDPR, CCPA, ECPA, local laws)
 - Respecting privacy and data protection regulations
@@ -503,16 +518,16 @@ damage caused by this software.
 
 | Document | Description |
 |----------|-------------|
-| [Code of Conduct](https://github.com/getphantomsignal/phantomsignal/blob/main/CODE_OF_CONDUCT.md) | Community standards and expectations |
-| [Contributing Guidelines](https://github.com/getphantomsignal/phantomsignal/blob/main/CONTRIBUTING.md) | How to contribute to PhantomSignal |
-| [Security Policy](https://github.com/getphantomsignal/phantomsignal/blob/main/SECURITY.md) | Reporting vulnerabilities responsibly |
-| [License](https://github.com/getphantomsignal/phantomsignal/blob/main/LICENSE) | MIT License terms |
+| [Code of Conduct](https://github.com/getdeadrecon/deadrecon/blob/main/CODE_OF_CONDUCT.md) | Community standards and expectations |
+| [Contributing Guidelines](https://github.com/getdeadrecon/deadrecon/blob/main/CONTRIBUTING.md) | How to contribute to DeadRecon |
+| [Security Policy](https://github.com/getdeadrecon/deadrecon/blob/main/SECURITY.md) | Reporting vulnerabilities responsibly |
+| [License](https://github.com/getdeadrecon/deadrecon/blob/main/LICENSE) | MIT License terms |
 
 ---
 
 ## 📜 License
 
-MIT License — see [LICENSE](https://github.com/getphantomsignal/phantomsignal/blob/main/LICENSE)
+MIT License — see [LICENSE](https://github.com/getdeadrecon/deadrecon/blob/main/LICENSE)
 
 Copyright (c) 2026 the-clipper. AI architecture and implementation by Claude (Anthropic).
 

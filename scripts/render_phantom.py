@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Render the PhantomSignal phantom mascot art to PNG assets.
+Render the DeadRecon phantom mascot art to PNG assets.
 
 Outputs two files:
-  phantomsignal/web/static/img/phantom-ascii.png             — dark background version
-  phantomsignal/web/static/img/phantom-ascii-transparent.png — transparent background (used in UI)
+  deadrecon/web/static/img/phantom-ascii.png             — dark background version
+  deadrecon/web/static/img/phantom-ascii-transparent.png — transparent background (used in UI)
 
 Requirements:
   pip install Pillow
@@ -68,7 +68,7 @@ DARK_BG = (10, 10, 15, 255)         # near-black
 
 FONT_PATH = "/usr/share/fonts/truetype/hack/Hack-Regular.ttf"
 
-OUT_DIR = Path(__file__).parent.parent / "phantomsignal" / "web" / "static" / "img"
+OUT_DIR = Path(__file__).parent.parent / "deadrecon" / "web" / "static" / "img"
 
 # ── Render ───────────────────────────────────────────────────────────────────
 def main() -> None:
@@ -103,7 +103,7 @@ def main() -> None:
         img.save(path)
         print(f"  ✓  {path}  ({total_w}×{total_h})")
 
-    print("Rendering PhantomSignal phantom assets...")
+    print("Rendering DeadRecon phantom assets...")
     render(DARK_BG, FG, OUT_DIR / "phantom-ascii.png")
     render((0, 0, 0, 0), FG, OUT_DIR / "phantom-ascii-transparent.png")
     print("Done.")

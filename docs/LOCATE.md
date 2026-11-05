@@ -1,4 +1,4 @@
-# PhantomSignal — Locate (Person Geographic Footprint)
+# DeadRecon — Locate (Person Geographic Footprint)
 
 > **Legal reminder:** Locate is for **authorized investigative / missing-persons
 > OSINT** only. Every person run is framed as a **case** with a purpose and a
@@ -72,7 +72,7 @@ CLI/API equivalent is not exposed yet; Locate is web-only.
 
 ## 3. What gets collected
 
-From the Profiler result, Locate extracts attributed [`GeoSignal`](../phantomsignal/intel/geo/signals.py)s:
+From the Profiler result, Locate extracts attributed [`GeoSignal`](../deadrecon/intel/geo/signals.py)s:
 
 | Signal (`kind`) | From | Tier |
 |---|---|---|

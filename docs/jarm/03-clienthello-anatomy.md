@@ -7,7 +7,7 @@ first attempt failed — see
 [05-implementation-and-validation.md](05-implementation-and-validation.md).)
 
 We build the hello inside-out: extensions → cipher list → hello body → handshake
-→ record. Code references are to `phantomsignal/scrapers/jarm.py`.
+→ record. Code references are to `deadrecon/scrapers/jarm.py`.
 
 ## Outer framing
 

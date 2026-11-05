@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
-LABEL maintainer="PhantomSignal Community"
-LABEL description="PhantomSignal OSINT Framework"
+LABEL maintainer="DeadRecon Community"
+LABEL description="DeadRecon OSINT Framework"
 
 # nmap gets only the raw-socket capability it needs for SYN scans and OS detection,
 # so the app itself can run without root.
@@ -26,12 +26,12 @@ ARG RECON_TOOLS=false
 RUN if [ "$RECON_TOOLS" = "true" ]; then sh /app/scripts/install_recon_tools.sh; fi
 
 RUN useradd --create-home --uid 10001 app \
-    && mkdir -p /app/exports /app/data /home/app/.phantomsignal \
-    && chown -R app:app /app/exports /app/data /home/app/.phantomsignal
+    && mkdir -p /app/exports /app/data /home/app/.deadrecon \
+    && chown -R app:app /app/exports /app/data /home/app/.deadrecon
 
 EXPOSE 5000
 
-ENV PHANTOMSIGNAL_DB_URL=sqlite:////app/data/phantomsignal.db
+ENV DEADRECON_DB_URL=sqlite:////app/data/deadrecon.db
 ENV NMAP_PRIVILEGED=1
 
 VOLUME ["/app/data", "/app/exports"]
@@ -47,4 +47,4 @@ RUN if command -v nuclei >/dev/null; then nuclei -update-templates -silent; fi
 # One worker: scans and Socket.IO rooms live in this process.
 CMD ["gunicorn", "--worker-class", "gthread", "--workers", "1", "--threads", "100", \
      "--bind", "0.0.0.0:5000", "--access-logfile", "-", \
-     "phantomsignal.web.app:create_app()"]
+     "deadrecon.web.app:create_app()"]

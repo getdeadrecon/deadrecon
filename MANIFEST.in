@@ -3,9 +3,9 @@ include requirements-dev.txt
 include requirements-server.txt
 include LICENSE
 include README.md
-recursive-include phantomsignal/web/templates *.html
-recursive-include phantomsignal/web/static *
-recursive-include phantomsignal/scrapers/data *.json *.md *.txt
-recursive-include phantomsignal/intel/signatures/templates *.yaml
+recursive-include deadrecon/web/templates *.html
+recursive-include deadrecon/web/static *
+recursive-include deadrecon/scrapers/data *.json *.md *.txt
+recursive-include deadrecon/intel/signatures/templates *.yaml
 prune tests
 prune config
