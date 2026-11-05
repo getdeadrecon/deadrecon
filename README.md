@@ -33,6 +33,10 @@
   connects directly, so don't rely on a proxy to hide `nuclei` scans.
 - **Security hardening** — SSRF and DNS rebinding protection, a nonce-based CSP, safe XML
   parsing, and a non-root Docker image with dependencies pinned by hash.
+- **Protection from hostile targets (1.29.3)** — crafted pages can't stall JS mining, downloads
+  stop at 3 MB, and public pages can't send script or favicon fetches to private addresses.
+  Telegram bot tokens stay out of results and logs, so if you've used a Telegram key, check saved
+  scans, exports and logs, and rotate the token if it appears.
 - **Console login (since 1.28.0)** — the web console needs an operator account, and REST
   calls need `Authorization: Bearer <token>`. The first run prints a setup token.
 
