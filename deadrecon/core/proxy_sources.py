@@ -154,9 +154,9 @@ async def fetch_proxy_source(url: str, default_scheme: str = "http",
     network/HTTP errors propagate to the caller to surface."""
     if not is_fetchable_url(url):
         raise ValueError("Proxy source URL must be http:// or https://")
-    from deadrecon.core.http import counted_client
+    from deadrecon.core.http import BROWSER_USER_AGENT, counted_client
     async with counted_client(timeout=timeout, follow_redirects=True,
-                              headers={"User-Agent": "DeadRecon-OSINT/1.0"}) as client:
+                              headers={"User-Agent": BROWSER_USER_AGENT}) as client:
         resp = await client.get(url)
         resp.raise_for_status()
         return parse_proxy_lines(resp.text, default_scheme, limit=limit)

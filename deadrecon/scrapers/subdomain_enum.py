@@ -27,7 +27,7 @@ import string
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 from deadrecon.core.dns_egress import make_resolver
-from deadrecon.core.http import egress_client
+from deadrecon.core.http import BROWSER_USER_AGENT, egress_client
 
 try:
     import dns.resolver
@@ -233,7 +233,7 @@ class SubdomainEnumerator:
         async with egress_client(
             self.config,
             timeout=20, follow_redirects=True,
-            headers={"User-Agent": "DeadRecon-OSINT/1.0"},
+            headers={"User-Agent": BROWSER_USER_AGENT},
                     ) as client:
             sources = {
                 "crt.sh": self._src_crtsh(client, domain),

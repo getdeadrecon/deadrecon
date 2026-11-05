@@ -195,7 +195,7 @@ class ServiceEnumerator:
         results: List[Dict] = []
         try:
             await asyncio.wait_for(reader.readline(), timeout=6)   # banner
-            await self._smtp_cmd(reader, writer, "EHLO deadrecon.local")
+            await self._smtp_cmd(reader, writer, "EHLO mail.example.net")
 
             valid: List[str] = []
             vrfy_supported = False
@@ -212,7 +212,7 @@ class ServiceEnumerator:
             # If VRFY is disabled, fall back to RCPT TO enumeration.
             if not vrfy_supported and domain:
                 await self._smtp_cmd(reader, writer,
-                                     "MAIL FROM:<probe@deadrecon.local>")
+                                     "MAIL FROM:<mail@example.net>")
                 for user in SMTP_USERS:
                     code = await self._smtp_cmd(reader, writer,
                                                 f"RCPT TO:<{user}@{domain}>")

@@ -23,7 +23,7 @@ import dns.flags
 import dns.name
 import dns.rdatatype
 
-from deadrecon.core.http import egress_client
+from deadrecon.core.http import BROWSER_USER_AGENT, egress_client
 from deadrecon.core.dns_egress import configured_proxies, lookup_ptr, make_resolver
 
 logger = logging.getLogger("deadrecon.dns_recon")
@@ -298,7 +298,7 @@ class DNSRecon:
             async with egress_client(self.config, timeout=15) as client:
                 response = await client.get(
                     f"https://crt.sh/?q=%.{domain}&output=json",
-                    headers={"User-Agent": "DeadRecon OSINT Framework"},
+                    headers={"User-Agent": BROWSER_USER_AGENT},
                 )
                 if response.status_code == 200:
                     certs = response.json()

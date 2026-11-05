@@ -19,7 +19,7 @@ from typing import Any, ClassVar, Dict, List, Optional, Type
 
 import httpx
 
-from deadrecon.core.http import counted_client
+from deadrecon.core.http import BROWSER_USER_AGENT, counted_client
 
 logger = logging.getLogger("deadrecon.intel.api")
 
@@ -164,7 +164,7 @@ class BaseIntelAPI(abc.ABC):
 
     def _default_headers(self) -> Dict[str, str]:
         return {
-            "User-Agent": "DeadRecon-OSINT/1.0 (+https://github.com/getdeadrecon/deadrecon)",
+            "User-Agent": BROWSER_USER_AGENT,
             "Accept": "application/json",
         }
 

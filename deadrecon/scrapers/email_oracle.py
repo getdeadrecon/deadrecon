@@ -27,7 +27,7 @@ import re
 from typing import Dict, List, Tuple
 from urllib.parse import quote
 
-from deadrecon.core.http import egress_client
+from deadrecon.core.http import BROWSER_USER_AGENT, egress_client
 
 logger = logging.getLogger("deadrecon.scrapers.email_oracle")
 
@@ -105,7 +105,7 @@ class EmailOracle:
         async with egress_client(
             self.config,
             timeout=self.timeout, follow_redirects=True,
-            headers={"User-Agent": "Mozilla/5.0 (DeadRecon-OSINT)"},
+            headers={"User-Agent": BROWSER_USER_AGENT},
                     ) as client:
             found: List[str] = []
             for rule in self.oracles:

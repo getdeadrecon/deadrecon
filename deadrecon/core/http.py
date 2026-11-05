@@ -222,6 +222,9 @@ _IDENTITIES: Tuple[Tuple[str, Dict[str, str]], ...] = (
     ),
 )
 
+# For requests outside the stealth client. Scans must not name the tool to anyone.
+BROWSER_USER_AGENT = _IDENTITIES[0][0]
+
 # curl_cffi impersonation target per identity index — the TLS/HTTP2 fingerprint
 # is matched to the same browser family as the identity's User-Agent + headers,
 # so a defender sees a consistent Chrome/Safari/Firefox across UA, header order,

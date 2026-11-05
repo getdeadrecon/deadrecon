@@ -29,7 +29,7 @@ from urllib.parse import quote, urlparse
 
 import httpx
 
-from deadrecon.core.http import egress_client
+from deadrecon.core.http import BROWSER_USER_AGENT, egress_client
 from deadrecon.core.tor import floor_timeout, tor_enabled, tor_proxy_url
 
 logger = logging.getLogger("deadrecon.scrapers.darkweb")
@@ -303,7 +303,7 @@ class DarkWebMonitor:
             async with egress_client(
                 self.config,
                 timeout=self.timeout, follow_redirects=True,
-                headers={"User-Agent": "DeadRecon-OSINT/1.0"},
+                headers={"User-Agent": BROWSER_USER_AGENT},
             ) as client:
                 r = await client.get(url)
                 payload = r.json() if r.status_code == 200 else []

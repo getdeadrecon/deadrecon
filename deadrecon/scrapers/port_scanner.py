@@ -19,6 +19,7 @@ import xml.etree.ElementTree as ET  # nosec B405 - parsing goes through defusedx
 import defusedxml.ElementTree as SafeET
 from typing import Dict, List, Optional
 
+from deadrecon.core.http import BROWSER_USER_AGENT
 from deadrecon.core.tor import tor_enabled
 
 logger = logging.getLogger("deadrecon.port_scanner")
@@ -89,14 +90,14 @@ BANNER_PROBES: Dict[int, bytes] = {
     21: b"",
     22: b"",
     23: b"\r\n",
-    25: b"EHLO deadrecon.local\r\n",
+    25: b"EHLO mail.example.net\r\n",
     79: b"root\r\n",
     80: b"HEAD / HTTP/1.0\r\nHost: target\r\n\r\n",
     110: b"",
     143: b"",
     443: b"",
     465: b"",
-    587: b"EHLO deadrecon.local\r\n",
+    587: b"EHLO mail.example.net\r\n",
     993: b"",
     995: b"",
     1433: b"",
@@ -364,8 +365,10 @@ def build_nmap_command(nmap_path: str, host: str, ports: List[int],
     host = _validate_nmap_operand(host, "target host")
 
     if stealth is None:
+        # nmap's version scripts otherwise announce "Nmap Scripting Engine" to the target.
         return [nmap_path, "-sV", "--version-intensity", "7",
-                "-O", "--osscan-guess"] + common + [host]
+                "-O", "--osscan-guess",
+                "--script-args", f'http.useragent="{BROWSER_USER_AGENT}"'] + common + [host]
 
     if stealth == "decoy":
         spec = _validate_nmap_operand(decoys or "RND:10", "decoy spec")

@@ -13,7 +13,7 @@ import re
 from typing import Dict, List, Optional
 from urllib.parse import quote
 
-from deadrecon.core.http import counted_client, egress_client
+from deadrecon.core.http import BROWSER_USER_AGENT, counted_client, egress_client
 from deadrecon.core.tor import tor_enabled
 
 from deadrecon.intel.apis.base import (
@@ -567,7 +567,7 @@ class HaveIBeenPwnedAPI(BaseIntelAPI):
     async def _check_email(self, email: str) -> List[Dict]:
         headers = {
             "hibp-api-key": self._api_key,
-            "User-Agent": "DeadRecon-OSINT/1.0",
+            "User-Agent": BROWSER_USER_AGENT,
         }
         data = await self._get(
             f"{self.BASE_URL}/breachedaccount/{email}",
@@ -1243,7 +1243,7 @@ class RedditAPI(BaseIntelAPI):
 
     async def search(self, query: str, **kwargs) -> List[Dict]:
         username = query.removeprefix("u/").removeprefix("@")
-        headers = {"User-Agent": "DeadRecon-OSINT/1.0 (security research)"}
+        headers = {"User-Agent": BROWSER_USER_AGENT}
 
         user_data = await self._get(
             f"{self.BASE_URL}/user/{username}/about.json",
@@ -2517,7 +2517,7 @@ class EmailRepAPI(BaseIntelAPI):
         if "@" not in query:
             return []
 
-        headers = {"User-Agent": "DeadRecon-OSINT/1.0"}
+        headers = {"User-Agent": BROWSER_USER_AGENT}
         if self._api_key:
             headers["Key"] = self._api_key
 

@@ -24,7 +24,7 @@ import re
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 from urllib.parse import parse_qs, urlparse
 
-from deadrecon.core.http import egress_client
+from deadrecon.core.http import BROWSER_USER_AGENT, egress_client
 
 logger = logging.getLogger("deadrecon.scrapers.archive_miner")
 
@@ -176,7 +176,7 @@ class ArchiveURLMiner:
         async with egress_client(
             self.config,
             timeout=25, follow_redirects=True,
-            headers={"User-Agent": "DeadRecon-OSINT/1.0"},
+            headers={"User-Agent": BROWSER_USER_AGENT},
                     ) as client:
             sources = {
                 "wayback": self._src_wayback(client, domain),

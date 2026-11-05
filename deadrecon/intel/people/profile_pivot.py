@@ -23,7 +23,7 @@ import re
 from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
-from deadrecon.core.http import egress_client
+from deadrecon.core.http import BROWSER_USER_AGENT, egress_client
 from deadrecon.scrapers.username_enum import (
     UsernameEnumerator, clean_username, is_valid_username,
 )
@@ -157,7 +157,7 @@ class ProfilePivotEngine:
         async with egress_client(
             self.config,
             timeout=self.timeout, follow_redirects=True,
-            headers={"User-Agent": "Mozilla/5.0 (DeadRecon-OSINT)"},
+            headers={"User-Agent": BROWSER_USER_AGENT},
                     ) as client:
             frontier = [seed]
             for depth in range(self.max_depth + 1):

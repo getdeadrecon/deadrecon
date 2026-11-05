@@ -28,7 +28,7 @@ import secrets
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from deadrecon.core.http import egress_client
+from deadrecon.core.http import BROWSER_USER_AGENT, egress_client
 
 logger = logging.getLogger("deadrecon.scrapers.username_enum")
 
@@ -119,7 +119,7 @@ class UsernameEnumerator:
         async with egress_client(
             self.config,
             timeout=self.timeout, follow_redirects=True,
-            headers={"User-Agent": "Mozilla/5.0 (DeadRecon-OSINT)"},
+            headers={"User-Agent": BROWSER_USER_AGENT},
                     ) as client:
             hits = await self._check_all(client, username)
             if self.fp_check and hits:

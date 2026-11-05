@@ -13,11 +13,19 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - **PhantomSignal is now DeadRecon.** The package, import path, commands, environment variables,
-  web console, reports, User-Agent strings and SMTP `EHLO` name all use the new name. Earlier entries
-  below keep the old name.
+  web console and reports all use the new name. Earlier entries below keep the old name.
 - JSON exports now use `deadrecon_version` in place of `phantomsignal_version`, and exported files
   start with `deadrecon_`. Update anything that parses these.
 - Added the `drecon` short command.
+
+### Security
+- **Scans no longer name the tool.** Targets and third-party services used to receive
+  `EHLO phantomsignal.local`, `MAIL FROM:<probe@phantomsignal.local>` and `PhantomSignal-OSINT`
+  User-Agents, one of which linked to this repo. They now get a neutral SMTP name and a browser
+  User-Agent. Saved reports still name the tool, since only you see them.
+- **nmap's version scan no longer announces itself in its User-Agent.** It used to send
+  `Nmap Scripting Engine` to web ports. Its other probes are still recognizable, so an nmap scan is
+  still reported as attributable.
 
 ### Migration
 - On first run `~/.phantomsignal` moves to `~/.deadrecon`, with a link left at the old path, and a
