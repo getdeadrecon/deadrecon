@@ -12,13 +12,13 @@ def read_requirements(path):
 
 
 setup(
-    name="phantomsignal",
-    version="1.29.3",
+    name="deadrecon",
+    version="1.30.0",
     description="The OPSEC-native OSINT framework: stealth egress, one-click Tor, and an honest per-scan report of what you leaked.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="the-clipper",
-    url="https://github.com/getphantomsignal/phantomsignal",
+    url="https://github.com/getdeadrecon/deadrecon",
     packages=find_packages(exclude=("tests", "tests.*")),
     include_package_data=True,
     python_requires=">=3.10",
@@ -29,8 +29,11 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "phantomsignal=phantomsignal.cli:main",
-            "psig=phantomsignal.cli:main",
+            "deadrecon=deadrecon.cli:main",
+            "drecon=deadrecon.cli:main",
+            # Old commands, kept so existing scripts keep working
+            "phantomsignal=deadrecon.cli:main",
+            "psig=deadrecon.cli:main",
         ],
     },
     classifiers=[
@@ -48,13 +51,13 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
         "Topic :: System :: Networking :: Monitoring",
     ],
-    keywords="osint intelligence reconnaissance security pentest phantom signal",
+    keywords="osint opsec tor reconnaissance recon attack-surface-management security pentest deadrecon phantomsignal",
     project_urls={
-        "Homepage": "https://phantomsignal.sh",
-        "Documentation": "https://github.com/getphantomsignal/phantomsignal/blob/main/docs/USAGE.md",
-        "Changelog": "https://github.com/getphantomsignal/phantomsignal/blob/main/CHANGELOG.md",
-        "Releases": "https://github.com/getphantomsignal/phantomsignal/releases",
-        "Bug Reports": "https://github.com/getphantomsignal/phantomsignal/issues",
-        "Source": "https://github.com/getphantomsignal/phantomsignal",
+        "Homepage": "https://deadrecon.sh",
+        "Documentation": "https://github.com/getdeadrecon/deadrecon/blob/main/docs/USAGE.md",
+        "Changelog": "https://github.com/getdeadrecon/deadrecon/blob/main/CHANGELOG.md",
+        "Releases": "https://github.com/getdeadrecon/deadrecon/releases",
+        "Bug Reports": "https://github.com/getdeadrecon/deadrecon/issues",
+        "Source": "https://github.com/getdeadrecon/deadrecon",
     },
 )

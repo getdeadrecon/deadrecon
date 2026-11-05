@@ -1,0 +1,67 @@
+"""DeadRecon Intel Routes — people search and profiler."""
+from flask import Blueprint, render_template, request, jsonify
+from deadrecon.intel.people.aggregator import ShadowProfileBuilder
+from deadrecon.intel.people.persist import persist_profile_scan
+from deadrecon.core.config import config
+import asyncio
+
+intel_bp = Blueprint("intel", __name__)
+
+
+@intel_bp.route("/")
+def intel_search():
+    from deadrecon.intel.orchestrator import IntelOrchestrator
+    orch = IntelOrchestrator(config)
+    apis = orch.get_available_apis()
+    return render_template("intel/search.html", apis=apis)
+
+
+@intel_bp.route("/person", methods=["POST"])
+def person_search():
+    first_name = request.form.get("first_name", "").strip()
+    last_name = request.form.get("last_name", "").strip()
+    email = request.form.get("email", "").strip()
+    phone = request.form.get("phone", "").strip()
+    username = request.form.get("username", "").strip()
+    address = request.form.get("address", "").strip()
+
+    if not any([first_name, last_name, email, phone, username]):
+        return render_template("intel/search.html", error="At least one identifier required.")
+
+    builder = ShadowProfileBuilder(config)
+    loop = asyncio.new_event_loop()
+    try:
+        profile = loop.run_until_complete(builder.build_profile(
+            first_name=first_name or None,
+            last_name=last_name or None,
+            email=email or None,
+            phone=phone or None,
+            username=username or None,
+            address=address or None,
+        ))
+    finally:
+        loop.close()
+
+    query = {
+        "first_name": first_name, "last_name": last_name, "email": email,
+        "phone": phone, "username": username,
+    }
+    # Persist the run as a first-class people_intel scan so it shows up under
+    # Scans with history/export/diff, not just this one-shot page.
+    scan_id = persist_profile_scan(profile, query)
+
+    return render_template("intel/results.html", profile=profile,
+                           query=query, scan_id=scan_id)
+
+
+@intel_bp.route("/api/person", methods=["POST"])
+def api_person_search():
+    data = request.get_json() or {}
+    builder = ShadowProfileBuilder(config)
+    loop = asyncio.new_event_loop()
+    try:
+        profile = loop.run_until_complete(builder.build_profile(**data))
+    finally:
+        loop.close()
+    scan_id = persist_profile_scan(profile, data)
+    return jsonify({**profile, "scan_id": scan_id})

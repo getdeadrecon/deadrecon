@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Render the PhantomSignal wordmark avatar to PNG assets.
+Render the DeadRecon wordmark avatar to PNG assets.
 
 Outputs:
-  docs/assets/phantomsignal-avatar.png              — dark background (docs/README)
-  docs/assets/phantomsignal-avatar-transparent.png  — transparent background
-  phantomsignal/web/static/img/phantom-ascii.png             — dark bg (UI)
-  phantomsignal/web/static/img/phantom-ascii-transparent.png — transparent (UI)
+  docs/assets/deadrecon-avatar.png              — dark background (docs/README)
+  docs/assets/deadrecon-avatar-transparent.png  — transparent background
+  deadrecon/web/static/img/phantom-ascii.png             — dark bg (UI)
+  deadrecon/web/static/img/phantom-ascii-transparent.png — transparent (UI)
 
 Requirements:
   pip install Pillow pyfiglet
@@ -31,7 +31,7 @@ GLOW_R    = 6                       # glow blur radius
 
 ROOT    = Path(__file__).parent.parent
 DOCS    = ROOT / "docs" / "assets"
-STATIC  = ROOT / "phantomsignal" / "web" / "static" / "img"
+STATIC  = ROOT / "deadrecon" / "web" / "static" / "img"
 
 
 def slant_lines(word: str) -> list[str]:
@@ -42,8 +42,8 @@ def slant_lines(word: str) -> list[str]:
 
 
 def render(bg: tuple, path: Path) -> None:
-    phantom_lines = slant_lines("PHANTOM")
-    signal_lines  = slant_lines("SIGNAL")
+    phantom_lines = slant_lines("DEAD")
+    signal_lines  = slant_lines("RECON")
 
     try:
         font = ImageFont.truetype(FONT_PATH, FONT_SZ)
@@ -97,9 +97,9 @@ def render(bg: tuple, path: Path) -> None:
 
 
 if __name__ == "__main__":
-    print("Rendering PhantomSignal avatar assets...")
-    render(DARK_BG,      DOCS   / "phantomsignal-avatar.png")
-    render((0, 0, 0, 0), DOCS   / "phantomsignal-avatar-transparent.png")
+    print("Rendering DeadRecon avatar assets...")
+    render(DARK_BG,      DOCS   / "deadrecon-avatar.png")
+    render((0, 0, 0, 0), DOCS   / "deadrecon-avatar-transparent.png")
     render(DARK_BG,      STATIC / "phantom-ascii.png")
     render((0, 0, 0, 0), STATIC / "phantom-ascii-transparent.png")
     print("Done.")

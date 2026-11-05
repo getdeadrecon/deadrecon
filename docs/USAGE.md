@@ -1,4 +1,4 @@
-# PhantomSignal — User Guide
+# DeadRecon — User Guide
 
 > **Legal reminder:** Only scan targets you own or have explicit written permission to test. Refer to the [Legal & Ethics](../README.md#️-legal--ethics) section in the README before proceeding.
 
@@ -34,8 +34,8 @@
 
 ```bash
 # Requires Python 3.10+
-git clone https://github.com/getphantomsignal/phantomsignal
-cd phantomsignal
+git clone https://github.com/getdeadrecon/deadrecon
+cd deadrecon
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e .
@@ -47,8 +47,8 @@ Open **http://127.0.0.1:5000** in your browser.
 ### Installation (Docker)
 
 ```bash
-git clone https://github.com/getphantomsignal/phantomsignal
-cd phantomsignal
+git clone https://github.com/getdeadrecon/deadrecon
+cd deadrecon
 docker-compose up -d
 ```
 
@@ -58,23 +58,23 @@ Open **http://localhost:5000**.
 
 The console has one operator account. On first run the server prints a one-time
 setup token; enter it at **http://localhost:5000** to create the account. On
-Docker, read it with `docker logs phantomsignal`.
+Docker, read it with `docker logs deadrecon`.
 
 | Task | Command |
 |------|---------|
-| Create the account without the browser, or reset a forgotten password | `phantomsignal set-password` |
-| Create a REST API token (revokes the previous one) | `phantomsignal api-token` |
+| Create the account without the browser, or reset a forgotten password | `deadrecon set-password` |
+| Create a REST API token (revokes the previous one) | `deadrecon api-token` |
 
-Run these with the same working directory or `PHANTOMSIGNAL_DB_URL` as the server,
-so they use the same database. On Docker, use `docker exec -it phantomsignal phantomsignal set-password`.
+Run these with the same working directory or `DEADRECON_DB_URL` as the server,
+so they use the same database. On Docker, use `docker exec -it deadrecon deadrecon set-password`.
 
 Docker publishes the console on loopback only. To reach it from other machines,
 put it behind a TLS reverse proxy and set:
 
 | Variable | Value |
 |----------|-------|
-| `PHANTOMSIGNAL_SECURE_COOKIES` | `true` |
-| `PHANTOMSIGNAL_ALLOWED_ORIGINS` | The public URL, for example `https://psig.example.com`. Separate several with commas. |
+| `DEADRECON_SECURE_COOKIES` | `true` |
+| `DEADRECON_ALLOWED_ORIGINS` | The public URL, for example `https://recon.example.com`. Separate several with commas. |
 
 ### What changes when a proxy is configured
 
@@ -169,7 +169,7 @@ You are redirected to the live results page where findings stream in as they're 
 - Modules: DNS Recon ✓, Port Scanner ✓, Tech Detector ✓, API Hunter ✓, Web Crawler ✓
 - Evasive mode: off
 
-**What PhantomSignal will find:**
+**What DeadRecon will find:**
 - Open ports and exposed services (admin panels, staging, APIs)
 - Technology stack (CMS version, frameworks, CDNs, WAF presence)
 - Missing security headers (CSP, X-Frame-Options, HSTS)
@@ -195,7 +195,7 @@ You are redirected to the live results page where findings stream in as they're 
 - Modules: Port Scanner ✓, DNS Recon ✓, Intel APIs ✓
 - Port Profile: **Top 1000** or **Full range (65535)** for thorough coverage. Port scans over the full range can hit the 5-minute module limit
 
-**What PhantomSignal will find:**
+**What DeadRecon will find:**
 - All open TCP ports with service/version from nmap (`-sV`) and banner grabbing — falls back to pure-Python async prober when nmap unavailable
 - **OS fingerprint** — detected automatically via nmap `-O` and shown in the port panel footer (e.g. "Linux 5.15 [95%]")
 - Reverse DNS and PTR records
@@ -219,7 +219,7 @@ You are redirected to the live results page where findings stream in as they're 
 - Modules: DNS Recon ✓, Tech Detector ✓, Intel APIs ✓, Web Crawler ✓
 - Crawl depth: 3
 
-**What PhantomSignal will find:**
+**What DeadRecon will find:**
 - All DNS records (A, AAAA, MX, NS, TXT, SOA, CAA)
 - Zone transfer vulnerabilities
 - Subdomain enumeration via brute-force wordlist + certificate transparency (crt.sh)
@@ -244,7 +244,7 @@ You are redirected to the live results page where findings stream in as they're 
 - Username / handle
 - Phone number
 
-**What PhantomSignal aggregates:**
+**What DeadRecon aggregates:**
 - Public social media profiles (GitHub, GitLab, Reddit, Mastodon, Keybase, and — with keys — Twitter/X, LinkedIn via Clearbit)
 - Breach exposure via **XposedOrNot (no key required)**, HaveIBeenPwned (HIBP key), and Intelligence X
 - Real name + email harvested from public **GitHub / GitLab commits**
@@ -256,7 +256,7 @@ You are redirected to the live results page where findings stream in as they're 
 
 **Works with zero API keys:** a full tier of the sources above is keyless, so the Profiler returns a useful baseline on a fresh install. Add keys to deepen it.
 
-**Every run is saved as a scan.** A Profiler search is persisted as a `people_intel` scan (with a linked shadow profile), so it appears under **Scans** with history, a categorised **People & Identity** summary, and export. Use the **View in Scans** button on the results page to jump there. From the CLI, `phantomsignal profile …` saves the same way and prints the scan id.
+**Every run is saved as a scan.** A Profiler search is persisted as a `people_intel` scan (with a linked shadow profile), so it appears under **Scans** with history, a categorised **People & Identity** summary, and export. Use the **View in Scans** button on the results page to jump there. From the CLI, `deadrecon profile …` saves the same way and prints the scan id.
 
 **OPSEC:** the keyless identity sources use your proxy pool when one is configured, and their lookups are counted in the scan's attribution surface. Other API sources, including keyed providers, connect directly unless Tor is on, and the report marks them as attributable. The offline phone source adds nothing to your footprint.
 
@@ -306,17 +306,17 @@ You are redirected to the live results page where findings stream in as they're 
 
 Covert doesn't hide your IP by itself. Add Tor or a proxy for that.
 
-**Tor:** click the **🧅 Tor** button at the top of any page. That's all. PhantomSignal starts Tor, shows its progress, and turns the button purple when it's confirmed working. Click it again to turn Tor off. The setting is remembered across restarts.
+**Tor:** click the **🧅 Tor** button at the top of any page. That's all. DeadRecon starts Tor, shows its progress, and turns the button purple when it's confirmed working. Click it again to turn Tor off. The setting is remembered across restarts.
 
-On the CLI, add `--tor` to a scan, or run `phantomsignal tor on` to keep it on. In Docker, Tor is built into the image, and `docker-compose --profile covert up -d` also turns it on.
+On the CLI, add `--tor` to a scan, or run `deadrecon tor on` to keep it on. In Docker, Tor is built into the image, and `docker-compose --profile covert up -d` also turns it on.
 
-PhantomSignal uses Tor in this order:
-1. The service you configured, if you set `PHANTOMSIGNAL_TOR_HOST`, `PHANTOMSIGNAL_TOR_PORT` or `scraper.tor_port`. Nothing else is tried if it's down.
+DeadRecon uses Tor in this order:
+1. The service you configured, if you set `DEADRECON_TOR_HOST`, `DEADRECON_TOR_PORT` or `scraper.tor_port`. Nothing else is tried if it's down.
 2. Tor already running on port 9050, or Tor Browser on port 9150.
 3. A `tor` program installed on this machine.
-4. The official Tor Expert Bundle, downloaded once from torproject.org into `~/.phantomsignal/tor` and checked against a pinned SHA-256 hash.
+4. The official Tor Expert Bundle, downloaded once from torproject.org into `~/.deadrecon/tor` and checked against a pinned SHA-256 hash.
 
-Tor started by PhantomSignal listens only on this machine, and stops when PhantomSignal stops. Automatic start doesn't configure bridges, so where Tor is blocked, run your own Tor with bridges and point `PHANTOMSIGNAL_TOR_HOST` at it.
+Tor started by DeadRecon listens only on this machine, and stops when DeadRecon stops. Automatic start doesn't configure bridges, so where Tor is blocked, run your own Tor with bridges and point `DEADRECON_TOR_HOST` at it.
 
 With Tor on:
 - **Each scan first confirms it's on Tor** with `check.torproject.org`. If Tor is still starting, the scan waits for it. If Tor can't be confirmed, the scan stops with an error before contacting the target. To skip this check, set `scraper.tor_verify` to `false`; a Tor outage then shows up as failed requests rather than a stopped scan.
@@ -336,7 +336,7 @@ Check your setup on the **Identity** page, which shows your exit IP and whether 
 - **Stealth profile** — `off` / `quiet` / `paranoid` controls per-host adaptive pacing, sticky browser identity, JA3/JA4 impersonation, and WAF-aware backoff.
 - **Rotating proxy pool** — one egress per host (`sticky`) or a fresh egress per request (`every`); burned proxies are benched and rotated automatically.
 - **Seed the pool in one click** — pull from a curated free feed (ProxyScrape, TheSpeedX, monosans, Proxifly), paste a custom list URL, or **upload a list file** (`ip:port`, `scheme://ip:port`, `user:pass@ip:port`, or `ip:port:user:pass`, one per line).
-- **These settings persist** across restarts (`~/.phantomsignal/config.yaml`).
+- **These settings persist** across restarts (`~/.deadrecon/config.yaml`).
 
 > ⚠️ Free public proxies are unvetted and often dead or hostile (a proxy operator can read/modify unencrypted traffic). Treat them as blend-in cover for low-sensitivity recon — pair with HTTPS and prefer your own egress for anything sensitive.
 
@@ -429,7 +429,7 @@ From any scan results page, click **↓ EXPORT INTEL** and choose a format:
 
 ### Encrypting exports
 
-All formats support **AES-256-GCM encryption**. Check the **Encrypt** checkbox before exporting and set a passphrase. The encrypted file includes a nonce and authentication tag — decryption requires PhantomSignal or a compatible AES-256-GCM implementation.
+All formats support **AES-256-GCM encryption**. Check the **Encrypt** checkbox before exporting and set a passphrase. The encrypted file includes a nonce and authentication tag — decryption requires DeadRecon or a compatible AES-256-GCM implementation.
 
 ---
 
@@ -440,42 +440,42 @@ All formats support **AES-256-GCM encryption**. Check the **Encrypt** checkbox b
 source .venv/bin/activate
 
 # Quick scan — renders DNS, port, tech, API, intel panels in terminal
-phantomsignal scan example.com --profile quick
+deadrecon scan example.com --profile quick
 
 # IP recon — nmap version+OS detection, 99-port default, GeoIP
-phantomsignal scan 192.168.1.1 --type ip_recon
+deadrecon scan 192.168.1.1 --type ip_recon
 
 # HTML report in a folder you choose
-phantomsignal scan example.com --format html --output ./reports
+deadrecon scan example.com --format html --output ./reports
 
 # Choose modules: repeat the flag or separate names with commas
-phantomsignal scan example.com -m dns_recon -m tech_detect
-phantomsignal scan example.com -m dns_recon,tech_detect,web_crawl
+deadrecon scan example.com -m dns_recon -m tech_detect
+deadrecon scan example.com -m dns_recon,tech_detect,web_crawl
 
 # Over Tor: starts Tor for you, and stops if it can't confirm it
-phantomsignal scan example.com --tor
+deadrecon scan example.com --tor
 
 # Compare the two most recent completed scans of a target
-phantomsignal diff example.com
+deadrecon diff example.com
 
 # Export a saved scan again
-phantomsignal export <scan-id> --format xlsx
+deadrecon export <scan-id> --format xlsx
 
 # People intelligence
-phantomsignal profile --email target@example.com --first-name John --last-name Doe
+deadrecon profile --email target@example.com --first-name John --last-name Doe
 
 # Show API sources, whether each is configured, and recent scans
-phantomsignal status
+deadrecon status
 
 # Check version
-phantomsignal --version
+deadrecon --version
 ```
 
 **CLI output (v1.3.0+):** After the scan completes, results are rendered as named Rich panels — one per active module — rather than a flat table. Each panel extracts the key fields from result data: the port panel shows PORT/SERVICE/PROTO/VERSION/BANNER/RISK with dangerous ports highlighted; the DNS panel shows resolved IPs, MX/NS/TXT records, subdomains, and SPF/DMARC status; the tech panel shows detected stack, security header grade, and TLS info; anomalies appear in a separate red-bordered callout. The footer shows Risk Score, Threat Level, and a hint to configure API keys for deeper coverage.
 
 ### Commands
 
-`psig` is a short alias for `phantomsignal`.
+`drecon` is a short alias for `deadrecon`. The old `phantomsignal` and `psig` commands still work.
 
 | Command | What it does |
 |---------|--------------|
@@ -496,9 +496,9 @@ phantomsignal --version
 |------|-------------|
 | `--type web_recon\|ip_recon\|domain_recon\|people_intel\|full_spectrum` | Scan type (default: `web_recon`) |
 | `--profile quick\|standard\|deep\|covert` | Scan profile (default: `standard`) |
-| `--modules <name>` | Modules to run. Repeat the flag or separate names with commas. Unknown names are an error. See `phantomsignal scan --help` for the list |
+| `--modules <name>` | Modules to run. Repeat the flag or separate names with commas. Unknown names are an error. See `deadrecon scan --help` for the list |
 | `--format json\|csv\|html\|xml\|xlsx\|pdf\|markdown\|stix` | Report format (default: `json`) |
-| `--output <path>` | Output directory (default: `~/.phantomsignal/exports`) |
+| `--output <path>` | Output directory (default: `~/.deadrecon/exports`) |
 | `--compress` | Compress the report into a ZIP file |
 | `--encrypt`, `--password <password>` | Encrypt the report |
 | `--tor` | Use Tor for this scan, and stop if it can't be confirmed |
@@ -526,10 +526,10 @@ pip install -e .
 
 **SQLite database locked**
 ```bash
-# Kill any stale PhantomSignal process
+# Kill any stale DeadRecon process
 pkill -f "python run.py"
-# If the DB is still locked (it's in the folder you started PhantomSignal from):
-fuser phantomsignal.db
+# If the DB is still locked (it's in the folder you started DeadRecon from):
+fuser deadrecon.db
 ```
 
 **SocketIO connection shows "CONNECTING..." permanently**
@@ -541,9 +541,9 @@ proxy_set_header Upgrade $http_upgrade;
 proxy_set_header Connection "upgrade";
 ```
 
-**Permission denied on `/phantomsignal/data/`**
+**Permission denied on `/deadrecon/data/`**
 ```bash
-chmod 755 phantomsignal/data
+chmod 755 deadrecon/data
 ```
 
 ---
@@ -567,9 +567,9 @@ pip install cryptography
 
 **Port 5000 blocked by AirPlay Receiver (macOS Monterey+)**
 
-macOS Monterey and later reserves port 5000 for AirPlay. Either disable AirPlay Receiver in *System Settings → General → AirDrop & Handoff*, or run PhantomSignal on a different port:
+macOS Monterey and later reserves port 5000 for AirPlay. Either disable AirPlay Receiver in *System Settings → General → AirDrop & Handoff*, or run DeadRecon on a different port:
 ```bash
-PHANTOMSIGNAL_PORT=5001 python run.py
+DEADRECON_PORT=5001 python run.py
 # Then open http://127.0.0.1:5001
 ```
 
@@ -584,9 +584,9 @@ pip install certifi
 
 ### Windows
 
-**Running PhantomSignal on Windows**
+**Running DeadRecon on Windows**
 
-PhantomSignal is primarily tested on Linux and macOS. Windows support is provided via WSL2 (recommended) or native Python.
+DeadRecon is primarily tested on Linux and macOS. Windows support is provided via WSL2 (recommended) or native Python.
 
 **Recommended: WSL2**
 ```powershell
@@ -635,10 +635,10 @@ Allow inbound connections to port 5000 in Windows Defender Firewall, or use `loc
 docker-compose ps
 
 # Check logs for errors
-docker-compose logs phantomsignal
+docker-compose logs deadrecon
 
 # Confirm port binding
-docker-compose port phantomsignal 5000
+docker-compose port deadrecon 5000
 ```
 
 **API keys not persisting between container restarts**
@@ -647,25 +647,25 @@ Mount a volume for the data directory:
 ```yaml
 # docker-compose.yml
 volumes:
-  - ./data:/app/phantomsignal/data
+  - ./data:/app/deadrecon/data
 ```
 
 **Database migration errors on upgrade**
 ```bash
 docker-compose down
-docker volume rm phantomsignal_phantomsignal-data
+docker volume rm deadrecon_deadrecon-data
 docker-compose up -d
 ```
-> ⚠ This clears all scan history. Back up `/app/data/phantomsignal.db` from the container first.
+> ⚠ This clears all scan history. Back up `/app/data/deadrecon.db` from the container first.
 
 **Scans complete instantly with 0 results (DNS not resolving in container)**
 ```bash
 # Test DNS inside container
-docker-compose exec phantomsignal nslookup example.com
+docker-compose exec deadrecon nslookup example.com
 
 # If failing, add DNS servers to docker-compose.yml:
 services:
-  phantomsignal:
+  deadrecon:
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -677,7 +677,7 @@ Increase Docker Desktop memory allocation (Settings → Resources → Memory) to
 
 **The Tor button shows "Tor failed"**
 
-Hover over the button to see why. Tor usually needs under a minute to connect the first time. If your network blocks Tor, run your own Tor with bridges and set `PHANTOMSIGNAL_TOR_HOST`. Nothing is sent while Tor is failed.
+Hover over the button to see why. Tor usually needs under a minute to connect the first time. If your network blocks Tor, run your own Tor with bridges and set `DEADRECON_TOR_HOST`. Nothing is sent while Tor is failed.
 
 **Rebuilding after code changes**
 ```bash
@@ -690,6 +690,6 @@ docker-compose up -d
 
 ## Getting Help
 
-- **GitHub Issues:** https://github.com/getphantomsignal/phantomsignal/issues
+- **GitHub Issues:** https://github.com/getdeadrecon/deadrecon/issues
 - **About page:** Click **ABOUT** in the footer for version info and capability overview
-- **Logs:** Check the terminal running PhantomSignal (manual) or `docker-compose logs` (Docker) for detailed error output
+- **Logs:** Check the terminal running DeadRecon (manual) or `docker-compose logs` (Docker) for detailed error output

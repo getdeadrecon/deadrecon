@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PhantomSignal ASCII Art Pack
+DeadRecon ASCII Art Pack
 Pure block art — no ANSI colour codes, full CP437 charset
 Works in any terminal, README, or raw text context.
 
@@ -100,7 +100,7 @@ def standalone_ghost() -> str:
         "  ·  ·  ·  " + "─" * 18 + "  ·  ·  ·",
         "",
         '  "Map the surface. Own the signal."',
-        "  pip install phantomsignal",
+        "  pip install deadrecon",
         "",
     ]
     return "\n".join(lines)
@@ -149,8 +149,8 @@ def scene() -> str:
     box(">> OPEN-SOURCE OSINT INTELLIGENCE FRAMEWORK <<")
     box('"Map the surface. Own the signal."')
     ln("║" + " " * 78 + "║")
-    box("pip install phantomsignal      github.com/getphantomsignal/phantomsignal")
-    box("phantomsignal.sh" + " " * 54 + "v1.3.0")
+    box("pip install deadrecon      github.com/getdeadrecon/deadrecon")
+    box("deadrecon.sh" + " " * 58 + "v1.3.0")
     ln("║" + " " * 78 + "║")
     ln("╚" + "═" * 78 + "╝")
 
@@ -167,7 +167,7 @@ def splash() -> str:
     def box(s): ln(f"║  {s:<76}║")
 
     ln("╔" + "═" * 78 + "╗")
-    ln(f"║  {'PHANTOM SIGNAL':^76}║")
+    ln(f"║  {'DEAD RECON':^76}║")
     ln(f"║  {'OPEN-SOURCE OSINT INTELLIGENCE FRAMEWORK':^76}║")
     ln("║  " + "─" * 76 + "║")
 
@@ -183,8 +183,8 @@ def splash() -> str:
     ln(f"║  {'DNS':^12}│{'PORT SCAN':^12}│{'TECH DETECT':^12}│{'INTEL APIS':^12}│{'SHADOW SCORE':^12}  ║")
     ln(f"║  {'A/MX/NS/TXT':^12}│{'99 ports':^12}│{'50+ stacks':^12}│{'30+ sources':^12}│{'0-100':^12}  ║")
     ln("║  " + "─" * 76 + "║")
-    ln("║  $ pip install phantomsignal" + " " * 49 + "║")
-    ln("║  phantomsignal.sh  ·  github.com/getphantomsignal/phantomsignal  ·  v1.3.0  ║")
+    ln("║  $ pip install deadrecon" + " " * 49 + "║")
+    ln("║  deadrecon.sh  ·  github.com/getdeadrecon/deadrecon  ·  v1.3.0" + " " * 14 + "║")
     ln('║  "Map the surface. Own the signal."' + " " * 42 + "║")
     ln("╚" + "═" * 78 + "╝")
 

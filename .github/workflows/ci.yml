@@ -32,11 +32,11 @@ jobs:
 
       - name: Import check
         run: |
-          python -c "import phantomsignal; print('v' + phantomsignal.__version__)"
-          python -c "from phantomsignal.core.config import PhantomSignalConfig"
-          python -c "from phantomsignal.core.models import Scan"
-          python -c "from phantomsignal.intel.apis.base import BaseIntelAPI, get_registered_apis"
-          python -c "import phantomsignal.intel.apis.all_apis; from phantomsignal.intel.apis.base import get_registered_apis; assert len(get_registered_apis()) > 0"
+          python -c "import deadrecon; print('v' + deadrecon.__version__)"
+          python -c "from deadrecon.core.config import DeadReconConfig"
+          python -c "from deadrecon.core.models import Scan"
+          python -c "from deadrecon.intel.apis.base import BaseIntelAPI, get_registered_apis"
+          python -c "import deadrecon.intel.apis.all_apis; from deadrecon.intel.apis.base import get_registered_apis; assert len(get_registered_apis()) > 0"
 
       - name: Run tests
         run: |
@@ -71,8 +71,8 @@ jobs:
           python -m venv /tmp/clean
           /tmp/clean/bin/pip install -q dist/*.whl
           cd /tmp
-          /tmp/clean/bin/phantomsignal --help > /dev/null
-          /tmp/clean/bin/python -c "from phantomsignal.intel.signatures.engine import load_templates; assert load_templates(); from phantomsignal.web.app import create_app; create_app()"
+          /tmp/clean/bin/deadrecon --help > /dev/null
+          /tmp/clean/bin/python -c "from deadrecon.intel.signatures.engine import load_templates; assert load_templates(); from deadrecon.web.app import create_app; create_app()"
 
   docker:
     name: Docker image
@@ -81,23 +81,23 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Build
-        run: docker build -t phantomsignal:ci .
+        run: docker build -t deadrecon:ci .
 
       - name: Start and check health
         run: |
-          docker run -d --name phantomsignal-ci -p 127.0.0.1:5000:5000 phantomsignal:ci
+          docker run -d --name deadrecon-ci -p 127.0.0.1:5000:5000 deadrecon:ci
           for i in $(seq 1 30); do
             if curl -fs http://127.0.0.1:5000/api/v1/health; then exit 0; fi
             sleep 2
           done
-          docker logs phantomsignal-ci
+          docker logs deadrecon-ci
           exit 1
 
       - name: Build with the optional recon tools
         run: |
-          docker build --build-arg RECON_TOOLS=true -t phantomsignal:ci-tools .
+          docker build --build-arg RECON_TOOLS=true -t deadrecon:ci-tools .
           for tool in nuclei katana subfinder naabu tlsx; do
-            docker run --rm --entrypoint "$tool" phantomsignal:ci-tools -version
+            docker run --rm --entrypoint "$tool" deadrecon:ci-tools -version
           done
 
   lint:
@@ -115,4 +115,4 @@ jobs:
         run: pip install flake8 -q
 
       - name: Flake8
-        run: flake8 phantomsignal/ --max-line-length=120 --extend-ignore=E501,W503,E203
+        run: flake8 deadrecon/ --max-line-length=120 --extend-ignore=E501,W503,E203

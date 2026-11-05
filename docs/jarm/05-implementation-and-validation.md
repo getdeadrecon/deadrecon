@@ -6,7 +6,7 @@ canonical without a paid Shodan key.
 
 ## Code map
 
-Everything is in `phantomsignal/scrapers/jarm.py`. Pure (unit-tested) vs. I/O:
+Everything is in `deadrecon/scrapers/jarm.py`. Pure (unit-tested) vs. I/O:
 
 | Function | Role | Pure? |
 |----------|------|-------|
@@ -89,7 +89,7 @@ membership-gated), so we validated two other ways:
    Our implementation reproduces it exactly:
 
    ```python
-   >>> from phantomsignal.scrapers.jarm import compute_jarm
+   >>> from deadrecon.scrapers.jarm import compute_jarm
    >>> compute_jarm("www.google.com")
    '27d40d40d29d40d1dc42d43d00041ded961c16c68658e95145597cf992c36c'
    #  └──────── matches the canonical prefix ────────┘
@@ -116,7 +116,7 @@ membership-gated), so we validated two other ways:
 ## Operational notes
 
 - JARM is **active** — it opens ten TCP connections to `:443`. Only run it against
-  hosts you're authorised to test (the same scope as the rest of PhantomSignal).
+  hosts you're authorised to test (the same scope as the rest of DeadRecon).
 - It's fast but not free; the module runs the blocking socket work in an executor
   so it doesn't stall the async pipeline.
 - A 62-zero result means "no probe elicited a parseable ServerHello" — the host

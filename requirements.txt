@@ -1,4 +1,4 @@
-# PhantomSignal runtime dependencies — only what the code imports.
+# DeadRecon runtime dependencies — only what the code imports.
 # Development tools live in requirements-dev.txt: pip install -e ".[dev]"
 
 # Web console
