@@ -268,7 +268,7 @@ body.sum-compact .cat-grid { grid-template-columns:repeat(auto-fill, minmax(240p
     <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0;">Request counts include one entry per run of {{ attribution.tool_runs | dictsort | map("first") | join(", ") }}. Their own requests can't be seen from here, so the real total is higher.</p>
     {% endif %}
     {% set mbo = attribution.modules_by_opsec or {} %}
-    <span class="opsec-chip c-stealth">stealth-guaranteed · {{ (mbo.stealth_guaranteed or [])|length }}</span>
+    <span class="opsec-chip c-stealth">stealth · {{ (mbo.stealth_guaranteed or [])|length }}</span>
     <span class="opsec-chip c-proxied">proxied · {{ (mbo.proxied or [])|length }}</span>
     <span class="opsec-chip c-attributable">attributable · {{ (mbo.attributable or [])|length }}</span>
     {% for prof, n in (attribution.ja3_profiles or {}).items() %}

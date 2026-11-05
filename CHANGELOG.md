@@ -10,6 +10,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- **Scan reports show `stealth` in place of `stealth-guaranteed`.** The word overpromised. The value in
+  JSON exports is unchanged.
 - **Credited the logo's inspiration:** *The Sun* by littlebitspace, on the About page, README and site.
 
 ## [1.31.0] - 2026-11-04
