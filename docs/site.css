@@ -524,6 +524,8 @@ a:hover { color: var(--green); }
   gap: 0.75rem;
 }
 .footer-brand { display: flex; align-items: center; gap: 0.5rem; }
+.footer-credit { max-width: 1100px; margin: 1rem auto 0; color: var(--text-dim); font-size: 0.8rem; text-align: center; }
+.footer-credit a { color: var(--cyan); }
 .footer-logo { font-family: var(--sans); font-weight: 700; letter-spacing: 0.1em; font-size: 1rem; color: #fff; }
 .footer-sub { color: var(--text-dim); font-size: 0.7rem; }
 .footer-disclaimer { color: var(--text-dim); font-size: 0.7rem; letter-spacing: 0.1em; }
