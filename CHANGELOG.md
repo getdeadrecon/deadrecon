@@ -10,7 +10,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
-- **Credited the logo's inspiration:** *The Sun* by littlebitspace, on the About page, README and site.
+- **Credited the logo's inspiration:** *The Sun* by littlebitspace, in the README.
 
 ## [1.31.0] - 2026-11-04
 
