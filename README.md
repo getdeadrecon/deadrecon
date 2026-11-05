@@ -7,7 +7,7 @@
 > **The OPSEC-native OSINT framework** — _"Map the surface. Own the signal."_
 >
 > Recon that doesn't burn your infrastructure — a shared stealth egress layer, one-click
-> Tor, and an honest per-scan report of exactly what you leaked.
+> Tor, and an honest per-scan report of what you leaked.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-ff3b1f?style=flat-square&logo=python)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f7de52?style=flat-square)](https://github.com/getdeadrecon/deadrecon/blob/main/LICENSE)

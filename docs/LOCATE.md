@@ -219,7 +219,7 @@ From the case header:
 Locate's outbound calls — people-search, geocoder, profile/archive/image fetches
 — leak the *investigator's* interest. They all route through the **stealth
 client** (proxy/identity/impersonation honored) and stay **passive** (no
-profile-view tip-offs, no contact). The **Identity** tab shows exactly what your
+profile-view tip-offs, no contact). The **Identity** tab shows what your
 egress presents.
 
 ---
