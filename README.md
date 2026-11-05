@@ -137,8 +137,8 @@ labelled "masked."
 
 ## ⚡ Also new — OPSEC Core (v1.25.0)
 
-**DeadRecon reports its own attribution surface.** No other open-source
-OSINT framework tells you what a scan leaked about *you*.
+**DeadRecon reports its own attribution surface.** Most recon tools only report
+on the target. DeadRecon also reports on you.
 
 ### 🛰 Attribution Surface — "what did this scan leak?"
 Every scan ends with an honest OPSEC grade — **masked**, **partial**, **exposed**,
@@ -149,7 +149,7 @@ or **quiet** — computed from real egress telemetry, not marketing:
 - **JA3/JA4 profiles presented** — which browser TLS fingerprints you wore, and
   how often.
 - **WAF challenges & adaptive backoffs** — where a defence noticed you.
-- **Per-module OPSEC breakdown** — every module tagged `stealth-guaranteed`,
+- **Per-module OPSEC breakdown** — every module tagged `stealth`,
   `proxied`, or `attributable`, so you see which parts of a run are masked and
   which are traceable back to you.
 
@@ -534,7 +534,7 @@ Copyright (c) 2026 the-clipper. AI architecture and implementation by Claude (An
 
 ## 🎨 Logo Credit
 
-Card XIII tips its censored skull to [*The Sun*](https://16colo.rs/pack/mist1024/LITTLEBITSPACE-THE_SUN.PNG) by [littlebitspace](https://16colo.rs/artist/littlebitspace). We studied the dithering, coveted the rays, and drew our own bones. The good pixels are their influence. The bad ones are all ours.
+Card XIII tips its censored skull to *The Sun* by [littlebitspace](https://16colo.rs/artist/littlebitspace). We studied the dithering, coveted the rays, and drew our own bones. The good pixels are their influence. The bad ones are all ours.
 
 ---
 
