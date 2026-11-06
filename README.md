@@ -4,10 +4,12 @@
 
 *Formerly PhantomSignal.*
 
-> **The OPSEC-native OSINT framework** — _"Map the surface. Own the signal."_
+> **The OPSEC-native OSINT framework**
 >
-> Recon that doesn't burn your infrastructure — a shared stealth egress layer, one-click
-> Tor, and an honest per-scan report of what you leaked.
+> _"DeadRecon lays the target bare. Leaves your name out of it. We checked the packets."_
+>
+> Recon that doesn't burn your infrastructure — shared stealth egress, one-click
+> Tor, and an honest per-scan report of what you bled.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-ff3b1f?style=flat-square&logo=python)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f7de52?style=flat-square)](https://github.com/getdeadrecon/deadrecon/blob/main/LICENSE)
