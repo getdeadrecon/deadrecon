@@ -11,15 +11,18 @@
       "file://$PWD/deadrecon-social.src.html"
 
   Reuses deadrecon-card.svg (the XIII tarot art) for the right panel.
-  Fonts load from Google Fonts, so a network connection is needed when rendering.
+  Fonts (Anton display + Roboto) load locally from ./fonts/ -- the same files
+  the live site uses -- so no network is needed when rendering.
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700;900&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
+  /* Local fonts, same files the live site (deadrecon.sh) uses */
+  @font-face{ font-family:'Anton'; src:url('fonts/anton-latin-400-normal.woff2') format('woff2'); font-weight:400; font-display:swap; }
+  @font-face{ font-family:'Roboto'; src:url('fonts/roboto-latin-400-normal.woff2') format('woff2'); font-weight:400; font-display:swap; }
+  @font-face{ font-family:'Roboto'; src:url('fonts/roboto-latin-500-normal.woff2') format('woff2'); font-weight:500; font-display:swap; }
+  @font-face{ font-family:'Roboto'; src:url('fonts/roboto-latin-700-normal.woff2') format('woff2'); font-weight:700; font-display:swap; }
   :root{ --bg:#000; --fg:#fff; --red:#ff3b1f; --gold:#f7de52; }
   *{ margin:0; padding:0; box-sizing:border-box; }
   html,body{ width:1280px; height:640px; background:var(--bg); overflow:hidden; }
@@ -31,8 +34,8 @@
 
   .wm{
     position:absolute; top:138px; left:19px; z-index:2;
-    font-family:"Roboto", system-ui, sans-serif; font-weight:900;
-    font-size:122px; line-height:1; letter-spacing:-4px; white-space:nowrap;
+    font-family:"Anton", "Arial Narrow", Impact, sans-serif; font-weight:400;
+    font-size:138px; line-height:1; letter-spacing:0.01em; text-transform:uppercase; white-space:nowrap;
   }
   .wm .w{ color:var(--fg); }
   .wm .r{ color:var(--red); }
@@ -44,7 +47,7 @@
   }
   .install{
     position:absolute; top:560px; left:21px; z-index:2;
-    font-family:"Roboto Mono", ui-monospace, monospace; font-weight:600;
+    font-family:ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; font-weight:600;
     font-size:30px; color:var(--gold); letter-spacing:0.5px;
   }
   .card{
