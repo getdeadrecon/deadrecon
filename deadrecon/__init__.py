@@ -14,7 +14,8 @@ r"""
 
 
          >> OPEN-SOURCE OSINT INTELLIGENCE FRAMEWORK <<
-         >> "Map the surface. Own the signal."        <<
+         >> "DeadRecon strips the target to bare metal.
+         >>  Leaves your name out of it. We checked the packets."
 """
 
 __version__ = "1.31.1"
@@ -43,8 +44,9 @@ BANNER = r"""
 
 
       ░░░░░░  DEAD RECON  //  v{version}  //  OSINT FRAMEWORK  ░░░░░░
-      ░  "Map the surface. Own the signal."                        ░
-      ░  by the-clipper  //  AI arch: Claude (Anthropic)        ░
+      ░  DeadRecon strips the target to bare metal.              ░
+      ░  Leaves your name out of it. We checked the packets.     ░
+      ░  by the-clipper  //  AI arch: Claude (Anthropic)         ░
       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 """.format(version=__version__)
 

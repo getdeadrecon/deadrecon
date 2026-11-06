@@ -738,7 +738,8 @@ def main(ctx, config):
     DeadRecon — Open Source OSINT Intelligence Framework
 
     \b
-    "Map the surface. Own the signal."
+    "DeadRecon strips the target to bare metal.
+    Leaves your name out of it. We checked the packets."
     """
     ctx.ensure_object(dict)
     ctx.obj["config_path"] = config

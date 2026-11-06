@@ -540,4 +540,4 @@ Card XIII tips its censored skull to *The Sun* by [littlebitspace](https://16col
 
 ---
 
-*Built with questionable amounts of caffeine. "Map the surface. Own the signal."*
+*Built with questionable amounts of caffeine. "DeadRecon strips the target to bare metal. Leaves your name out of it. We checked the packets."*
