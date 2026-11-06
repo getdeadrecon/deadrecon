@@ -13,7 +13,7 @@ def read_requirements(path):
 
 setup(
     name="deadrecon",
-    version="1.31.1",
+    version="1.31.2",
     description="The OPSEC-native OSINT framework: stealth egress, one-click Tor, and an honest per-scan report of what you bled.",
     long_description=long_description,
     long_description_content_type="text/markdown",
