@@ -25,11 +25,12 @@
   html,body{ width:1280px; height:640px; background:var(--bg); overflow:hidden; }
   .stage{ position:relative; width:1280px; height:640px; background:var(--bg); }
 
-  /* full-width red censor bar: behind the wordmark, over the card */
-  .redbar{ position:absolute; left:0; right:0; top:300px; height:46px; background:var(--red); z-index:1; }
+  /* full-width red censor bar: behind the wordmark, aligned onto the card's own
+     built-in censor bar (card.svg viewBox y54-63, scaled) so they read as one stripe */
+  .redbar{ position:absolute; left:0; right:0; top:311px; height:42px; background:var(--red); z-index:1; }
 
   .wm{
-    position:absolute; top:138px; left:64px; z-index:2;
+    position:absolute; top:138px; left:54px; z-index:2;
     font-family:"Archivo Black", system-ui, sans-serif;
     font-size:134px; line-height:1; letter-spacing:-2px; white-space:nowrap;
     transform:scaleX(0.80); transform-origin:left center;
