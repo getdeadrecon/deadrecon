@@ -6,7 +6,7 @@
 
 > **The OPSEC-native OSINT framework**
 >
-> _"DeadRecon lays the target bare. Leaves your name out of it. We checked the packets."_
+> _"DeadRecon strips the target to bare metal. Leaves your name out of it. We checked the packets."_
 >
 > Recon that doesn't burn your infrastructure — shared stealth egress, one-click
 > Tor, and an honest per-scan report of what you bled.
