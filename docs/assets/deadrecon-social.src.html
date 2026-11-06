@@ -1,0 +1,68 @@
+<!doctype html>
+<!--
+  Source for deadrecon-social.png (1280x640 OG/Twitter card).
+  Regenerate from this directory with headless Chrome:
+
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+      --headless=new --disable-gpu --hide-scrollbars \
+      --force-device-scale-factor=1 --window-size=1280,640 \
+      --virtual-time-budget=4000 \
+      --screenshot=deadrecon-social.png \
+      "file://$PWD/deadrecon-social.src.html"
+
+  Reuses deadrecon-card.svg (the XIII tarot art) for the right panel.
+  Fonts (Anton display + Roboto) load locally from ./fonts/ -- the same files
+  the live site uses -- so no network is needed when rendering.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  /* Local fonts, same files the live site (deadrecon.sh) uses */
+  @font-face{ font-family:'Anton'; src:url('fonts/anton-latin-400-normal.woff2') format('woff2'); font-weight:400; font-display:swap; }
+  @font-face{ font-family:'Roboto'; src:url('fonts/roboto-latin-400-normal.woff2') format('woff2'); font-weight:400; font-display:swap; }
+  @font-face{ font-family:'Roboto'; src:url('fonts/roboto-latin-500-normal.woff2') format('woff2'); font-weight:500; font-display:swap; }
+  @font-face{ font-family:'Roboto'; src:url('fonts/roboto-latin-700-normal.woff2') format('woff2'); font-weight:700; font-display:swap; }
+  :root{ --bg:#000; --fg:#fff; --red:#ff3b1f; --gold:#f7de52; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ width:1280px; height:640px; background:var(--bg); overflow:hidden; }
+  .stage{ position:relative; width:1280px; height:640px; background:var(--bg); }
+
+  /* full-width red censor bar: behind the wordmark, aligned onto the card's own
+     built-in censor bar (card.svg viewBox y54-63, scaled) so they read as one stripe */
+  .redbar{ position:absolute; left:0; right:0; top:311px; height:42px; background:var(--red); z-index:1; }
+
+  .wm{
+    position:absolute; top:138px; left:19px; z-index:2;
+    font-family:"Anton", "Arial Narrow", Impact, sans-serif; font-weight:400;
+    font-size:138px; line-height:1; letter-spacing:0.01em; text-transform:uppercase; white-space:nowrap;
+  }
+  .wm .w{ color:var(--fg); -webkit-text-stroke:5px var(--fg); paint-order:stroke fill; }
+  .wm .r{ color:var(--red); -webkit-text-stroke:5px var(--red); paint-order:stroke fill; }
+
+  .sub{
+    position:absolute; top:392px; left:21px; z-index:2;
+    font-family:"Roboto", system-ui, sans-serif; font-weight:700;
+    font-size:42px; line-height:1.28; color:var(--fg); letter-spacing:-0.5px;
+  }
+  .install{
+    position:absolute; top:560px; left:21px; z-index:2;
+    font-family:ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; font-weight:600;
+    font-size:30px; color:var(--gold); letter-spacing:0.5px;
+  }
+  .card{
+    position:absolute; top:56px; right:72px; height:528px; width:auto; z-index:0;
+    image-rendering:pixelated;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="redbar"></div>
+    <h1 class="wm"><span class="w">DEAD</span><span class="r">RECON</span></h1>
+    <p class="sub">Strips the target to bare metal.<br>Leaves your name out of it.</p>
+    <p class="install">pip install deadrecon&nbsp;&nbsp;·&nbsp;&nbsp;deadrecon.sh</p>
+    <img class="card" src="deadrecon-card.svg" alt="">
+  </div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to PhantomSignal // PHANTOM SIGNAL are documented here.
+All notable changes to DeadRecon // DEAD RECON are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).  
 Versioning follows [Semantic Versioning](https://semver.org/).
@@ -8,6 +8,15 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ---
 
 ## [Unreleased]
+
+### Changed
+- **New tagline.** "DeadRecon strips the target to bare metal. Leaves your name out of it. We
+  checked the packets." replaces "Map the surface. Own the signal." across the README, site,
+  PyPI, the CLI banners and the report footer. The per-scan report wording is now "what you
+  bled" (still honest, and without the "exactly" that 1.31.1 removed).
+- **Rebuilt the social card** (`deadrecon-social.png`) with the new tagline and the site's
+  Anton wordmark, and added a regenerable HTML source (`deadrecon-social.src.html`) so it no
+  longer exists only as a baked PNG.
 
 ## [1.31.1] - 2026-11-05
 
