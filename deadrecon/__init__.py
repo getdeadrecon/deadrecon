@@ -18,7 +18,7 @@ r"""
          >>  Leaves your name out of it. We checked the packets."
 """
 
-__version__ = "1.31.1"
+__version__ = "1.31.2"
 __codename__ = "DEAD RECON"
 __author__ = "the-clipper"
 __credits__ = [

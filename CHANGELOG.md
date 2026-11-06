@@ -9,6 +9,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.31.2] - 2026-11-06
+
 ### Changed
 - **New tagline.** "DeadRecon strips the target to bare metal. Leaves your name out of it. We
   checked the packets." replaces "Map the surface. Own the signal." across the README, site,
