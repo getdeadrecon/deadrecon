@@ -9,6 +9,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- **GitHub topics now fit the tool.** Swapped six very broad tags (`cybersecurity`, `security-tools`,
+  `hacking`, `threat-intelligence`, and the duplicates `pentesting` and `bugbounty`) for `easm`,
+  `recon-tool`, `reconnaissance-framework`, `tor-proxy`, `footprinting` and `subdomain-enumeration`.
+  The README's Topics badges now match the repo's actual topics.
+
 ## [1.31.2] - 2026-11-06
 
 ### Changed
